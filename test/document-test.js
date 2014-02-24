@@ -262,6 +262,17 @@ QUnit.test('preview',function(){
 	equal(doc.getPageCount(),2);
 });
 
+QUnit.test('load from json',function(){
+	var doc=K.createDocument();
+	var daodejin=doc.createPage(origin+"。");
+
+	daodejin.addRevision(6,0,'也');
+	daodejin2=doc.evolvePage(daodejin);
+
+	console.log(daodejin2.toJSONString());
+	equal(true,true)
+})
+
 QUnit.test('coevolve page',function(){
 	/*
 	*/

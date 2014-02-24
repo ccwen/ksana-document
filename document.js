@@ -231,7 +231,14 @@ var revisionAt=function(pos) {
 		return (pos>=m.start && pos<=m.start+m.len);
 	})
 }
-
+var toJSONString=function() {
+	var obj={};
+	if (this.getParentId()) obj.pid=this.getParentId;
+	if (this.getName()) obj.name=this.getName();
+	if (this.getRevert()) obj.revert=this.getRevert();
+	obj.text=this.getInscription();
+	return JSON.stringify(obj);
+}
 var newPage = function(opts) {
 	var PG={}; // the instance
 	var inscription="";
@@ -263,9 +270,11 @@ var newPage = function(opts) {
 	PG.getId           = function() { return meta.id;	}
 	PG.getDoc          = function() { return doc;	}
 	PG.getParentId     = function() { return meta.parentId;	}
+	PG.__setParentId__ = function(i) { meta.parentId=i;	}
 	PG.getMarkup       = function(i){ return cloneMarkup(markups[i])} //protect from modification
 	PG.getMarkupCount  = function() { return markups.length}
 	PG.getRevert       = function() { return meta.revert	}
+	PG.__setRevert__   = function(r){ meta.revert=JSON.parse(JSON.stringify(r))}
 	PG.getRevision     = function(i){ return cloneMarkup(revisions[i])}
 	PG.getRevisionCount= function() { return revisions.length}
 	PG.getInscription  = function() { return inscription;	}
@@ -287,47 +296,46 @@ var newPage = function(opts) {
 	PG.markupAt        = markupAt;
 	PG.revisionAt      = revisionAt;
 	PG.getChildren     = getChildren;
-
+	PG.toJSONString    = toJSONString;
 
 	return PG;
 }
 
-var createDocument = function() {
+var createDocument = function(docjson) {
 	var DOC={};
-	var pages={};
+	var pages=[];
 	var pagecount=0;
+
 
 	var createFromJSON=function(json) {
 			rootPage.clearRevisions();
 			rootPage.addRevision(0,0,json.text);
 			var page=evolvePage(rootPage);
 			page.setName(json.name);
+			if (json.pid) page.__setParentId__(json.pid);
+			if (json.revert) page.__setRevert__(json.revert);
 			page.addMarkups(json.markups,true);
 			page.addRevisions(json.revisions,true);
 			return page;
 	}
+
 	var createPages=function(json) {
-		json.map(function(pg){
-			createPage(pg);
-		})
+		json.map(function(pg){createPage(pg);})
 		return this;
 	}
 	var createPage=function(input) {
-		var id=pagecount;
+		var id=pages.length;
 		if (typeof input=='undefined' || typeof input.getId=='function') {
 			var parent=input||0;
 			var page=newPage({id:id,parent:parent,doc:DOC});
-			pagecount++;
+			pages.push(page) ;
 		} else if (typeof input=='string') { 
 			var page=createFromJSON({text:input});
 		} else {
 			var page=createFromJSON(input);
 		}
-		pages[id] = page ;
 		return page;
 	}
-
-	var rootPage=createPage();   
 
 	var evolvePage=function(d,opts) {//apply revisions and upgrate markup
 		if (opts && opts.preview) {
@@ -390,9 +398,22 @@ var createDocument = function() {
 		arr.map(function(p,i){ if (p) leafpages.push(i) });
 		return leafpages;
 	}
+	var toJSONString=function() {
+		var out=["["],s="";
+		for (var i in pages) {
+			if (i=='0') continue;
+			s+=pages[i].toJSONString();
+			out.push(s);
+			s=",";
+		}
+		out.push("]");
+		return out.join('\n');
+	}
+
+	var rootPage=createPage();   
 
 	DOC.getPage=function(id) {return pages[id]};
-	DOC.getPageCount=function() {return pagecount} ;
+	DOC.getPageCount=function() {return pages.length} ;
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
 	DOC.evolvePage=evolvePage;
@@ -402,6 +423,8 @@ var createDocument = function() {
 	DOC.migrateMarkup=migrateMarkup; //for testing
 	DOC.getLeafPages=getLeafPages;
 	DOC.findPage=findPage;
+	DOC.toJSONString=toJSONString;
+	if (docjson) DOC.createPages(docjson);
 
 	return DOC;
 }
