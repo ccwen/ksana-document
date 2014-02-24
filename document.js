@@ -49,7 +49,7 @@ var migrateMarkup=function(markup, rev) {
 		return m;
 	}
 }
-var upgradeText=function(sourcetext ,revisions) {
+var applyChanges=function(sourcetext ,revisions) {
 	revisions.sort(function(r1,r2){return r2.start-r1.start});
 	var text2=sourcetext;
 	revisions.map(function(r){
@@ -187,6 +187,14 @@ var clearRevisions=function(start,len) {
 var clearMarkups=function(start,len) {
 	clear.apply(this,[this.__getMarkups__(),start,len]);
 }
+var getFirstChild=function() {
+	var id=this.getId(), doc=this.getDoc();
+	var pgcount=doc.getPageCount();
+	for (var i=0;i<pgcount;i++) {
+		if (doc.getPage(i).getParentId()==id) return doc.getPage(i);
+	}	
+	return null;
+}
 var getChildren=function() {
 	var id=this.getId(), doc=this.getDoc();
 	var pgcount=doc.getPageCount();
@@ -231,17 +239,39 @@ var revisionAt=function(pos) {
 		return (pos>=m.start && pos<=m.start+m.len);
 	})
 }
-var toJSONString=function() {
+
+var compressRevert=function(R) {
+	var out=[];
+	for (var i in R) {
+		if (R[i].payload.text=="") {
+			out.push({s:R[i].start,l:R[i].len})
+		} else out.push({s:R[i].start,l:R[i].len,y:R[i].payload})
+	}
+	return out;
+}
+var decompressRevert=function(R) {
+	var out=[];
+	for (var i in R) {
+		var payload=R[i].y;
+		if (!payload) payload={text:""};
+		out.push({start:R[i].s,len:R[i].l, payload:payload})
+	}
+	return out;
+}
+
+var toJSONString=function(opts) {
 	var obj={};
-	if (this.getParentId()) obj.pid=this.getParentId;
-	if (this.getName()) obj.name=this.getName();
-	if (this.getRevert()) obj.revert=this.getRevert();
-	obj.text=this.getInscription();
+	opts=opts||{};
+	if (this.getParentId()) obj.p=this.getParentId();
+	if (this.getName()) obj.n=this.getName();
+	if (this.getRevert()) obj.r=compressRevert(this.getRevert());
+	if (opts.withtext) obj.t=this.getInscription();
 	return JSON.stringify(obj);
 }
 var newPage = function(opts) {
 	var PG={}; // the instance
 	var inscription="";
+	var hasInscription=false;
 	var markups=[];
 	var revisions=[];
 
@@ -250,6 +280,7 @@ var newPage = function(opts) {
 	var parentId=0;
 	if (typeof opts.parent==='object') {
 		inscription=opts.parent.getInscription();
+		hasInscription=true;
 		parentId=opts.parent.getId();
 	}
 	var doc=opts.doc;
@@ -257,12 +288,20 @@ var newPage = function(opts) {
 
 	//this is the only function changing inscription,use by Doc only
 	PG.__selfEvolve__  =function(revs,M) { 
-		var newinscription=upgradeText(inscription, revs);
+		var newinscription=applyChanges(inscription, revs);
 		var migratedmarkups=[];
 		meta.revert=revertRevision(revs,inscription);
 		inscription=newinscription;
+		hasInscription=true;
 		markups=upgradeMarkups(M,revs);
 	}
+	PG.getInscription  = function() {
+		if (meta.id==0) return ""; //root page
+		if (hasInscription) return inscription;
+		var child=this.getFirstChild(meta.id);
+		hasInscription=true;
+		return applyChanges(child.getInscription(),child.getRevert());
+	}	
 	//protected functions
 	PG.__getMarkups__  = function() { return markups; }	
 	PG.__getRevisions__= function() { return revisions;	}
@@ -274,29 +313,31 @@ var newPage = function(opts) {
 	PG.getMarkup       = function(i){ return cloneMarkup(markups[i])} //protect from modification
 	PG.getMarkupCount  = function() { return markups.length}
 	PG.getRevert       = function() { return meta.revert	}
-	PG.__setRevert__   = function(r){ meta.revert=JSON.parse(JSON.stringify(r))}
+	PG.__setRevert__   = function(r){ meta.revert=decompressRevert(r)}
 	PG.getRevision     = function(i){ return cloneMarkup(revisions[i])}
 	PG.getRevisionCount= function() { return revisions.length}
-	PG.getInscription  = function() { return inscription;	}
-	PG.setName         = function(n){ meta.name=n; return this}
-	PG.getName         = function(n){ return meta.name}
-	PG.clearRevisions  = clearRevisions;
-	PG.clearMarkups    = clearMarkups;
-	PG.addMarkup       = addMarkup;
-	PG.addMarkups      = addMarkups;
-	PG.addRevision     = addRevision;
-	PG.addRevisions    = addRevisions;
-	PG.hasAncestor     = hasAncestor;
-	PG.upgradeMarkups  = upgradeMarkups;
-	PG.downgradeMarkups= downgradeMarkups;
-	PG.upgradeMarkupsTo= upgradeMarkupsTo;
+
+		
+	PG.setName           = function(n){ meta.name=n; return this}
+	PG.getName           = function(n){ return meta.name}
+	PG.clearRevisions    = clearRevisions;
+	PG.clearMarkups      = clearMarkups;
+	PG.addMarkup         = addMarkup;
+	PG.addMarkups        = addMarkups;
+	PG.addRevision       = addRevision;
+	PG.addRevisions      = addRevisions;
+	PG.hasAncestor       = hasAncestor;
+	PG.upgradeMarkups    = upgradeMarkups;
+	PG.downgradeMarkups  = downgradeMarkups;
+	PG.upgradeMarkupsTo  = upgradeMarkupsTo;
 	PG.downgradeMarkupsTo=downgradeMarkupsTo;
-	PG.getAncestors    = getAncestors;
-	PG.isLeafPage      = isLeafPage;
-	PG.markupAt        = markupAt;
-	PG.revisionAt      = revisionAt;
-	PG.getChildren     = getChildren;
-	PG.toJSONString    = toJSONString;
+	PG.getAncestors      = getAncestors;
+	PG.isLeafPage        = isLeafPage;
+	PG.markupAt          = markupAt;
+	PG.revisionAt        = revisionAt;
+	PG.getChildren       = getChildren;
+	PG.getFirstChild     = getFirstChild;
+	PG.toJSONString      = toJSONString;
 
 	return PG;
 }
@@ -309,11 +350,16 @@ var createDocument = function(docjson) {
 
 	var createFromJSON=function(json) {
 			rootPage.clearRevisions();
-			rootPage.addRevision(0,0,json.text);
-			var page=evolvePage(rootPage);
-			page.setName(json.name);
-			if (json.pid) page.__setParentId__(json.pid);
-			if (json.revert) page.__setRevert__(json.revert);
+			var t=json.text||json.t;
+			if (t) {
+				rootPage.addRevision(0,0,json.text || json.t);
+				var page=evolvePage(rootPage);				
+			} else {
+				var page=createPage();
+			}
+			if (json.n) page.setName(json.n);
+			if (json.p) page.__setParentId__(json.p);
+			if (json.r) page.__setRevert__(json.r);
 			page.addMarkups(json.markups,true);
 			page.addRevisions(json.revisions,true);
 			return page;
@@ -396,13 +442,16 @@ var createDocument = function(docjson) {
 		}
 		var leafpages=[];
 		arr.map(function(p,i){ if (p) leafpages.push(i) });
-		return leafpages;
+		return {leafPages:leafpages, isLeafPages:arr};
 	}
+	
 	var toJSONString=function() {
 		var out=["["],s="";
-		for (var i in pages) {
-			if (i=='0') continue;
-			s+=pages[i].toJSONString();
+		var isLeafPages=this.getLeafPages().isLeafPages;
+		console.log(isLeafPages);
+		for (var i=0;i<pages.length;i++) {
+			if (i==0) continue;
+			s+=pages[i].toJSONString({"withtext":isLeafPages[i]});
 			out.push(s);
 			s=",";
 		}
@@ -410,7 +459,9 @@ var createDocument = function(docjson) {
 		return out.join('\n');
 	}
 
-	var rootPage=createPage();   
+
+
+	var rootPage=createPage();
 
 	DOC.getPage=function(id) {return pages[id]};
 	DOC.getPageCount=function() {return pages.length} ;
@@ -423,6 +474,7 @@ var createDocument = function(docjson) {
 	DOC.migrateMarkup=migrateMarkup; //for testing
 	DOC.getLeafPages=getLeafPages;
 	DOC.findPage=findPage;
+
 	DOC.toJSONString=toJSONString;
 	if (docjson) DOC.createPages(docjson);
 

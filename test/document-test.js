@@ -4,7 +4,7 @@ console.log('ksana page test suite');
 QUnit.test('new page',function(){
 	var doc=K.createDocument();
 	var d=doc.createPage();
-	equal(d.getInscription(),"");
+//	equal(d.getInscription(),"");
 	equal(d.getId(),1);
 	equal(doc.getPageCount(),2);
 });
@@ -244,7 +244,7 @@ QUnit.test('migrate markups',function(){
 	equal(M[0].start,12);
 	equal(punc2.getInscription().substr(M[0].start,M[0].len),"非常名");	
 
-	var leafpages=doc.getLeafPages();
+	var leafpages=doc.getLeafPages().leafPages;
 	equal(leafpages.length,2);
 
 	equal(punc2.isLeafPage(),true);
@@ -269,8 +269,19 @@ QUnit.test('load from json',function(){
 	daodejin.addRevision(6,0,'也');
 	daodejin2=doc.evolvePage(daodejin);
 
-	console.log(daodejin2.toJSONString());
-	equal(true,true)
+	daodejin2.addRevision(4,1,'恆');
+	daodejin2.addRevision(11,1,'恆');
+	daodejin2.addRevision(13,0,'也');
+	daodejin3=doc.evolvePage(daodejin2);
+	var jsonstring=doc.toJSONString();
+	var json=JSON.parse(jsonstring);
+	equal(typeof json[0].t,'undefined'); //removed in persistent json
+	equal(typeof json[1].t,'undefined'); //removed in persistent json
+	equal(typeof json[2].t,'string');
+	
+	var doc2=K.createDocument(json);
+	equal(doc2.getPage(1).getInscription(),origin+"。")
+	equal(doc2.getPage(3).getInscription(),"道可道非恆道也名可名非恆名也。")
 })
 
 QUnit.test('coevolve page',function(){
