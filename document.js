@@ -262,10 +262,10 @@ var decompressRevert=function(R) {
 var toJSONString=function(opts) {
 	var obj={};
 	opts=opts||{};
-	if (this.getParentId()) obj.p=this.getParentId();
 	if (this.getName()) obj.n=this.getName();
-	if (this.getRevert()) obj.r=compressRevert(this.getRevert());
 	if (opts.withtext) obj.t=this.getInscription();
+	if (this.getParentId()) obj.p=this.getParentId();
+	if (this.getRevert()) obj.r=compressRevert(this.getRevert());
 	return JSON.stringify(obj);
 }
 var newPage = function(opts) {
