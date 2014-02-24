@@ -1,0 +1,17 @@
+{
+  "name": "dhammagear-document",
+  "version": "0.0.1",
+  "description": "dhammagear document",
+  "main": "index.js",
+  "scripts": {
+    "test": "vows"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dhammagear/dhammagear-document"
+  },
+  "author": "yapcheahshen",
+  "license": "GPL 3.0",
+  "readmeFilename": "README.md",
+  "gitHead": "4509ade819ba8f1067634bc3fa86b33f26840d04"
+}
