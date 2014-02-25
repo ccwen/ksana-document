@@ -264,7 +264,7 @@ QUnit.test('preview',function(){
 
 QUnit.test('load from json',function(){
 	var doc=K.createDocument();
-	var daodejin=doc.createPage(origin+"。");
+	var daodejin=doc.createPage({name:"ch1",text:origin+"。"});
 
 	daodejin.addRevision(6,0,'也');
 	daodejin2=doc.evolvePage(daodejin);
@@ -278,10 +278,13 @@ QUnit.test('load from json',function(){
 	equal(typeof json[0].t,'undefined'); //removed in persistent json
 	equal(typeof json[1].t,'undefined'); //removed in persistent json
 	equal(typeof json[2].t,'string');
-	
+
 	var doc2=K.createDocument(json);
 	equal(doc2.getPage(1).getInscription(),origin+"。")
 	equal(doc2.getPage(3).getInscription(),"道可道非恆道也名可名非恆名也。")
+
+	equal(doc2.getPageByName("ch1").getInscription(),"道可道非恆道也名可名非恆名也。")
+	equal(doc2.getPageByName("ch1",1).getInscription(),origin+"。")
 })
 
 QUnit.test('coevolve page',function(){

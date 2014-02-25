@@ -277,16 +277,17 @@ var newPage = function(opts) {
 
 	opts=opts||{};
 	opts.id=opts.id || 0; //root id==0
-	var parentId=0;
+	var parentId=0 ,name="";
 	if (typeof opts.parent==='object') {
 		inscription=opts.parent.getInscription();
+		name=opts.parent.getName();
 		hasInscription=true;
 		parentId=opts.parent.getId();
 	}
 	var doc=opts.doc;
-	var meta= {name:"",id:opts.id, parentId:parentId, revert:null };
+	var meta= {name:name,id:opts.id, parentId:parentId, revert:null };
 
-	//this is the only function changing inscription,use by Doc only
+	//these are the only 2 function changing inscription,use by Doc only
 	PG.__selfEvolve__  =function(revs,M) { 
 		var newinscription=applyChanges(inscription, revs);
 		var migratedmarkups=[];
@@ -300,7 +301,8 @@ var newPage = function(opts) {
 		if (hasInscription) return inscription;
 		var child=this.getFirstChild(meta.id);
 		hasInscription=true;
-		return applyChanges(child.getInscription(),child.getRevert());
+		inscription=applyChanges(child.getInscription(),child.getRevert());
+		return inscription;
 	}	
 	//protected functions
 	PG.__getMarkups__  = function() { return markups; }	
@@ -345,9 +347,18 @@ var newPage = function(opts) {
 var createDocument = function(docjson) {
 	var DOC={};
 	var pages=[];
-	var pagecount=0;
+	var names={};
 
-
+	var addPage=function(name) {
+		if (!names[name]) {
+			names[name]=pages.length-1;
+		} else {
+			if (typeof names[name]=='number') {
+				names[name]=[names[name]];
+			}
+			names[name].push(pages.length-1)
+		}
+	}
 	var createFromJSON=function(json) {
 			rootPage.clearRevisions();
 			var t=json.text||json.t;
@@ -357,7 +368,9 @@ var createDocument = function(docjson) {
 			} else {
 				var page=createPage();
 			}
-			if (json.n) page.setName(json.n);
+			var name=json.n||json.name||"";
+			addPage(name);
+			page.setName(name);
 			if (json.p) page.__setParentId__(json.p);
 			if (json.r) page.__setRevert__(json.r);
 			page.addMarkups(json.markups,true);
@@ -372,6 +385,7 @@ var createDocument = function(docjson) {
 	var createPage=function(input) {
 		var id=pages.length;
 		if (typeof input=='undefined' || typeof input.getId=='function') {
+			//root page
 			var parent=input||0;
 			var page=newPage({id:id,parent:parent,doc:DOC});
 			pages.push(page) ;
@@ -459,12 +473,24 @@ var createDocument = function(docjson) {
 		return out.join('\n');
 	}
 
-
+	var getPageByName=function(name,version) {
+		var parr=names[name];
+		version=version||pages.length;
+		if (parr instanceof Array) {
+			var last=parr[0];
+			for (var i=0;i<parr.length;i++ ) {
+				if (parr[i]>version) break;
+				last=parr[i];
+			}
+			return pages[last];
+		} else return pages[parr];
+	}
 
 	var rootPage=createPage();
 
 	DOC.getPage=function(id) {return pages[id]};
 	DOC.getPageCount=function() {return pages.length} ;
+	DOC.getVersion=function(){return pages.length};
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
 	DOC.evolvePage=evolvePage;
@@ -474,6 +500,8 @@ var createDocument = function(docjson) {
 	DOC.migrateMarkup=migrateMarkup; //for testing
 	DOC.getLeafPages=getLeafPages;
 	DOC.findPage=findPage;
+	DOC.getPageByName=getPageByName;
+
 
 	DOC.toJSONString=toJSONString;
 	if (docjson) DOC.createPages(docjson);
