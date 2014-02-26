@@ -1,8 +1,8 @@
-var K=require('../document');
-console.log('ksana page test suite');
+var D=require('../document');
+console.log('dhammagear document test suite');
 
 QUnit.test('new page',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var d=doc.createPage();
 //	equal(d.getInscription(),"");
 	equal(d.getId(),1);
@@ -10,7 +10,7 @@ QUnit.test('new page',function(){
 });
 
 QUnit.test('migrate markup (delete)',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	deletemiddle={start:3,len:3,payload:{text:""}};
 	payload={nothing:true}
 	left={start:0,len:3,payload:payload};
@@ -43,7 +43,7 @@ QUnit.test('migrate markup (delete)',function(){
 		//  dout     |     |      |		     x        xz          z            
 		//  insert   +++ x +++xx  +++ xx   x+++yz   x+++yyyz    +++ xyz
 QUnit.test('evolve markup (insert)',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	payload={nothing:true}
 	insertmiddle={start:3,len:0,payload:{text:"+++"}};
 
@@ -76,7 +76,7 @@ QUnit.test('evolve markup (insert)',function(){
 var origin="道可道非常道名可名非常名";
 
 QUnit.test('evolve page',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin);
 	equal(daodejin.getId(),1);
 
@@ -111,7 +111,7 @@ QUnit.test('evolve page',function(){
 	//equal(ng.getInscription(),"道可道，非恆道也；名可名，非恆名也。");
 });
 QUnit.test('clear markup by range',function() {
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin);
 
 	daodejin.addMarkup(1,2,{empty:true});
@@ -124,7 +124,7 @@ QUnit.test('clear markup by range',function() {
 
 });
 QUnit.test('validate markup position',function() {
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin);
 	daodejin.addMarkup(0,-1,{empty:true});
 	daodejin.addMarkup(-10,-1,{empty:true});
@@ -146,7 +146,7 @@ QUnit.test('validate markup position',function() {
 
 });
 QUnit.test('markups devolve to parent  ',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin+"。");
 	daodejin.addRevision(6,0,'也');
 	daodejin.addRevision(12,0,'也');
@@ -179,7 +179,7 @@ QUnit.test('markups devolve to parent  ',function(){
 });
 
 QUnit.test('validate revision',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin+"。");
 	daodejin.addRevision(0,3,"");//delete 道可道
 	equal(daodejin.getRevisionCount(),1);
@@ -189,7 +189,7 @@ QUnit.test('validate revision',function(){
 });
 
 QUnit.test('devolve markups to ancestor',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin+"。");
 
 	daodejin.addRevision(6,0,'也');
@@ -211,7 +211,7 @@ QUnit.test('devolve markups to ancestor',function(){
 QUnit.test('migrate markups',function(){
 //find MRCA, B devolve to MRCA, evolve to C
 //test two seperate page. all markup become 0,0
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin+"。");
 
 	daodejin.addRevision(6,0,'也');
@@ -254,7 +254,7 @@ QUnit.test('migrate markups',function(){
 });
 
 QUnit.test('preview',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin);
 	equal(daodejin.getId(),1);
 	daodejin.addRevision(4,1,'恆');	
@@ -263,7 +263,7 @@ QUnit.test('preview',function(){
 });
 
 QUnit.test('load from json',function(){
-	var doc=K.createDocument();
+	var doc=D.createDocument();
 	var daodejin=doc.createPage({name:"ch1",text:origin+"。"});
 
 	daodejin.addRevision(6,0,'也');
@@ -279,11 +279,13 @@ QUnit.test('load from json',function(){
 	equal(typeof json[1].t,'undefined'); //removed in persistent json
 	equal(typeof json[2].t,'string');
 
-	var doc2=K.createDocument(json);
+	var doc2=D.createDocument(json);
 	equal(doc2.getPage(1).getInscription(),origin+"。")
 	equal(doc2.getPage(3).getInscription(),"道可道非恆道也名可名非恆名也。")
 
+	//lastest version
 	equal(doc2.getPageByName("ch1").getInscription(),"道可道非恆道也名可名非恆名也。")
+	//previous version
 	equal(doc2.getPageByName("ch1",1).getInscription(),origin+"。")
 })
 

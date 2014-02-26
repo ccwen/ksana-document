@@ -507,7 +507,6 @@ var createDocument = function(docjson) {
 	DOC.findPage=findPage;
 	DOC.getPageByName=getPageByName;
 
-
 	DOC.toJSONString=toJSONString;
 	if (docjson) DOC.createPages(docjson);
 
