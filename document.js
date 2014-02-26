@@ -469,7 +469,8 @@ var createDocument = function(docjson) {
 			out.push(s);
 			s=",";
 		}
-		out.push("]");
+		out[out.length-1]+="]";
+		//make line number save as version number
 		return out.join('\n');
 	}
 
