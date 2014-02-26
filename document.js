@@ -473,9 +473,10 @@ var createDocument = function(docjson) {
 		return out.join('\n');
 	}
 
+
 	var getPageByName=function(name,version) {
 		var parr=names[name];
-		version=version||pages.length;
+		version=version||this.getVersion();//return lastest if not specified
 		if (parr instanceof Array) {
 			var last=parr[0];
 			for (var i=0;i<parr.length;i++ ) {
@@ -490,6 +491,9 @@ var createDocument = function(docjson) {
 
 	DOC.getPage=function(id) {return pages[id]};
 	DOC.getPageCount=function() {return pages.length} ;
+	/*
+		external markups must be saved with version number.
+	*/
 	DOC.getVersion=function(){return pages.length};
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
