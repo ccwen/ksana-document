@@ -13,15 +13,15 @@ var parseXMLTag=function(s) {
 
 	while (s[i] && (s.charCodeAt(i)>0x30)) {name+=s[i];i++;}
 
-	if (s[i]=='/') {
-		return {name:name,type:'empty'}
-	} else {
-		var attr=[];
-		s.substring(i+1).replace(/(.*)=(.*)/g,function(m,m1,m2) {
-			attr.push([m1,m2.substring(1,m2.length-1)]);
-		});
-		return {name:name,type:'start',attr:attr}
-	}
+	var type="start";
+	if (s[s.length-1]=='/') { type="emtpy"}
+	var attr={},count=0;
+	s.substring(i+1).replace(/(.*)="(.*)"/g,function(m,m1,m2) {
+		attr[m1]=m2;
+		count++;
+	});
+	if (!count) attr=undefined;
+	return {name:name,type:type,attr:attr}
 }
 var parseUnit=function(name,unit,doc) {
 	// name,spg, soff, epg, eoff , attributes

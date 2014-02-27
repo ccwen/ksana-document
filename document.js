@@ -348,6 +348,7 @@ var createDocument = function(docjson) {
 	var DOC={};
 	var pages=[];
 	var names={};
+	var meta={doctype:"dg1.0"}
 
 	var addPage=function(name) {
 		if (!names[name]) {
@@ -379,7 +380,10 @@ var createDocument = function(docjson) {
 	}
 
 	var createPages=function(json) {
-		json.map(function(pg){createPage(pg);})
+		var count=0;
+		for (var i=1;i<json.length;i++) {
+			createPage(json[i]);
+		}
 		return this;
 	}
 	var createPage=function(input) {
@@ -460,9 +464,8 @@ var createDocument = function(docjson) {
 	}
 	
 	var toJSONString=function() {
-		var out=["["],s="";
+		var out=["["+JSON.stringify(meta)], s=",";
 		var isLeafPages=this.getLeafPages().isLeafPages;
-		console.log(isLeafPages);
 		for (var i=0;i<pages.length;i++) {
 			if (i==0) continue;
 			s+=pages[i].toJSONString({"withtext":isLeafPages[i]});
@@ -496,6 +499,8 @@ var createDocument = function(docjson) {
 		external markups must be saved with version number.
 	*/
 	DOC.getVersion=function(){return pages.length};
+	DOC.getMeta=function(){return meta};
+
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
 	DOC.evolvePage=evolvePage;
@@ -506,7 +511,6 @@ var createDocument = function(docjson) {
 	DOC.getLeafPages=getLeafPages;
 	DOC.findPage=findPage;
 	DOC.getPageByName=getPageByName;
-
 	DOC.toJSONString=toJSONString;
 	if (docjson) DOC.createPages(docjson);
 
