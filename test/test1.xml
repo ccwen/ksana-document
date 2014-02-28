@@ -1,6 +1,7 @@
 <xml>
-<a t="xyz">text1</a>text<b>text2</b>
-<pb n="1"/><c>text3</c>
+<a t="xyz">text1</a>text<p id="1"><b>text2</b>
+<pb n="1"/><c>text3</c><c>text3</c></p><p id="2"><c>text3</c>
 <pb n="2"/><d>text4</d><e>text5</e>
 <f q="1"/>
+</p>
 </xml>
