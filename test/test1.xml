@@ -1,7 +1,7 @@
 <xml>
-<a t="xyz">text1</a>text<p id="1"><b>text2</b>
-<pb n="1"/><c>text3</c><c>text3</c></p><p id="2"><c>text3</c>
-<pb n="2"/><d>text4</d><e>text5</e>
-<f q="1"/>
+<a t="xyz">11</a>22<p id="1"><b>33</b>
+<pb n="1"/><c>44</c></p>55<p id="2"><c>66</c></p><p id="3"><c>77</c>
+<pb n="2"/><d>88</d><e>99</e>
+<f q="1"/>00
 </p>
 </xml>

@@ -288,12 +288,19 @@ var newPage = function(opts) {
 	var meta= {name:name,id:opts.id, parentId:parentId, revert:null };
 
 	//these are the only 2 function changing inscription,use by Doc only
+	checkLength=function(ins) {
+		if (ins.length>doc.maxInscriptionLength) {
+			console.error("exceed size");
+			ins=ins.substring(0,maxInscriptionLength);
+		}
+		return ins;
+	}
 	PG.__selfEvolve__  =function(revs,M) { 
 		//TODO ;make sure inscription is loaded
 		var newinscription=applyChanges(inscription, revs);
 		var migratedmarkups=[];
 		meta.revert=revertRevision(revs,inscription);
-		inscription=newinscription;
+		inscription=checkLength(newinscription);
 		hasInscription=true;
 		markups=upgradeMarkups(M,revs);
 	}
@@ -303,7 +310,7 @@ var newPage = function(opts) {
 			if (hasInscription) return inscription;
 			var child=this.getFirstChild();
 			hasInscription=true;
-			inscription=applyChanges(child.inscription,child.revert);
+			inscription=checkLength(applyChanges(child.inscription,child.revert));
 			return inscription;
 	}});
 	//protected functions
@@ -346,7 +353,6 @@ var newPage = function(opts) {
 
 	return PG;
 }
-
 var createDocument = function(docjson) {
 	var DOC={};
 	var pages=[];
@@ -497,12 +503,11 @@ var createDocument = function(docjson) {
 	var rootPage=createPage();
 
 	DOC.getPage=function(id) {return pages[id]};
-	DOC.pageCount=function() {return pages.length} ;
 	/*
 		external markups must be saved with version number.
 	*/
 	Object.defineProperty(DOC,'meta',{value:meta});
-
+	Object.defineProperty(DOC,'maxInscriptionLength',{value:2048});
 	Object.defineProperty(DOC,'version',{get:function(){return pages.length}});
 	Object.defineProperty(DOC,'pageCount',{get:function(){return pages.length}});
 
@@ -521,5 +526,67 @@ var createDocument = function(docjson) {
 
 	return DOC;
 }
+/*
+	TODO move user markups to tags
+*/
 
-module.exports={ createDocument: createDocument }
+var splitInscriptions=function(doc,starts) {
+	var combined="",j=0;
+	var inscriptions=[],oldunitoffsets=[0];
+	for (var i=1;i<doc.pageCount;i++) {
+		var page=doc.getPage(i);
+		var pageStart=doc.maxInscriptionLength*i;
+ 		combined+=page.inscription;
+		oldunitoffsets.push(combined.length);
+	}
+	var last=0,newunitoffsets=[0];
+	starts.map(function(S){
+		var till=oldunitoffsets[ S[0] ]+ S[1];
+		newunitoffsets.push(till);
+		inscriptions.push( combined.substring(last,till));
+		last=till;
+	})
+	inscriptions.push( combined.substring(last));
+	newunitoffsets.push(combined.length);
+	return {inscriptions:inscriptions,oldunitoffsets:oldunitoffsets , newunitoffsets:newunitoffsets};
+}
+var sortedIndex = function (array, tofind) {
+  var low = 0, high = array.length;
+  while (low < high) {
+    var mid = (low + high) >> 1;
+    array[mid] < tofind ? low = mid + 1 : high = mid;
+  }
+  return low;
+};
+var reunit=function(doc,tagname,opts) {
+	var unitstarts=[];
+
+	//assuming unit tag in doc.tags
+	doc.tags.map(function(T){
+		if (T.name===tagname) {
+			unitstarts.push([T.sunit,T.soff]);
+		}
+	});
+
+	var R=splitInscriptions(doc,unitstarts);
+	var out=createDocument();
+	R.inscriptions.map(function(I){out.createPage(I)});
+
+	
+	var tags=[];
+	doc.tags.map(function(T){
+		var tag=JSON.parse(JSON.stringify(T));
+		var pos=R.oldunitoffsets[T.sunit]+T.soff;
+		var p=sortedIndex(R.newunitoffsets,pos)-1;
+		tag.sunit=p;tag.soff=pos-R.newunitoffsets[p];
+
+		eunit=T.eunit||T.sunit;eoff=T.eoff||T.soff;
+		pos=R.oldunitoffsets[eunit]+eoff;
+		p=sortedIndex(R.newunitoffsets,pos)-1;
+		tag.eunit=p;tag.eoff=pos-R.newunitoffsets[p];
+		tags.push(tag);
+	});
+	return out;
+}
+
+module.exports={ createDocument: createDocument, reunit:reunit}

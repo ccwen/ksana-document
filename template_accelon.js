@@ -23,19 +23,23 @@ var parseXMLTag=function(s) {
 	if (!count) attr=undefined;
 	return {name:name,type:type,attr:attr}
 }
-var parseUnit=function(name,unit,doc) {
-	// name,spg, soff, epg, eoff , attributes
-	var parsed=unit.replace(/<(.*?)>/g,function(m,m1,offset){
+var parseUnit=function(unitseq,unittext,doc) {
+	// name,sunit, soff, eunit, eoff , attributes
+	var totaltaglength=0;
+	var parsed=unittext.replace(/<(.*?)>/g,function(m,m1,off){
 		var tag=parseXMLTag(m1);
+		tag.seq=unitseq;
+		var offset=off-totaltaglength;
+		totaltaglength+=m.length;
 		if (tag.type=='end') {
 			tag=tagstack.pop();
 			if (tag.name!=m1.substring(1)) {
-				throw 'unbalanced tag at unit '+name+' '+unit;
+				throw 'unbalanced tag at unit  '+unittext;
 			}
-			if (tag.spg!=name) tag.epg=name;
+			if (tag.sunit!=unitseq) tag.eunit=unitseq;
 			if (tag.soff!=offset) tag.eoff=offset;
 		} else {
-			tag.spg=name;tag.soff=offset;
+			tag.sunit=unitseq;tag.soff=offset;
 			if (tag.type=='start') tagstack.push(tag);
 			tags.push(tag);
 		}
@@ -56,14 +60,14 @@ var splitUnit=function(buf) {
 var importxml=function(buf,opts) {
 	var doc=D.createDocument();
 	var units=splitUnit(buf);
-	units.map(function(U){
-		var out=parseUnit(U[0],U[1],doc)
+	units.map(function(U,i){
+		var out=parseUnit(i,U[1],doc)
 		doc.createPage(out.inscription);
 	});
 	if (tagstack.length) {
 		throw 'tagstack not null'+JSON.stringify(tagstack)
 	}
-	doc.xmltags=tags;
+	doc.tags=tags;
 	return doc;
 }
 module.exports=importxml;

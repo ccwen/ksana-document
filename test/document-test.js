@@ -280,7 +280,7 @@ QUnit.test('load from json',function(){
 	equal(typeof json[3].t,'string');
 
 	var doc2=D.createDocument(json);
-	console.log(json)
+
 	equal(doc2.getPage(1).inscription,origin+"。")
 	equal(doc2.getPage(3).inscription,"道可道非恆道也名可名非恆名也。")
 
@@ -290,7 +290,17 @@ QUnit.test('load from json',function(){
 	equal(doc2.pageByName("ch1",1).inscription,origin+"。")
 
 })
-
+var F=require('../fromxml');
+var fs=require('fs');
+QUnit.test('reunit',function(){
+	var buf=fs.readFileSync('./test1.xml','utf8').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+	var doc=F.importXML(buf,{"template":"accelon"});
+	var doc2=D.reunit(doc,"p");
+	equal(doc2.pageCount,5);
+	//check converted tag
+	//export to XML
+	//compare with test1.xml
+})
 QUnit.test('coevolve page',function(){
 	/*
 	*/
