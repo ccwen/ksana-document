@@ -5,8 +5,8 @@ QUnit.test('new page',function(){
 	var doc=D.createDocument();
 	var d=doc.createPage();
 //	equal(d.getInscription(),"");
-	equal(d.getId(),1);
-	equal(doc.getPageCount(),2);
+	equal(d.id,1);
+	equal(doc.pageCount,2);
 });
 
 QUnit.test('migrate markup (delete)',function(){
@@ -78,9 +78,9 @@ var origin="道可道非常道名可名非常名";
 QUnit.test('evolve page',function(){
 	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin);
-	equal(daodejin.getId(),1);
+	equal(daodejin.id,1);
 
-	equal(daodejin.getInscription(),origin);
+	equal(daodejin.inscription,origin);
 
 	daodejin.addRevision(4,1,'恆');
 	daodejin.addRevision(6,0,'也');
@@ -90,7 +90,7 @@ QUnit.test('evolve page',function(){
 	daodejin.addMarkup(8,1,{name:"動詞"});
 
 	mawang=doc.evolvePage(daodejin)
-	equal(mawang.getInscription(),"道可道非恆道也名可名非恆名也");
+	equal(mawang.inscription,"道可道非恆道也名可名非恆名也");
 	var m1=mawang.getMarkup(0);
 	var m2=mawang.getMarkup(1);
 
@@ -103,12 +103,12 @@ QUnit.test('evolve page',function(){
 	daodejin.addRevision(9,0,"，");
 	daodejin.addRevision(12,0,"。");
 	punc=doc.evolvePage(daodejin);
-	equal(punc.getInscription(),"道可道，非常道；名可名，非常名。");
+	equal(punc.inscription,"道可道，非常道；名可名，非常名。");
 
-	equal(doc.getPageCount(),4);//root,daodejin,mawang,punc
+	equal(doc.pageCount,4);//root,daodejin,mawang,punc
 
 	//ng=doc.coevolve(mawang,punc);
-	//equal(ng.getInscription(),"道可道，非恆道也；名可名，非恆名也。");
+	//equal(ng.getInscription,"道可道，非恆道也；名可名，非恆名也。");
 });
 QUnit.test('clear markup by range',function() {
 	var doc=D.createDocument();
@@ -118,9 +118,9 @@ QUnit.test('clear markup by range',function() {
 	daodejin.addMarkup(5,1,{empty:true});
 
 	daodejin.clearMarkups(0,3);
-	equal(daodejin.getMarkupCount(),1);
+	equal(daodejin.markupCount,1);
 	daodejin.clearMarkups(5,1);
-	equal(daodejin.getMarkupCount(),0)
+	equal(daodejin.markupCount,0)
 
 });
 QUnit.test('validate markup position',function() {
@@ -153,10 +153,10 @@ QUnit.test('markups devolve to parent  ',function(){
 	var mawang=doc.evolvePage(daodejin);
 	//道可道非常道也名可名非常名也。
 
-	mawang.addRevisions( mawang.getRevert() );
+	mawang.addRevisions( mawang.revert );
 	//道可道非常道名可名非常名。
 	var daodejin2=doc.evolvePage(mawang);
-	equal(daodejin2.getInscription(),origin+"。","rollback with revert revision"); 
+	equal(daodejin2.inscription,origin+"。","rollback with revert revision"); 
 
 	mawang.addMarkup(13,1,{name:"虛字"});
 	mawang.addMarkup(9,1,{name:"動詞"});
@@ -169,11 +169,11 @@ QUnit.test('markups devolve to parent  ',function(){
 
 	equal(M[1].start,8,'markup 2 start');
 	equal(M[1].len,1,'markup 2 len'); //survive
-	equal(daodejin2.getInscription().substr(M[1].start,M[1].len),"名");
+	equal(daodejin2.inscription.substr(M[1].start,M[1].len),"名");
 	
 	equal(M[2].start,5,'markup 3 start');
 	equal(M[2].len,2,'markup 3 len'); //survive but content changed
-	equal(daodejin2.getInscription().substr(M[2].start,M[2].len),"道名");
+	equal(daodejin2.inscription.substr(M[2].start,M[2].len),"道名");
 
 	
 });
@@ -182,9 +182,9 @@ QUnit.test('validate revision',function(){
 	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin+"。");
 	daodejin.addRevision(0,3,"");//delete 道可道
-	equal(daodejin.getRevisionCount(),1);
+	equal(daodejin.revisionCount,1);
 	daodejin.addRevision(1,1,"");//delete 可
-	equal(daodejin.getRevisionCount(),1);
+	equal(daodejin.revisionCount,1);
 
 });
 
@@ -200,9 +200,9 @@ QUnit.test('devolve markups to ancestor',function(){
   //道可道非常道也名可名非常名也。
 	daodejin3.addMarkup(14,1,"句號");
 	var M=doc.migrate(daodejin3,daodejin);
-	equal( daodejin3.getInscription().substr(14,1),"。")
+	equal( daodejin3.inscription.substr(14,1),"。")
 	equal(M[0].start,12);
-	equal( daodejin.getInscription().substr(M[0].start,M[0].len),"。")
+	equal( daodejin.inscription.substr(M[0].start,M[0].len),"。")
 
 //markup 
 	
@@ -221,7 +221,7 @@ QUnit.test('migrate markups',function(){
 	mawang2=doc.evolvePage(mawang1);	
 	//第一章道可道非常道也名可名非常名
 	mawang2.addMarkup(13,3,"非常名");
-	equal(mawang2.getInscription().substr(13,3),"非常名")
+	equal(mawang2.inscription.substr(13,3),"非常名")
 
 	daodejin.clearRevisions();
 	daodejin.addRevision(3,0,'，');
@@ -235,14 +235,14 @@ QUnit.test('migrate markups',function(){
 	//道可道，非常道；名可名，非常名。
 	
 	var ancestor=doc.findMRCA(mawang2,punc2);
-	equal(ancestor.getId(),daodejin.getId());
+	equal(ancestor.id,daodejin.id);
 	var M=doc.migrate(mawang2,daodejin);	//downgrade to ancestor
 	equal(M[0].start,9);
-	equal(daodejin.getInscription().substr(M[0].start,M[0].len),"非常名");
+	equal(daodejin.inscription.substr(M[0].start,M[0].len),"非常名");
 
 	var M=doc.migrate(mawang2,punc2); //downgrade to ancestor and upgrade to punc2
 	equal(M[0].start,12);
-	equal(punc2.getInscription().substr(M[0].start,M[0].len),"非常名");	
+	equal(punc2.inscription.substr(M[0].start,M[0].len),"非常名");	
 
 	var leafpages=doc.getLeafPages().leafPages;
 	equal(leafpages.length,2);
@@ -256,10 +256,10 @@ QUnit.test('migrate markups',function(){
 QUnit.test('preview',function(){
 	var doc=D.createDocument();
 	var daodejin=doc.createPage(origin);
-	equal(daodejin.getId(),1);
+	equal(daodejin.id,1);
 	daodejin.addRevision(4,1,'恆');	
 	mawang=doc.evolvePage(daodejin,{preview:true});
-	equal(doc.getPageCount(),2);
+	equal(doc.pageCount,2);
 });
 
 QUnit.test('load from json',function(){
@@ -281,13 +281,13 @@ QUnit.test('load from json',function(){
 
 	var doc2=D.createDocument(json);
 	console.log(json)
-	equal(doc2.getPage(1).getInscription(),origin+"。")
-	equal(doc2.getPage(3).getInscription(),"道可道非恆道也名可名非恆名也。")
+	equal(doc2.getPage(1).inscription,origin+"。")
+	equal(doc2.getPage(3).inscription,"道可道非恆道也名可名非恆名也。")
 
 	//lastest version
-	equal(doc2.getPageByName("ch1").getInscription(),"道可道非恆道也名可名非恆名也。")
+	equal(doc2.pageByName("ch1").inscription,"道可道非恆道也名可名非恆名也。")
 	//previous version
-	equal(doc2.getPageByName("ch1",1).getInscription(),origin+"。")
+	equal(doc2.pageByName("ch1",1).inscription,origin+"。")
 
 })
 
