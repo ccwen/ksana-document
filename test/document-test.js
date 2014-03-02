@@ -290,13 +290,15 @@ QUnit.test('load from json',function(){
 	equal(doc2.pageByName("ch1",1).inscription,origin+"。")
 
 })
-var F=require('../fromxml');
+var F=require('../xml');
 var fs=require('fs');
 QUnit.test('reunit',function(){
 	var buf=fs.readFileSync('./test1.xml','utf8').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
 	var doc=F.importXML(buf,{"template":"accelon"});
 	var doc2=D.reunit(doc,"p");
 	equal(doc2.pageCount,5);
+	//doc3=D.reunit(doc2,"pb");
+	//equal(doc3.pageCount,3);
 	//check converted tag
 	//export to XML
 	//compare with test1.xml

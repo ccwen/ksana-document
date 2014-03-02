@@ -558,35 +558,45 @@ var sortedIndex = function (array, tofind) {
   }
   return low;
 };
-var reunit=function(doc,tagname,opts) {
-	var unitstarts=[];
 
-	//assuming unit tag in doc.tags
-	doc.tags.map(function(T){
-		if (T.name===tagname) {
-			unitstarts.push([T.sunit,T.soff]);
-		}
-	});
+var addOldUnit=function() {
+/* convert old unit into tags */	
+}
 
-	var R=splitInscriptions(doc,unitstarts);
-	var out=createDocument();
-	R.inscriptions.map(function(I){out.createPage(I)});
-
-	
-	var tags=[];
-	doc.tags.map(function(T){
+var reunitTags=function(tags,R,newtagname) {
+	var out=[];
+	tags.map(function(T){
+		if (T.name===newtagname) return;
 		var tag=JSON.parse(JSON.stringify(T));
 		var pos=R.oldunitoffsets[T.sunit]+T.soff;
-		var p=sortedIndex(R.newunitoffsets,pos)-1;
+		var p=sortedIndex(R.newunitoffsets,pos+1)-1;
+		if (p==-1) p=0;
 		tag.sunit=p;tag.soff=pos-R.newunitoffsets[p];
 
 		eunit=T.eunit||T.sunit;eoff=T.eoff||T.soff;
-		pos=R.oldunitoffsets[eunit]+eoff;
-		p=sortedIndex(R.newunitoffsets,pos)-1;
-		tag.eunit=p;tag.eoff=pos-R.newunitoffsets[p];
-		tags.push(tag);
+		if (eunit!=T.sunit || eoff!=T.soff) {
+			pos=R.oldunitoffsets[eunit]+eoff;
+			p=sortedIndex(R.newunitoffsets,pos)-1;
+			if (p==-1) p=0;
+			if (eunit!=T.sunit) tag.eunit=p;
+			if (eoff!=T.soff)   tag.eoff=pos-R.newunitoffsets[p];
+		}
+		out.push(tag);
 	});
 	return out;
+}
+var reunit=function(doc,tagname,opts) {
+	var unitstarts=[];
+	doc.tags.map(function(T){
+		if (T.name===tagname)	unitstarts.push([T.sunit,T.soff]);
+	});
+
+	var R=splitInscriptions(doc,unitstarts);
+	var newdoc=createDocument();
+	R.inscriptions.map(function(text){newdoc.createPage(text)});
+
+	newdoc.tags=reunitTags(doc.tags,R,tagname);
+	return newdoc;
 }
 
 module.exports={ createDocument: createDocument, reunit:reunit}

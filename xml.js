@@ -22,4 +22,8 @@ var importXML=function(lines,opts) {
 	}
 	return null;
 }
-module.exports={importXML:importXML,formatJSON:formatJSON};
+var exportXML=function() {
+	
+}
+module.exports={importXML:importXML,exportXML:exportXML,
+	formatJSON:formatJSON};

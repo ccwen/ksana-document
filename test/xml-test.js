@@ -1,5 +1,5 @@
-var F=require('../fromxml');
-console.log('fromxml test suite');
+var F=require('../xml');
+console.log('xml test suite');
 fs=require('fs');
 
 QUnit.test('import xml',function(){
