@@ -275,8 +275,29 @@ var findMarkup=function(query) { //same like jquery
 	})
 	return output;
 }
-var fiss=function(breakpoints,opts){
-//
+var fission=function(breakpoints,opts){
+	var meta=this.__meta__();
+	var movetags=function(newpage,start,end) {
+
+	}
+	meta.offspringStart=this.doc.version;
+	meta.offspringCount=breakpoints.length+1;
+	/* create page ,add transclude from*/
+	var last=0, t="";
+	for (var i=0;i<breakpoints.length;i++) {
+		t=this.inscription.substr(last,breakpoints[i]);
+		var transclude={id:this.id, start:last };
+		var newpage=this.doc.createPage({text:t, transclude:transclude});
+		movetags(newpage,last,breakpoints[i]);
+		last=breakpoints[i];
+	}
+
+	t=this.inscription.substr(last);
+	newpage=this.doc.createPage({text:t, transclude:transclude});
+	movetags(newpage,last,breakpoints[i]);
+
+	//when convert to json, remove the inscription in origin text
+	//and retrived from fission children
 }
 var newPage = function(opts) {
 	var PG={};
@@ -345,6 +366,10 @@ var newPage = function(opts) {
 		
 	PG.setName           = function(n){ meta.name=n; return this}
 	Object.defineProperty(PG,'name',{get:function(){return meta.name}});
+	PG.__meta__        = function() {return meta};
+
+	Object.defineProperty(PG,'offspringStart',{get:function(){return meta.offspringStart}});
+	Object.defineProperty(PG,'offspringCount',{get:function(){return meta.offspringCount}});
 	PG.clearRevisions    = clearRevisions;
 	PG.clearMarkups      = clearMarkups;
 	PG.addMarkup         = addMarkup;
@@ -364,7 +389,7 @@ var newPage = function(opts) {
 	PG.getFirstChild     = getFirstChild;
 	PG.toJSONString      = toJSONString;
 	PG.findMarkup				 = findMarkup;
-	PG.fiss              = fiss;
+	PG.fission           = fission;
 
 	return PG;
 }

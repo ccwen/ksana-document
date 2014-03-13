@@ -317,8 +317,11 @@ QUnit.test('fission',function(){
   var ptags=pg.findMarkup({name:"p"});
   var oldversion=doc.version;
   var breakpoints=ptags.map(function(P){return P.start});
-//	pg.fiss(breakpoints);
-//	equal(doc.version-oldversion,breakpoints+1);
+	pg.fission(breakpoints);
+	equal(pg.offspringStart , oldversion);
+	equal(pg.offspringCount, breakpoints.length+1);
+
+	equal(doc.version-oldversion,breakpoints.length+1);
 });
 
 QUnit.test('coevolve page',function(){
