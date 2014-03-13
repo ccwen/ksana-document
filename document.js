@@ -187,27 +187,8 @@ var clearRevisions=function(start,len) {
 var clearMarkups=function(start,len) {
 	clear.apply(this,[this.__markups__(),start,len]);
 }
-var getFirstChild=function() {
-	var id=this.id, doc=this.doc;
-	var pgcount=doc.pageCount;
-	for (var i=0;i<pgcount;i++) {
-		if (doc.getPage(i).parentId==id) return doc.getPage(i);
-	}	
-	return null;
-}
-/*
-var getChildren=function() {
-	var id=this.id, doc=this.doc;
-	var pgcount=doc.pageCount;
-	var children=[];
-	for (var i=0;i<pgcount;i++) {
-		if (doc.getPage(i).parentId==id) children.push(i);
-	}
-	return children;
-}
-*/
 var isLeafPage=function() {
-	return (this.__children__().length==0);
+	return (this.__mutant__().length==0);
 }
 var revertRevision=function(revs,parentinscription) {
 	var revert=[], offset=0;
@@ -280,8 +261,8 @@ var fission=function(breakpoints,opts){
 	var movetags=function(newpage,start,end) {
 
 	}
-	meta.offspringStart=this.doc.version;
-	meta.offspringCount=breakpoints.length+1;
+	meta.daugtherStart=this.doc.version;
+	meta.daugtherCount=breakpoints.length+1;
 	/* create page ,add transclude from*/
 	var last=0, t="";
 	for (var i=0;i<breakpoints.length;i++) {
@@ -297,7 +278,7 @@ var fission=function(breakpoints,opts){
 	movetags(newpage,last,breakpoints[i]);
 
 	//when convert to json, remove the inscription in origin text
-	//and retrived from fission children
+	//and retrived from fission mutant
 }
 var newPage = function(opts) {
 	var PG={};
@@ -305,7 +286,7 @@ var newPage = function(opts) {
 	var hasInscription=false;
 	var markups=[];
 	var revisions=[];
-	var children=[];
+	var mutant=[];
 
 	opts=opts||{};
 	opts.id=opts.id || 0; //root id==0
@@ -340,9 +321,9 @@ var newPage = function(opts) {
 		get : function() {
 			if (meta.id==0) return ""; //root page
 			if (hasInscription) return inscription;
-			var child=this.children(0);
+			var m=this.getMutant(0);
 			hasInscription=true;
-			inscription=checkLength(applyChanges(child.inscription,child.revert));
+			inscription=checkLength(applyChanges(m.inscription,m.revert));
 			return inscription;
 	}});
 	//protected functions
@@ -359,17 +340,17 @@ var newPage = function(opts) {
 	Object.defineProperty(PG,'revert',{get:function(){return meta.revert}});
 	PG.__setRevert__   = function(r) { meta.revert=decompressRevert(r)}
 	PG.getRevision     = function(i) { return cloneMarkup(revisions[i])}
-	PG.children        = function(i) { return children[i] };
-	PG.__children__    = function()  { return children};
-	PG.__setChildren__ = function(c)  { children=c};
+	PG.getMutant       = function(i) { return mutant[i] };
+	PG.__mutant__      = function()  { return mutant};
+	PG.__setmutant__   = function(c)  { mutant=c};
 	Object.defineProperty(PG,'revisionCount',{get:function(){return revisions.length}});
 		
 	PG.setName           = function(n){ meta.name=n; return this}
 	Object.defineProperty(PG,'name',{get:function(){return meta.name}});
 	PG.__meta__        = function() {return meta};
 
-	Object.defineProperty(PG,'offspringStart',{get:function(){return meta.offspringStart}});
-	Object.defineProperty(PG,'offspringCount',{get:function(){return meta.offspringCount}});
+	Object.defineProperty(PG,'daugtherStart',{get:function(){return meta.daugtherStart}});
+	Object.defineProperty(PG,'daugtherCount',{get:function(){return meta.daugtherCount}});
 	PG.clearRevisions    = clearRevisions;
 	PG.clearMarkups      = clearMarkups;
 	PG.addMarkup         = addMarkup;
@@ -385,8 +366,7 @@ var newPage = function(opts) {
 	PG.isLeafPage        = isLeafPage;
 	PG.markupAt          = markupAt;
 	PG.revisionAt        = revisionAt;
-//	PG.getChildren          = getChildren;
-	PG.getFirstChild     = getFirstChild;
+//	PG.getmutant          = getmutant;
 	PG.toJSONString      = toJSONString;
 	PG.findMarkup				 = findMarkup;
 	PG.fission           = fission;
@@ -433,9 +413,9 @@ var createDocument = function(docjson) {
 		for (var i=1;i<json.length;i++) {
 			createPage(json[i]);
 		}
-		//build children array
+		//build mutant array
 		pages.map(function(P,idx,pages){
-			if (P.parentId) pages[P.parentId].__children__().push(P);
+			if (P.parentId) pages[P.parentId].__mutant__().push(P);
 		});
 		return this;
 	}
@@ -460,7 +440,7 @@ var createDocument = function(docjson) {
 		} else {
 			var nextgen=createPage(pg);	
 		}
-		if (pg.id) pg.__children__().push(nextgen);
+		if (pg.id) pg.__mutant__().push(nextgen);
 		nextgen.__selfEvolve__( pg.__revisions__() , pg.__markups__() );
 
 		return nextgen;

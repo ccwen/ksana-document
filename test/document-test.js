@@ -90,7 +90,7 @@ QUnit.test('evolve page',function(){
 	daodejin.addMarkup(8,1,{name:"動詞"});
 
 	mawang=doc.evolvePage(daodejin)
-	equal(daodejin.children(0).id,mawang.id);
+	equal(daodejin.getMutant(0).id,mawang.id);
 	equal(mawang.inscription,"道可道非恆道也名可名非恆名也");
 	var m1=mawang.getMarkup(0);
 	var m2=mawang.getMarkup(1);
@@ -318,8 +318,8 @@ QUnit.test('fission',function(){
   var oldversion=doc.version;
   var breakpoints=ptags.map(function(P){return P.start});
 	pg.fission(breakpoints);
-	equal(pg.offspringStart , oldversion);
-	equal(pg.offspringCount, breakpoints.length+1);
+	equal(pg.daugtherStart , oldversion);
+	equal(pg.daugtherCount, breakpoints.length+1);
 
 	equal(doc.version-oldversion,breakpoints.length+1);
 });
