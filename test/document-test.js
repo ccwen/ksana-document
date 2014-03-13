@@ -90,6 +90,7 @@ QUnit.test('evolve page',function(){
 	daodejin.addMarkup(8,1,{name:"動詞"});
 
 	mawang=doc.evolvePage(daodejin)
+	equal(daodejin.children(0).id,mawang.id);
 	equal(mawang.inscription,"道可道非恆道也名可名非恆名也");
 	var m1=mawang.getMarkup(0);
 	var m2=mawang.getMarkup(1);
@@ -290,6 +291,7 @@ QUnit.test('load from json',function(){
 	equal(doc2.pageByName("ch1",1).inscription,origin+"。")
 
 })
+/*
 var F=require('../xml');
 var fs=require('fs');
 QUnit.test('reunit',function(){
@@ -303,6 +305,22 @@ QUnit.test('reunit',function(){
 	//export to XML
 	//compare with test1.xml
 })
+*/
+var fs=require('fs');
+var F=require('../xml');
+QUnit.test('fission',function(){
+	var buf=fs.readFileSync('./test1.xml','utf8').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+	var doc=F.importXML(buf,{"template":"accelon", "whole":true});
+	equal(doc.pageCount,2);
+	equal(doc.getPage(1).markupCount,14);
+  var pg=doc.getPage(1);
+  var ptags=pg.findMarkup({name:"p"});
+  var oldversion=doc.version;
+  var breakpoints=ptags.map(function(P){return P.start});
+//	pg.fiss(breakpoints);
+//	equal(doc.version-oldversion,breakpoints+1);
+});
+
 QUnit.test('coevolve page',function(){
 	/*
 	*/

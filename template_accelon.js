@@ -57,13 +57,31 @@ var splitUnit=function(buf) {
 	units.push([name,buf.substring(last)]);
 	return units;
 }
+var addMarkups=function(tags,page){
+	tags.map(function(T){
+		var start=T.soff;
+		var len=0;
+		if (T.eoff>T.soff) len=T.eoff-T.soff;
+		var payload={name:T.name};
+		if (T.attr) payload.attr=T.attr;
+		page.addMarkup(start,len,payload);
+	})
+}
 var importxml=function(buf,opts) {
 	var doc=D.createDocument();
-	var units=splitUnit(buf);
-	units.map(function(U,i){
-		var out=parseUnit(i,U[1],doc)
-		doc.createPage(out.inscription);
-	});
+	if (opts.whole) {
+		var name=opts.name||"";
+		var out=parseUnit(0,buf,doc);
+		var page=doc.createPage({name:name,text:out.inscription});
+		addMarkups(out.tags,page);
+	} else {
+		var units=splitUnit(buf);
+		units.map(function(U,i){
+			var out=parseUnit(i,U[1],doc)
+			doc.createPage({text:out.inscription,name:U[0]});
+		});		
+	}
+
 	if (tagstack.length) {
 		throw 'tagstack not null'+JSON.stringify(tagstack)
 	}

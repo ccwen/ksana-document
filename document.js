@@ -195,6 +195,7 @@ var getFirstChild=function() {
 	}	
 	return null;
 }
+/*
 var getChildren=function() {
 	var id=this.id, doc=this.doc;
 	var pgcount=doc.pageCount;
@@ -204,13 +205,9 @@ var getChildren=function() {
 	}
 	return children;
 }
+*/
 var isLeafPage=function() {
-	var id=this.id, doc=this.doc;
-	var pgcount=doc.pageCount;
-	for (var i=0;i<pgcount;i++) {
-		if (doc.getPage(i).parentId==id) return false;
-	}
-	return true;
+	return (this.__children__().length==0);
 }
 var revertRevision=function(revs,parentinscription) {
 	var revert=[], offset=0;
@@ -268,12 +265,26 @@ var toJSONString=function(opts) {
 	if (this.revert) obj.r=compressRevert(this.revert);
 	return JSON.stringify(obj);
 }
+var findMarkup=function(query) { //same like jquery
+	var name=query.name;
+	var output=[];
+	this.__markups__().map(function(M){
+		if (M.payload.name==name) {
+			output.push(M);
+		}
+	})
+	return output;
+}
+var fiss=function(breakpoints,opts){
+//
+}
 var newPage = function(opts) {
 	var PG={};
 	var inscription="";
 	var hasInscription=false;
 	var markups=[];
 	var revisions=[];
+	var children=[];
 
 	opts=opts||{};
 	opts.id=opts.id || 0; //root id==0
@@ -308,7 +319,7 @@ var newPage = function(opts) {
 		get : function() {
 			if (meta.id==0) return ""; //root page
 			if (hasInscription) return inscription;
-			var child=this.getFirstChild();
+			var child=this.children(0);
 			hasInscription=true;
 			inscription=checkLength(applyChanges(child.inscription,child.revert));
 			return inscription;
@@ -325,9 +336,11 @@ var newPage = function(opts) {
 	Object.defineProperty(PG,'markupCount',{get:function(){return markups.length}});
 
 	Object.defineProperty(PG,'revert',{get:function(){return meta.revert}});
-	PG.__setRevert__   = function(r){ meta.revert=decompressRevert(r)}
-	PG.getRevision     = function(i){ return cloneMarkup(revisions[i])}
-
+	PG.__setRevert__   = function(r) { meta.revert=decompressRevert(r)}
+	PG.getRevision     = function(i) { return cloneMarkup(revisions[i])}
+	PG.children        = function(i) { return children[i] };
+	PG.__children__    = function()  { return children};
+	PG.__setChildren__ = function(c)  { children=c};
 	Object.defineProperty(PG,'revisionCount',{get:function(){return revisions.length}});
 		
 	PG.setName           = function(n){ meta.name=n; return this}
@@ -347,9 +360,11 @@ var newPage = function(opts) {
 	PG.isLeafPage        = isLeafPage;
 	PG.markupAt          = markupAt;
 	PG.revisionAt        = revisionAt;
-	PG.getChildren          = getChildren;
+//	PG.getChildren          = getChildren;
 	PG.getFirstChild     = getFirstChild;
 	PG.toJSONString      = toJSONString;
+	PG.findMarkup				 = findMarkup;
+	PG.fiss              = fiss;
 
 	return PG;
 }
@@ -393,6 +408,10 @@ var createDocument = function(docjson) {
 		for (var i=1;i<json.length;i++) {
 			createPage(json[i]);
 		}
+		//build children array
+		pages.map(function(P,idx,pages){
+			if (P.parentId) pages[P.parentId].__children__().push(P);
+		});
 		return this;
 	}
 	var createPage=function(input) {
@@ -410,13 +429,15 @@ var createDocument = function(docjson) {
 		return page;
 	}
 
-	var evolvePage=function(d,opts) {//apply revisions and upgrate markup
+	var evolvePage=function(pg,opts) {//apply revisions and upgrate markup
 		if (opts && opts.preview) {
-			var nextgen=newPage({parent:d,doc:DOC});
+			var nextgen=newPage({parent:pg,doc:DOC});
 		} else {
-			var nextgen=createPage(d);	
+			var nextgen=createPage(pg);	
 		}
-		nextgen.__selfEvolve__( d.__revisions__() , d.__markups__() );
+		if (pg.id) pg.__children__().push(nextgen);
+		nextgen.__selfEvolve__( pg.__revisions__() , pg.__markups__() );
+
 		return nextgen;
 	}
 
@@ -511,6 +532,7 @@ var createDocument = function(docjson) {
 	Object.defineProperty(DOC,'version',{get:function(){return pages.length}});
 	Object.defineProperty(DOC,'pageCount',{get:function(){return pages.length}});
 
+
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
 	DOC.evolvePage=evolvePage;
@@ -529,7 +551,7 @@ var createDocument = function(docjson) {
 /*
 	TODO move user markups to tags
 */
-
+/*
 var splitInscriptions=function(doc,starts) {
 	var combined="",j=0;
 	var inscriptions=[],oldunitoffsets=[0];
@@ -550,6 +572,7 @@ var splitInscriptions=function(doc,starts) {
 	newunitoffsets.push(combined.length);
 	return {inscriptions:inscriptions,oldunitoffsets:oldunitoffsets , newunitoffsets:newunitoffsets};
 }
+
 var sortedIndex = function (array, tofind) {
   var low = 0, high = array.length;
   while (low < high) {
@@ -560,7 +583,7 @@ var sortedIndex = function (array, tofind) {
 };
 
 var addOldUnit=function() {
-/* convert old unit into tags */	
+// convert old unit into tags 
 }
 
 var reunitTags=function(tags,R,newtagname) {
@@ -598,5 +621,11 @@ var reunit=function(doc,tagname,opts) {
 	newdoc.tags=reunitTags(doc.tags,R,tagname);
 	return newdoc;
 }
+*/
+// reunit is too complicated, change to fission
+// a big chunk of text divide into smaller unit
+//
+var fissPage=function() {
 
-module.exports={ createDocument: createDocument, reunit:reunit}
+}
+module.exports={ createDocument: createDocument}
