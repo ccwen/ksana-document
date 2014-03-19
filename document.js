@@ -259,23 +259,25 @@ var findMarkup=function(query) { //same like jquery
 var fission=function(breakpoints,opts){
 	var meta=this.__meta__();
 	var movetags=function(newpage,start,end) {
-
+		var M=this.__markups__();
+		M.map(function(m){
+			if (m.start>=start && m.start<end) {
+				newpage.addMarkup(m.start-start,m.len, m.payload);
+			}
+		})
 	}
 	meta.daugtherStart=this.doc.version;
 	meta.daugtherCount=breakpoints.length+1;
 	/* create page ,add transclude from*/
-	var last=0, t="";
-	for (var i=0;i<breakpoints.length;i++) {
-		t=this.inscription.substr(last,breakpoints[i]);
-		var transclude={id:this.id, start:last };
+	var start=0, t="";
+	for (var i=0;i<=breakpoints.length;i++) {
+		var end=breakpoints[i]||this.inscription.length
+		t=this.inscription.substring(start,end);
+		var transclude={id:this.id, start:start };//
 		var newpage=this.doc.createPage({text:t, transclude:transclude});
-		movetags(newpage,last,breakpoints[i]);
-		last=breakpoints[i];
+		movetags.apply(this,[newpage,start,end]);
+		start=end;
 	}
-
-	t=this.inscription.substr(last);
-	newpage=this.doc.createPage({text:t, transclude:transclude});
-	movetags(newpage,last,breakpoints[i]);
 
 	//when convert to json, remove the inscription in origin text
 	//and retrived from fission mutant
