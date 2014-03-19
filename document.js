@@ -1,5 +1,6 @@
 /*
   Multiversion text with external durable markups
+  define a "fail to migrate markup" by setting length to -1
 */
 "use strict";
 var createMarkup=function(textlen,start,len,payload) {
@@ -20,6 +21,9 @@ var cloneMarkup=function(m) {
 	if (typeof m=='undefined') return null;
 	return createMarkup(-1,m.start,m.len,JSON.parse(JSON.stringify(m.payload)));
 }
+/*
+TODO , handle migration of fission page
+*/
 var migrateMarkup=function(markup, rev) {
 	var end=markup.start+markup.len;
 	var newlen=(rev.payload.text.length-rev.len);
@@ -388,7 +392,7 @@ var newPage = function(opts) {
 	PG.toJSONString      = toJSONString;
 	PG.findMarkup				 = findMarkup;
 	PG.fission           = fission;
-	Object.preventExtensions(PG);
+	Object.seal(PG);
 	return PG;
 }
 var createDocument = function(docjson) {
@@ -571,7 +575,7 @@ var createDocument = function(docjson) {
 	DOC.pageByName=pageByName;
 	DOC.toJSONString=toJSONString;
 	if (docjson) DOC.createPages(docjson);
-	Object.preventExtensions(DOC);
+	Object.seal(DOC);
 	return DOC;
 }
 /*
