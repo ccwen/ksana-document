@@ -325,8 +325,15 @@ QUnit.test('fission',function(){
 	equal(doc.version-oldversion,breakpoints.length+1);
 	var dpg=doc.getPage(pg.daugtherStart);
 	var m=doc.getPage(pg.daugtherStart+3).markupAt(8);
-	equal(m[0].payload.name,'p')
-	equal(m[1].payload.name,'f')
+	equal(m[0].payload.name,'p');
+	equal(m[1].payload.name,'f');
+
+	var jsonstring=doc.toJSONString();
+	var json=JSON.parse(jsonstring);
+	console.log(json)
+	equal(typeof json[1].t,'undefined','inscription removed');
+	var doc2=D.createDocument(json);
+	equal(doc2.getPage(1).inscription,doc.getPage(1).inscription);
 });
 
 QUnit.test('coevolve page',function(){

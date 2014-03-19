@@ -244,6 +244,11 @@ var toJSONString=function(opts) {
 	if (opts.withtext) obj.t=this.inscription;
 	if (this.parentId) obj.p=this.parentId;
 	if (this.revert) obj.r=compressRevert(this.revert);
+	var meta=this.__meta__();
+	if (meta.daugtherStart) {
+		obj.ds=meta.daugtherStart;
+		obj.dc=meta.daugtherCount;
+	}
 	return JSON.stringify(obj);
 }
 var findMarkup=function(query) { //same like jquery
@@ -275,6 +280,7 @@ var fission=function(breakpoints,opts){
 		t=this.inscription.substring(start,end);
 		var transclude={id:this.id, start:start };//
 		var newpage=this.doc.createPage({text:t, transclude:transclude});
+		newpage.__setParentId__(this.id);
 		movetags.apply(this,[newpage,start,end]);
 		start=end;
 	}
@@ -323,9 +329,17 @@ var newPage = function(opts) {
 		get : function() {
 			if (meta.id==0) return ""; //root page
 			if (hasInscription) return inscription;
-			var m=this.getMutant(0);
+			if (meta.daugtherStart) {
+				inscription="";
+				for (var i=0;i<meta.daugtherCount;i++) {//combine from daugther
+					var pg=this.doc.getPage(meta.daugtherStart+i);
+					inscription+=pg.inscription;
+				}
+			} else {
+				var m=this.getMutant(0); //revert from Mutant
+				inscription=checkLength(applyChanges(m.inscription,m.revert));				
+			}
 			hasInscription=true;
-			inscription=checkLength(applyChanges(m.inscription,m.revert));
 			return inscription;
 	}});
 	//protected functions
@@ -341,6 +355,7 @@ var newPage = function(opts) {
 
 	Object.defineProperty(PG,'revert',{get:function(){return meta.revert}});
 	PG.__setRevert__   = function(r) { meta.revert=decompressRevert(r)}
+	PG.__setDaugther__ = function(s,c) { meta.daugtherStart=s;meta.daugtherCount=c};
 	PG.getRevision     = function(i) { return cloneMarkup(revisions[i])}
 	PG.getMutant       = function(i) { return mutant[i] };
 	PG.__mutant__      = function()  { return mutant};
@@ -405,6 +420,9 @@ var createDocument = function(docjson) {
 			page.setName(name);
 			if (json.p) page.__setParentId__(json.p);
 			if (json.r) page.__setRevert__(json.r);
+			if (json.ds) {
+				page.__setDaugther__(json.ds,json.dc);
+			}
 			page.addMarkups(json.markups,true);
 			page.addRevisions(json.revisions,true);
 			return page;
@@ -632,7 +650,4 @@ var reunit=function(doc,tagname,opts) {
 // reunit is too complicated, change to fission
 // a big chunk of text divide into smaller unit
 //
-var fissPage=function() {
-
-}
 module.exports={ createDocument: createDocument}
