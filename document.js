@@ -1,6 +1,7 @@
 /*
   Multiversion text with external durable markups
 */
+"use strict";
 var createMarkup=function(textlen,start,len,payload) {
 	if (textlen==-1) textlen=1024*1024*1024; //max string size 1GB
 	//the only function create a new markup instance, be friendly to V8 Hidden Class
@@ -36,13 +37,13 @@ var migrateMarkup=function(markup, rev) {
 		//  insert   +++   +++    +++     +++      +++        +++
 		//  iout     +++x  +++xx  +++xx  x+++yz   x+++yyyz    +++ xyz
 		if (rev.start>markup.start) {
-			adv=rev.start-markup.start;  //markup in advance of rev
+			var adv=rev.start-markup.start;  //markup in advance of rev
 			var remain=( markup.len -adv) + newlen ; // remaining character after 
 			if (remain<0) remain=0;
 			m.len = adv + remain ;
 		} else {
 			m.start=rev.start;
-			behind=markup.start-rev.start;
+			var behind=markup.start-rev.start;
 			m.len=markup.len - (rev.len-behind);
 		}
 		if (m.len<0) m.len=0;
@@ -309,7 +310,7 @@ var newPage = function(opts) {
 	var meta= {name:name,id:opts.id, parentId:parentId, revert:null };
 
 	//these are the only 2 function changing inscription,use by Doc only
-	checkLength=function(ins) {
+	var checkLength=function(ins) {
 		if (ins.length>doc.maxInscriptionLength) {
 			console.error("exceed size");
 			ins=ins.substring(0,maxInscriptionLength);

@@ -1,3 +1,4 @@
+"use strict";
 var D=require('../document');
 console.log('dhammagear document test suite');
 
@@ -11,29 +12,29 @@ QUnit.test('new page',function(){
 
 QUnit.test('migrate markup (delete)',function(){
 	var doc=D.createDocument();
-	deletemiddle={start:3,len:3,payload:{text:""}};
-	payload={nothing:true}
-	left={start:0,len:3,payload:payload};
-	m=doc.migrateMarkup( left , deletemiddle) //
+	var deletemiddle={start:3,len:3,payload:{text:""}};
+	var payload={nothing:true}
+	var left={start:0,len:3,payload:payload};
+	var m=doc.migrateMarkup( left , deletemiddle) //
 	equal(m.start,0);equal(m.len,3);
 
-	right={start:6,len:3,payload:payload};
+	var right={start:6,len:3,payload:payload};
 	m=doc.migrateMarkup( right , deletemiddle) //
 	equal(m.start,3);equal(m.len,3);
 
-	middle={start:4,len:1,payload:payload};
+	var middle={start:4,len:1,payload:payload};
 	m=doc.migrateMarkup( middle , deletemiddle) 
 	equal(m.start,3);equal(m.len,0);
 
-  leftpartial={start:2,len:3,payload:payload};
+  var leftpartial={start:2,len:3,payload:payload};
 	m=doc.migrateMarkup( leftpartial , deletemiddle);
 	equal(m.start,2);equal(m.len,1);
 
-	partial={start:2,len:5,payload:payload};
+	var partial={start:2,len:5,payload:payload};
 	m=doc.migrateMarkup( partial , deletemiddle) 
 	equal(m.start,2);equal(m.len,2);
 
-  rightpartial={start:4,len:3,payload:payload};
+  var rightpartial={start:4,len:3,payload:payload};
 	m=doc.migrateMarkup( rightpartial , deletemiddle);
 	equal(m.start,3);equal(m.len,1);
 });
@@ -44,30 +45,30 @@ QUnit.test('migrate markup (delete)',function(){
 		//  insert   +++ x +++xx  +++ xx   x+++yz   x+++yyyz    +++ xyz
 QUnit.test('evolve markup (insert)',function(){
 	var doc=D.createDocument();
-	payload={nothing:true}
-	insertmiddle={start:3,len:0,payload:{text:"+++"}};
+	var payload={nothing:true}
+	var insertmiddle={start:3,len:0,payload:{text:"+++"}};
 
-	left={start:0,len:3,payload:payload};
-	m=doc.migrateMarkup( left , insertmiddle) // no change
+	var left={start:0,len:3,payload:payload};
+	var m=doc.migrateMarkup( left , insertmiddle) // no change
 	equal(m.start,0);equal(m.len,3);
 
-	right={start:6,len:3,payload:payload};
+	var right={start:6,len:3,payload:payload};
 	m=doc.migrateMarkup( right , insertmiddle) //
 	equal(m.start,9);equal(m.len,3);
 
-	middle={start:4,len:1,payload:payload};
+	var middle={start:4,len:1,payload:payload};
 	m=doc.migrateMarkup( middle , insertmiddle) 
 	equal(m.start,7);equal(m.len,1);
 
-  leftpartial={start:2,len:3,payload:payload};
+  var leftpartial={start:2,len:3,payload:payload};
 	m=doc.migrateMarkup( leftpartial , insertmiddle);
 	equal(m.start,2);equal(m.len,6);
 
-	partial={start:2,len:5,payload:payload};
+	var partial={start:2,len:5,payload:payload};
 	m=doc.migrateMarkup( partial , insertmiddle) 
 	equal(m.start,2);equal(m.len,8);
 
-  rightpartial={start:4,len:3,payload:payload};
+  var rightpartial={start:4,len:3,payload:payload};
 	m=doc.migrateMarkup( rightpartial , insertmiddle);
 	equal(m.start,7);equal(m.len,3);
 
@@ -89,7 +90,7 @@ QUnit.test('evolve page',function(){
 	daodejin.addMarkup(2,1,{name:"動詞"});
 	daodejin.addMarkup(8,1,{name:"動詞"});
 
-	mawang=doc.evolvePage(daodejin)
+	var mawang=doc.evolvePage(daodejin)
 	equal(daodejin.getMutant(0).id,mawang.id);
 	equal(mawang.inscription,"道可道非恆道也名可名非恆名也");
 	var m1=mawang.getMarkup(0);
@@ -103,7 +104,7 @@ QUnit.test('evolve page',function(){
 	daodejin.addRevision(6,0,"；");
 	daodejin.addRevision(9,0,"，");
 	daodejin.addRevision(12,0,"。");
-	punc=doc.evolvePage(daodejin);
+	var punc=doc.evolvePage(daodejin);
 	equal(punc.inscription,"道可道，非常道；名可名，非常名。");
 
 	equal(doc.pageCount,4);//root,daodejin,mawang,punc
@@ -194,10 +195,10 @@ QUnit.test('devolve markups to ancestor',function(){
 	var daodejin=doc.createPage(origin+"。");
 
 	daodejin.addRevision(6,0,'也');
-	daodejin2=doc.evolvePage(daodejin);
+	var daodejin2=doc.evolvePage(daodejin);
 
 	daodejin2.addRevision(13,0,'也');
-	daodejin3=doc.evolvePage(daodejin2);	
+	var daodejin3=doc.evolvePage(daodejin2);	
   //道可道非常道也名可名非常名也。
 	daodejin3.addMarkup(14,1,"句號");
 	var M=doc.migrate(daodejin3,daodejin);
@@ -216,10 +217,10 @@ QUnit.test('migrate markups',function(){
 	var daodejin=doc.createPage(origin+"。");
 
 	daodejin.addRevision(6,0,'也');
-	mawang1=doc.evolvePage(daodejin);
+	var mawang1=doc.evolvePage(daodejin);
 
 	mawang1.addRevision(0,0,'第一章');
-	mawang2=doc.evolvePage(mawang1);	
+	var mawang2=doc.evolvePage(mawang1);	
 	//第一章道可道非常道也名可名非常名
 	mawang2.addMarkup(13,3,"非常名");
 	equal(mawang2.inscription.substr(13,3),"非常名")
@@ -227,11 +228,11 @@ QUnit.test('migrate markups',function(){
 	daodejin.clearRevisions();
 	daodejin.addRevision(3,0,'，');
 	daodejin.addRevision(6,0,'；');
-	punc1=doc.evolvePage(daodejin);
+	var punc1=doc.evolvePage(daodejin);
 	//道可道，非常道；名可名非常名
 	punc1.addRevision(11,0,'，');
 	punc1.addRevision(14,0,'。');
-	punc2=doc.evolvePage(punc1);
+	var punc2=doc.evolvePage(punc1);
 	//
 	//道可道，非常道；名可名，非常名。
 	
@@ -259,7 +260,7 @@ QUnit.test('preview',function(){
 	var daodejin=doc.createPage(origin);
 	equal(daodejin.id,1);
 	daodejin.addRevision(4,1,'恆');	
-	mawang=doc.evolvePage(daodejin,{preview:true});
+	var mawang=doc.evolvePage(daodejin,{preview:true});
 	equal(doc.pageCount,2);
 });
 
@@ -268,12 +269,12 @@ QUnit.test('load from json',function(){
 	var daodejin=doc.createPage({name:"ch1",text:origin+"。"});
 
 	daodejin.addRevision(6,0,'也');
-	daodejin2=doc.evolvePage(daodejin);
+	var daodejin2=doc.evolvePage(daodejin);
 
 	daodejin2.addRevision(4,1,'恆');
 	daodejin2.addRevision(11,1,'恆');
 	daodejin2.addRevision(13,0,'也');
-	daodejin3=doc.evolvePage(daodejin2);
+	var daodejin3=doc.evolvePage(daodejin2);
 	var jsonstring=doc.toJSONString();
 	var json=JSON.parse(jsonstring);
 	equal(typeof json[1].t,'undefined'); //removed in persistent json
