@@ -392,7 +392,7 @@ var newPage = function(opts) {
 	PG.toJSONString      = toJSONString;
 	PG.findMarkup				 = findMarkup;
 	PG.fission           = fission;
-	Object.seal(PG);
+	Object.freeze(PG);
 	return PG;
 }
 var createDocument = function(docjson) {
@@ -575,7 +575,7 @@ var createDocument = function(docjson) {
 	DOC.pageByName=pageByName;
 	DOC.toJSONString=toJSONString;
 	if (docjson) DOC.createPages(docjson);
-	Object.seal(DOC);
+	Object.freeze(DOC);
 	return DOC;
 }
 /*

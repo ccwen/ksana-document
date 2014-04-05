@@ -1,6 +1,6 @@
 {
-  "name": "dhammagear-document",
-  "repo": "dhammagear/dhammagear-document",
+  "name": "ksana-document",
+  "repo": "ksana/ksana-document",
   "description": "test",
   "version": "0.0.1",
   "keywords": [],
@@ -11,7 +11,7 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": [
-    "index.js","document.js"
+    "index.js","document.js","xml.js","template_accelon.js"
   ],
   "remotes": []
 }

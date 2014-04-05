@@ -1,2 +1,3 @@
 ﻿
-module.exports={document:require('./document'),fromxml:require('./fromxml')};
+
+module.exports={document:require('./document'),xml:require('./xml')};
