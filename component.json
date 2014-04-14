@@ -11,7 +11,7 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": [
-    "index.js","document.js","xml.js","template_accelon.js"
+    "index.js","document.js","xml.js","template_accelon.js","persistent.js"
   ],
   "remotes": []
 }

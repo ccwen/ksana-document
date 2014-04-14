@@ -74,12 +74,13 @@ var addRevision=function(start,len,str) {
 	return valid;
 }
 var addMarkups=function(newmarkups,opts) {
-	if (!(newmarkups instanceof Array)) return;
+	if (!newmarkups) return;
+	if (!newmarkups.length) return;
 	if (opts &&opts.clear) this.clearMarkups();
 	var maxlength=this.inscription.length;
 	var markups=this.__markups__();
 	for (var i in newmarkups) {
-		m=newmarkups[i];
+		var m=newmarkups[i];
 		var newmarkup=createMarkup(maxlength, m.start, m.len, m.payload)
 		markups.push(newmarkup);
 	};
@@ -293,6 +294,17 @@ var fission=function(breakpoints,opts){
 	//when convert to json, remove the inscription in origin text
 	//and retrived from fission mutant
 }
+var toggleMarkup=function(start,len,payload) {
+	var M=this.__markups__();
+	for (var i=0;i<M.length;i++){
+		if (start===M[i].start && len==M[i].len 
+			  && payload.type==M[i].payload.type) {
+			M.splice(i, 1);
+			return;
+		} 
+	}
+	this.addMarkup(start,len,payload);
+}
 var newPage = function(opts) {
 	var PG={};
 	var inscription="";
@@ -376,6 +388,7 @@ var newPage = function(opts) {
 	PG.clearRevisions    = clearRevisions;
 	PG.clearMarkups      = clearMarkups;
 	PG.addMarkup         = addMarkup;
+	PG.toggleMarkup      = toggleMarkup;
 	PG.addMarkups        = addMarkups;
 	PG.addRevision       = addRevision;
 	PG.addRevisions      = addRevisions;
@@ -395,7 +408,7 @@ var newPage = function(opts) {
 	Object.freeze(PG);
 	return PG;
 }
-var createDocument = function(docjson) {
+var createDocument = function(docjson,markupjson) {
 	var DOC={};
 	var pages=[];
 	var names={};
@@ -433,15 +446,22 @@ var createDocument = function(docjson) {
 			return page;
 	}
 
-	var createPages=function(json) {
+	var createPages=function(json,markups) {
 		var count=0;
 		for (var i=1;i<json.length;i++) {
 			createPage(json[i]);
 		}
+
 		//build mutant array
 		pages.map(function(P,idx,pages){
 			if (P.parentId) pages[P.parentId].__mutant__().push(P);
 		});
+
+		for (var i=0;i<markups.length;i++){
+			var m=markups[i];
+			var pageid=m.i;
+			pages[pageid].addMarkup(m.start,m.len,m.payload);
+		};		
 		return this;
 	}
 	var createPage=function(input) {
@@ -574,7 +594,7 @@ var createDocument = function(docjson) {
 	DOC.findPage=findPage;
 	DOC.pageByName=pageByName;
 	DOC.toJSONString=toJSONString;
-	if (docjson) DOC.createPages(docjson);
+	if (docjson) DOC.createPages(docjson,markupjson);
 	Object.freeze(DOC);
 	return DOC;
 }
