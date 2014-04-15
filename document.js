@@ -412,7 +412,7 @@ var createDocument = function(docjson,markupjson) {
 	var DOC={};
 	var pages=[];
 	var names={};
-	var meta={doctype:"dg1.0"}
+	var meta={doctype:"dg1.0",filename:""}
 
 	var addPage=function(name) {
 		if (!names[name]) {
@@ -581,7 +581,6 @@ var createDocument = function(docjson,markupjson) {
 	Object.defineProperty(DOC,'maxInscriptionLength',{value:2048});
 	Object.defineProperty(DOC,'version',{get:function(){return pages.length}});
 	Object.defineProperty(DOC,'pageCount',{get:function(){return pages.length}});
-
 
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
