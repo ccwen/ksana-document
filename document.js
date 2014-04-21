@@ -457,7 +457,7 @@ var createDocument = function(docjson,markupjson) {
 			if (P.parentId) pages[P.parentId].__mutant__().push(P);
 		});
 
-		for (var i=0;i<markups.length;i++){
+		if (markups) for (var i=0;i<markups.length;i++){
 			var m=markups[i];
 			var pageid=m.i;
 			pages[pageid].addMarkup(m.start,m.len,m.payload);

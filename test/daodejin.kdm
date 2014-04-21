@@ -1,6 +1,6 @@
 [
-{"start":5,"len":2,"payload":{"type":"doubt"},"i":1},
-{"start":20,"len":2,"payload":{"type":"doubt"},"i":1},
+{"start":5,"len":2,"payload":{"type":"doubt","text":"asdfasdf","insert":8,"reason":"adasdf"},"i":1},
+{"start":20,"len":2,"payload":{"type":"doubt","text":"","insert":false},"i":1},
 {"start":44,"len":2,"payload":{"type":"changes","choices":[{"text":"新增","insert":true,"author":"作業員1","reason":"新增之理由"},{"text":"替代","author":"作業員2","reason":"替代之理由"},{"text":"替代2","author":"作業員3","reason":"替代之理由二"},{"text":"","author":"作業員4","reason":"刪除之理由"}],"selected":1},"i":1},
 {"start":6,"len":2,"payload":{"type":"noun"},"i":2},
 {"start":10,"len":2,"payload":{"type":"link"},"i":2},
