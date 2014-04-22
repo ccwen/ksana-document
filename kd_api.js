@@ -21,7 +21,7 @@ function getFiles(dirs,filtercb){
             config.shortname=files[i];
             config.filename=name;
           } else {
-            config={name:name,filename:name,shortname:files[i]}
+            config={name:name,filename:name,shortname:files[i]};
           }
           var pathat=config.filename.lastIndexOf('/');
           config.withfoldername=config.filename.substring(1+config.filename.lastIndexOf('/',pathat-1));
@@ -42,8 +42,8 @@ var getProjectFolders=function(p) {
   if (!folders.length)return folders;
   if (parseInt(folders[0].shortname)) {
     folders.sort(function(a,b) {
-      return parseInt(a.shortname)-parseInt(b.shortname)
-    })
+      return parseInt(a.shortname)-parseInt(b.shortname);
+    });
   } else {
     folders.sort(function(a,b) {
       if (a.shortname==b.shortname) return 0; 
@@ -51,17 +51,17 @@ var getProjectFolders=function(p) {
     });
   }
   return folders;
-}
+};
 var getProjectFiles=function(p) {
   var fs=nodeRequire('fs');
   var files= getFiles( p.filename,function(name){
-      return name.indexOf(".kd")==name.length-3;
+      return name.indexOf(".kd")===name.length-3;
   });
   if (!files.length)return files;
   if (parseInt(files[0].shortname)) {
     files.sort(function(a,b) {
-      return parseInt(a.shortname)-parseInt(b.shortname)
-    })
+      return parseInt(a.shortname)-parseInt(b.shortname);
+    });
   } else {
     files.sort(function(a,b) {
       if (a.shortname==b.shortname) return 0; 
@@ -69,11 +69,11 @@ var getProjectFiles=function(p) {
     });
   }
   return files;
-}
+};
 var getProjectPath=function(p) {
   var path=nodeRequire('path');
   return path.resolve(p.filename);
-}
+};
 var enumProject=function() { 
   var fs=nodeRequire('fs');
 	//search for local 
@@ -83,23 +83,23 @@ var enumProject=function() {
       }
   });
   return folders;
-}
+};
 
 var openDocument=function(f) {
   var persistent=nodeRequire('ksana-document').persistent;
   //if empty file, create a empty
   var doc=persistent.open(f);
   return doc;
-}
+};
 
 var saveMarkup=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
   return persistent.saveMarkup(opts.doc , opts.filename);
-}
+};
 var saveDocument=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
   return persistent.saveDocument(opts.doc , opts.filename);
-}
+};
 var installservice=function(services) {
 	var API={ 
 		enumProject:enumProject,
@@ -108,12 +108,12 @@ var installservice=function(services) {
     openDocument:openDocument,
     saveMarkup:saveMarkup,
     saveDocument:saveDocument,
-		version: function() { return require('./package.json').version }
+		version: function() { return require('./package.json').version; }
 	};
 	if (services) {
-		services['document']=API;
+		services.document=API;
 	}
 	return API;
-}
+};
 
 module.exports=installservice;

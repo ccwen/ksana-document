@@ -1,5 +1,5 @@
 var D=require('./document');
-var unitsep=/<pb n="([^"]*?)"\/>/g 
+var unitsep=/<pb n="([^"]*?)"\/>/g  ;
 /*
 	inline tag
 */
@@ -14,7 +14,7 @@ var parseXMLTag=function(s) {
 	while (s[i] && (s.charCodeAt(i)>0x30)) {name+=s[i];i++;}
 
 	var type="start";
-	if (s[s.length-1]=='/') { type="emtpy"}
+	if (s[s.length-1]=='/') { type="emtpy"; }
 	var attr={},count=0;
 	s=s.substring(name.length+1);
 	s.replace(/(.*?)="([^"]*?)"/g,function(m,m1,m2) {
@@ -22,8 +22,8 @@ var parseXMLTag=function(s) {
 		count++;
 	});
 	if (!count) attr=undefined;
-	return {name:name,type:type,attr:attr}
-}
+	return {name:name,type:type,attr:attr};
+};
 var parseUnit=function(unitseq,unittext,doc) {
 	// name,sunit, soff, eunit, eoff , attributes
 	var totaltaglength=0;
@@ -45,19 +45,19 @@ var parseUnit=function(unitseq,unittext,doc) {
 			tags.push(tag);
 		}
 		return ""; //remove the tag from inscription
-	})
+	});
 	return {inscription:parsed, tags:tags};
-}
+};
 var splitUnit=function(buf,sep) {
 	var units=[], unit="", last=0 ,name="";
 	buf.replace(sep,function(m,m1,offset){
 		units.push([name,buf.substring(last,offset)]);
 		name=m1;
 		last=offset+m.length; 
-	})
+	});
 	units.push([name,buf.substring(last)]);
 	return units;
-}
+};
 var addMarkups=function(tags,page){
 	tags.map(function(T){
 		var start=T.soff;
@@ -66,8 +66,8 @@ var addMarkups=function(tags,page){
 		var payload={name:T.name};
 		if (T.attr) payload.attr=T.attr;
 		page.addMarkup(start,len,payload);
-	})
-}
+	});
+};
 var importxml=function(buf,opts) {
 	var doc=D.createDocument();
 	if (opts.whole) {
@@ -78,15 +78,15 @@ var importxml=function(buf,opts) {
 	} else {
 		var units=splitUnit(buf,opts.sep || unitsep);
 		units.map(function(U,i){
-			var out=parseUnit(i,U[1],doc)
+			var out=parseUnit(i,U[1],doc);
 			doc.createPage({text:out.inscription,name:U[0]});
 		});		
 	}
 
 	if (tagstack.length) {
-		throw 'tagstack not null'+JSON.stringify(tagstack)
+		throw 'tagstack not null'+JSON.stringify(tagstack);
 	}
 	doc.setTags(tags);
 	return doc;
-}
+};
 module.exports=importxml;

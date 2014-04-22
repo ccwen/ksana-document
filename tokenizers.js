@@ -3,7 +3,7 @@ var tibetan =function(s) {
 	//shad and space grouped into same token
 	var offset=0;
 	var tokens=[],offsets=[];
-	var s=s.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+	s=s.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
 	arr=s.split('\n');
 
 	for (var i=0;i<arr.length;i++) {
@@ -14,17 +14,17 @@ var tibetan =function(s) {
 			offsets.push(offset+last);
 			last=m1+m.length;
 		});
-		if (i==arr.length-1) break;
+		if (i===arr.length-1) break;
 		tokens.push('\n');
 		offsets.push(offset+last);
 		offset+=str.length+1;
 	}
 
-	return {tokens:tokens,offsets:offsets}
-}
+	return {tokens:tokens,offsets:offsets};
+};
 var simple=function(s) {
-	var isCJK =function(c) {return ((c>=0x3000 && c<=0x9FFF) 
-	|| (c>=0xD800 && c<0xDFFF) || (c>=0xFF00) ) ;}
+	var isCJK =function(c) {return ((c>=0x3000 && c<=0x9FFF) ||
+	 (c>=0xD800 && c<0xDFFF) || (c>=0xFF00)) ;};
 	var token='';
 	var res=[], offsets=[] , skips=[];
 	var i=0; 
@@ -38,7 +38,7 @@ var simple=function(s) {
 		skips.push(toskip);
 		if (toskip) skiptokencount++;
 		token='';
-	}
+	};
 	while (i<s.length) {
 		var c=s.charAt(i);
 		var code=s.charCodeAt(i);
@@ -50,16 +50,16 @@ var simple=function(s) {
 			}
 			addtoken();
 		} else {
-			if (c<'0' || c=='&' || c=='<' || c=='?'
-			|| c=='|' || c=='~' || c=='`' || c==';' 
-			|| c=='>' || c==':' || c=='{' || c=='}'
-			|| c=='=' || c=='@' || c=='[' || c==']'
-			|| code==0xf0b || code==0xf0d // tibetan space
-			|| (code>=0x2000 && code<=0x206f)) {
+			if (c<'0' || c=='&' || c=='<' || c=='?' ||
+			 c=='|' || c=='~' || c=='`' || c==';'  ||
+			 c=='>' || c==':' || c=='{' || c=='}' ||
+			 c=='=' || c=='@' || c=='[' || c==']' ||
+			 code==0xf0b || code==0xf0d || // tibetan space
+			 (code>=0x2000 && code<=0x206f)) {
 				addtoken();
 				if (c=='&' || c=='<') {
 					var endchar='>';
-					if (c=='&') endchar=';'
+					if (c==='&') endchar=';';
 					while (i<s.length && s.charAt(i)!=endchar) {
 						token+=s.charAt(i);
 						i++;
@@ -79,6 +79,6 @@ var simple=function(s) {
 	}
 	if (token.trim()) addtoken();
 	return {tokens:res, offsets:offsets,skips:skips,skiptokencount:skiptokencount};
-}
+};
 
 module.exports={simple:simple,tibetan:tibetan};

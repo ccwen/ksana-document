@@ -1,25 +1,25 @@
 if (typeof nodeRequire!="function") nodeRequire=require; 
-
+var maxFileSize=512*1024;//for github
 var D=require("./document");
 var fs=nodeRequire("fs"); 
 var open=function(fn,mfn) {
 	if (!fs.existsSync(fn)) throw "persistent.js::open file not found ";
 	var content=fs.readFileSync(fn,'utf8');
-	var kd=null;
+	var kd=null,kdm=null;
 	try {
 		kd=JSON.parse(content);
 	} catch (e) {
-		kd=[{"create":new Date()}]
+		kd=[{"create":new Date()}];
 	}
 		
 	if (!mfn) mfn=fn+"m";
 	if (fs.existsSync(mfn)) {
-		var kdm=JSON.parse(fs.readFileSync(mfn,'utf8'));	
+		kdm=JSON.parse(fs.readFileSync(mfn,'utf8'));	
 	}
 	var doc=D.createDocument(kd,kdm);
 	doc.meta.filename=fn;
 	return doc;
-}
+};
 var serializeDocument=function(doc) {
 	var out=[];
 	for (var i=1;i<doc.pageCount;i++) {
@@ -29,7 +29,7 @@ var serializeDocument=function(doc) {
 		out.push(JSON.stringify(obj));
 	}
 	return 	"[\n"+out.join(",\n")+"\n]";
-}
+};
 var serializeXMLTag=function(doc) {
 	if (!doc.tags)return;
 	var out=[];
@@ -37,21 +37,26 @@ var serializeXMLTag=function(doc) {
 		out.push(JSON.stringify(doc.tags[i]));
 	}
 	return 	"[\n"+out.join(",\n")+"\n]";
-}
+};
 var serializeMarkup=function(doc) {
 	var out=[];
+	var sortfunc=function(a,b) {
+		return a.start-b.start;
+	};
 	for (var i=0;i<doc.pageCount;i++) {
 		var M=doc.getPage(i).__markups__();
 
-		JSON.parse(JSON.stringify(M))
-		.sort(function(a,b){return a.start-b.start})
-		.map(function(m){
-			m.i=i; //add index of pageid;
+		var markups=JSON.parse(JSON.stringify(M))
+		.sort(sortfunc);
+
+		for (var j=0;j<markups.length;j++) {
+			var m=markups[j];
+			m.i=i;
 			out.push(JSON.stringify(m));
-		})
+		}
 	}
 	return 	"[\n"+out.join(",\n")+"\n]";
-}
+};
 var saveMarkup=function(doc,mfn) {
 	if (!doc.meta.filename && !mfn) throw "missing filename";
 	if (!doc.dirty) return;
@@ -62,19 +67,22 @@ var saveMarkup=function(doc,mfn) {
 	return fs.writeFile(mfn,out,'utf8',function(err){
 		if (!err) doc.markClean();
 	});
-}
+};
 
 var saveDocument=function(doc,fn) {
 	if (!fn) fn=doc.meta.filename;
 	var out=serializeDocument(doc);
+	if (out.length>maxFileSize) {
+		console.error('file size too big ',out.length);
+	}
 	return fs.writeFileSync(fn,out,'utf8');
-}
+};
 
 var saveDocumentTags=function(doc,fn) {
 	if (!fn) fn=doc.meta.filename;
 	var out=serializeXMLTag(doc);
 	return fs.writeFileSync(fn,out,'utf8');
-}
+};
 
 module.exports={open:open,
 	saveDocument:saveDocument,
