@@ -1,3 +1,27 @@
+var tibetan =function(s) {
+	//continuous tsek grouped into same token
+	//shad and space grouped into same token
+	var offset=0;
+	var tokens=[],offsets=[];
+	var s=s.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+	arr=s.split('\n');
+
+	for (var i=0;i<arr.length;i++) {
+		var last=0;
+		str=arr[i];
+		str.replace(/[།་ ]+/g,function(m,m1){
+			tokens.push(str.substring(last,m1)+m);
+			offsets.push(offset+last);
+			last=m1+m.length;
+		});
+		if (i==arr.length-1) break;
+		tokens.push('\n');
+		offsets.push(offset+last);
+		offset+=str.length+1;
+	}
+
+	return {tokens:tokens,offsets:offsets}
+}
 var simple=function(s) {
 	var isCJK =function(c) {return ((c>=0x3000 && c<=0x9FFF) 
 	|| (c>=0xD800 && c<0xDFFF) || (c>=0xFF00) ) ;}
@@ -57,4 +81,4 @@ var simple=function(s) {
 	return {tokens:res, offsets:offsets,skips:skips,skiptokencount:skiptokencount};
 }
 
-module.exports={simple:simple};
+module.exports={simple:simple,tibetan:tibetan};

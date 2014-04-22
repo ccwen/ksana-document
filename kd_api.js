@@ -3,6 +3,7 @@ function getFiles(dirs,filtercb){
   var fs=nodeRequire('fs');
   var path=nodeRequire('path');
 	var out=[];
+  var shortnames={}; //shortname must be unique
   if (typeof dirs=='string')dirs=[dirs];
 
   for (var j=0;j<dirs.length;j++ ) {
@@ -17,20 +18,25 @@ function getFiles(dirs,filtercb){
             config=JSON.parse(fs.readFileSync(name+'/ksana.json','utf8'));
             var stat=fs.statSync(json);
             config.lastModified=stat.mtime;
-            config.folder=files[i];
-            config.path=path.resolve(name);
+            config.shortname=files[i];
+            config.filename=name;
           } else {
-            config={name:name,shortname:files[i],path:path.resolve(name)}
+            config={name:name,filename:name,shortname:files[i]}
           }
-          out.push(config);
+          var pathat=config.filename.lastIndexOf('/');
+          config.withfoldername=config.filename.substring(1+config.filename.lastIndexOf('/',pathat-1));
+
+          if (!shortnames[files[i]]) out.push(config);
+          shortnames[files[i]]=true;
       }
     }
   }
   return out;
 }
+
 var getProjectFolders=function(p) {
   var fs=nodeRequire('fs');
-  var folders= getFiles(p,function(name){
+  var folders= getFiles( p.filename ,function(name){
       return fs.statSync(name).isDirectory();
   });
   if (!folders.length)return folders;
@@ -48,7 +54,7 @@ var getProjectFolders=function(p) {
 }
 var getProjectFiles=function(p) {
   var fs=nodeRequire('fs');
-  var files= getFiles(p.path,function(name){
+  var files= getFiles( p.filename,function(name){
       return name.indexOf(".kd")==name.length-3;
   });
 
@@ -62,6 +68,10 @@ var getProjectFiles=function(p) {
     });
   }
   return files;
+}
+var getProjectPath=function(p) {
+  var path=nodeRequire('path');
+  return path.resolve(p.filename);
 }
 var enumProject=function() { 
   var fs=nodeRequire('fs');
@@ -80,12 +90,19 @@ var openDocument=function(f) {
   var doc=persistent.open(f);
   return doc;
 }
+
+var saveMarkup=function(opts,cb) {
+  var persistent=nodeRequire('ksana-document').persistent;
+  return persistent.saveMarkup(opts.doc , opts.filename);
+}
+
 var installservice=function(services) {
 	var API={ 
 		enumProject:enumProject,
     getProjectFolders:getProjectFolders,
     getProjectFiles:getProjectFiles,
     openDocument:openDocument,
+    saveMarkup:saveMarkup,
 		version: function() { return require('./package.json').version }
 	};
 	if (services) {

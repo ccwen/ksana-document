@@ -64,6 +64,7 @@ var applyChanges=function(sourcetext ,revisions) {
 }
 var addMarkup=function(start,len,payload) {
 	this.__markups__().push(createMarkup(this.inscription.length,start, len, payload ));
+	this.doc.markDirty();
 }
 var addRevision=function(start,len,str) {
 	var valid=this.__revisions__().every(function(r) {
@@ -71,6 +72,7 @@ var addRevision=function(start,len,str) {
 	})
 	var newrevision=createMarkup(this.inscription.length,start,len,{text:str});
 	if (valid) this.__revisions__().push(newrevision);
+	this.doc.markDirty();
 	return valid;
 }
 var addMarkups=function(newmarkups,opts) {
@@ -185,6 +187,7 @@ var clear=function(M,start,len) { //return number of item removed
 			count++;
 		}
 	}
+	this.doc.markDirty();
 	return count;
 }
 var clearRevisions=function(start,len) {
@@ -360,6 +363,7 @@ var newPage = function(opts) {
 			return inscription;
 	}});
 	//protected functions
+
 	PG.__markups__     = function() { return markups; }
 	PG.__revisions__   = function() { return revisions;}
 	PG.hasRevision     = function() { return revisions.length>0}
@@ -413,6 +417,7 @@ var createDocument = function(docjson,markupjson) {
 	var pages=[];
 	var names={};
 	var meta={doctype:"dg1.0",filename:""}
+	var dirty=0;
 
 	var addPage=function(name) {
 		if (!names[name]) {
@@ -574,6 +579,8 @@ var createDocument = function(docjson,markupjson) {
 	var rootPage=createPage();
 
 	DOC.getPage=function(id) {return pages[id]};
+	DOC.markDirty=function() {dirty++};
+	DOC.markClean=function() {dirty=0};
 	/*
 		external markups must be saved with version number.
 	*/
@@ -581,6 +588,8 @@ var createDocument = function(docjson,markupjson) {
 	Object.defineProperty(DOC,'maxInscriptionLength',{value:2048});
 	Object.defineProperty(DOC,'version',{get:function(){return pages.length}});
 	Object.defineProperty(DOC,'pageCount',{get:function(){return pages.length}});
+	Object.defineProperty(DOC,'dirty',{get:function() {return dirty>0 }});
+
 
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
@@ -594,6 +603,7 @@ var createDocument = function(docjson,markupjson) {
 	DOC.pageByName=pageByName;
 	DOC.toJSONString=toJSONString;
 	if (docjson) DOC.createPages(docjson,markupjson);
+	dirty=0;
 	Object.freeze(DOC);
 	return DOC;
 }

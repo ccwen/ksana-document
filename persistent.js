@@ -3,7 +3,7 @@ if (typeof nodeRequire!="function") nodeRequire=require;
 var D=require("./document");
 var fs=nodeRequire("fs"); 
 var open=function(fn,mfn) {
-	if (!fs.existsSync(fn)) throw "file not file";
+	if (!fs.existsSync(fn)) throw "persistent.js::open file not found ";
 	var content=fs.readFileSync(fn,'utf8');
 	var kd=null;
 	try {
@@ -34,14 +34,17 @@ var serializeMarkup=function(doc) {
 	}
 	return 	"[\n"+out.join(",\n")+"\n]";
 }
-var saveMarkup=function(doc,mfn,cb) {
+var saveMarkup=function(doc,mfn) {
 	if (!doc.meta.filename && !mfn) throw "missing filename";
-	if (!cb && typeof mfn=="function") {
-		cb=mfn;
+	if (!doc.dirty) return;
+	if (typeof mfn=="undefined") {
 		mfn=doc.meta.filename+"m";
 	}
 	var out=serializeMarkup(doc);
-	fs.writeFile(mfn,out,'utf8',cb);
+	console.log('save markup')
+	return fs.writeFile(mfn,out,'utf8',function(err){
+		if (!err) doc.markClean();
+	});
 }
 
 module.exports={open:open,saveMarkup:saveMarkup,
