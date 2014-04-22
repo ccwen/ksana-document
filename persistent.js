@@ -20,6 +20,24 @@ var open=function(fn,mfn) {
 	doc.meta.filename=fn;
 	return doc;
 }
+var serializeDocument=function(doc) {
+	var out=[];
+	for (var i=1;i<doc.pageCount;i++) {
+		var P=doc.getPage(i);
+		var obj={n:P.name, t:P.inscription};
+		if (P.parentId) obj.p=P.parentId;
+		out.push(JSON.stringify(obj));
+	}
+	return 	"[\n"+out.join(",\n")+"\n]";
+}
+var serializeXMLTag=function(doc) {
+	if (!doc.tags)return;
+	var out=[];
+	for (var i=0;i<doc.tags.length;i++) {
+		out.push(JSON.stringify(doc.tags[i]));
+	}
+	return 	"[\n"+out.join(",\n")+"\n]";
+}
 var serializeMarkup=function(doc) {
 	var out=[];
 	for (var i=0;i<doc.pageCount;i++) {
@@ -41,11 +59,28 @@ var saveMarkup=function(doc,mfn) {
 		mfn=doc.meta.filename+"m";
 	}
 	var out=serializeMarkup(doc);
-	console.log('save markup')
 	return fs.writeFile(mfn,out,'utf8',function(err){
 		if (!err) doc.markClean();
 	});
 }
 
-module.exports={open:open,saveMarkup:saveMarkup,
-serializeMarkup:serializeMarkup};
+var saveDocument=function(doc,fn) {
+	if (!fn) fn=doc.meta.filename;
+	var out=serializeDocument(doc);
+	return fs.writeFileSync(fn,out,'utf8');
+}
+
+var saveDocumentTags=function(doc,fn) {
+	if (!fn) fn=doc.meta.filename;
+	var out=serializeXMLTag(doc);
+	return fs.writeFileSync(fn,out,'utf8');
+}
+
+module.exports={open:open,
+	saveDocument:saveDocument,
+	saveDocumentTags:saveDocumentTags,
+	saveMarkup:saveMarkup,
+	serializeDocument:serializeDocument,
+	serializeMarkup:serializeMarkup,
+	serializeXMLTag:serializeXMLTag
+};

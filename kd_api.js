@@ -57,14 +57,15 @@ var getProjectFiles=function(p) {
   var files= getFiles( p.filename,function(name){
       return name.indexOf(".kd")==name.length-3;
   });
-
-  if (parseInt(files[0])) {
+  if (!files.length)return files;
+  if (parseInt(files[0].shortname)) {
     files.sort(function(a,b) {
-      return parseInt(a)-parseInt(b)
+      return parseInt(a.shortname)-parseInt(b.shortname)
     })
   } else {
     files.sort(function(a,b) {
-      if (a==b) return 0; else if (a>b) return 1; else return -1;
+      if (a.shortname==b.shortname) return 0; 
+      else if (a.shortname>b.shortname) return 1; else return -1;
     });
   }
   return files;
@@ -91,11 +92,14 @@ var openDocument=function(f) {
   return doc;
 }
 
-var saveMarkup=function(opts,cb) {
+var saveMarkup=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
   return persistent.saveMarkup(opts.doc , opts.filename);
 }
-
+var saveDocument=function(opts) {
+  var persistent=nodeRequire('ksana-document').persistent;
+  return persistent.saveDocument(opts.doc , opts.filename);
+}
 var installservice=function(services) {
 	var API={ 
 		enumProject:enumProject,
@@ -103,6 +107,7 @@ var installservice=function(services) {
     getProjectFiles:getProjectFiles,
     openDocument:openDocument,
     saveMarkup:saveMarkup,
+    saveDocument:saveDocument,
 		version: function() { return require('./package.json').version }
 	};
 	if (services) {

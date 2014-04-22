@@ -331,8 +331,8 @@ var newPage = function(opts) {
 	//these are the only 2 function changing inscription,use by Doc only
 	var checkLength=function(ins) {
 		if (ins.length>doc.maxInscriptionLength) {
-			console.error("exceed size");
-			ins=ins.substring(0,maxInscriptionLength);
+			console.error("exceed size",ins.length);
+			ins=ins.substring(0,doc.maxInscriptionLength);
 		}
 		return ins;
 	}
@@ -418,6 +418,7 @@ var createDocument = function(docjson,markupjson) {
 	var names={};
 	var meta={doctype:"dg1.0",filename:""}
 	var dirty=0;
+	var tags={};
 
 	var addPage=function(name) {
 		if (!names[name]) {
@@ -581,14 +582,16 @@ var createDocument = function(docjson,markupjson) {
 	DOC.getPage=function(id) {return pages[id]};
 	DOC.markDirty=function() {dirty++};
 	DOC.markClean=function() {dirty=0};
+	DOC.setTags=function(T) {tags=T};
 	/*
 		external markups must be saved with version number.
 	*/
 	Object.defineProperty(DOC,'meta',{value:meta});
-	Object.defineProperty(DOC,'maxInscriptionLength',{value:2048});
+	Object.defineProperty(DOC,'maxInscriptionLength',{value:4096});
 	Object.defineProperty(DOC,'version',{get:function(){return pages.length}});
 	Object.defineProperty(DOC,'pageCount',{get:function(){return pages.length}});
 	Object.defineProperty(DOC,'dirty',{get:function() {return dirty>0 }});
+	Object.defineProperty(DOC,'tags',{get:function() {return tags }});
 
 
 	DOC.createPage=createPage;
@@ -604,6 +607,7 @@ var createDocument = function(docjson,markupjson) {
 	DOC.toJSONString=toJSONString;
 	if (docjson) DOC.createPages(docjson,markupjson);
 	dirty=0;
+	
 	Object.freeze(DOC);
 	return DOC;
 }

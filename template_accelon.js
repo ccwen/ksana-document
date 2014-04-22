@@ -16,7 +16,8 @@ var parseXMLTag=function(s) {
 	var type="start";
 	if (s[s.length-1]=='/') { type="emtpy"}
 	var attr={},count=0;
-	s.substring(i+1).replace(/(.*)="(.*)"/g,function(m,m1,m2) {
+	s=s.substring(name.length+1);
+	s.replace(/(.*?)="([^"]*?)"/g,function(m,m1,m2) {
 		attr[m1]=m2;
 		count++;
 	});
@@ -47,9 +48,9 @@ var parseUnit=function(unitseq,unittext,doc) {
 	})
 	return {inscription:parsed, tags:tags};
 }
-var splitUnit=function(buf) {
+var splitUnit=function(buf,sep) {
 	var units=[], unit="", last=0 ,name="";
-	buf.replace(unitsep,function(m,m1,offset){
+	buf.replace(sep,function(m,m1,offset){
 		units.push([name,buf.substring(last,offset)]);
 		name=m1;
 		last=offset+m.length; 
@@ -75,7 +76,7 @@ var importxml=function(buf,opts) {
 		var page=doc.createPage({name:name,text:out.inscription});
 		addMarkups(out.tags,page);
 	} else {
-		var units=splitUnit(buf);
+		var units=splitUnit(buf,opts.sep || unitsep);
 		units.map(function(U,i){
 			var out=parseUnit(i,U[1],doc)
 			doc.createPage({text:out.inscription,name:U[0]});
@@ -85,7 +86,7 @@ var importxml=function(buf,opts) {
 	if (tagstack.length) {
 		throw 'tagstack not null'+JSON.stringify(tagstack)
 	}
-	doc.tags=tags;
+	doc.setTags(tags);
 	return doc;
 }
 module.exports=importxml;
