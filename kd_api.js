@@ -100,6 +100,16 @@ var saveDocument=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
   return persistent.saveDocument(opts.doc , opts.filename);
 };
+var getUserSettings=function(user) {
+  var fs=nodeRequire('fs');
+  var defsettingfilename='./settings.json';
+  if (typeof user=="undefined") {
+    if (fs.existsSync(defsettingfilename)) {
+      return JSON.parse(fs.readFileSync(defsettingfilename,'utf8'));  
+    }
+  }
+  return {};
+}
 var installservice=function(services) {
 	var API={ 
 		enumProject:enumProject,
@@ -108,6 +118,7 @@ var installservice=function(services) {
     openDocument:openDocument,
     saveMarkup:saveMarkup,
     saveDocument:saveDocument,
+    getUserSettings:getUserSettings,
 		version: function() { return require('./package.json').version; }
 	};
 	if (services) {
