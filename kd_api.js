@@ -8,6 +8,7 @@ function getFiles(dirs,filtercb){
 
   for (var j=0;j<dirs.length;j++ ) {
     var dir=dirs[j];
+    if (!fs.existsSync(dir))continue;
     var files = fs.readdirSync(dir);
     for(var i in files){
       if (!files.hasOwnProperty(i)) continue;
@@ -110,6 +111,7 @@ var getUserSettings=function(user) {
   }
   return {};
 }
+var markup=require('./markup.js');
 var installservice=function(services) {
 	var API={ 
 		enumProject:enumProject,
@@ -119,6 +121,7 @@ var installservice=function(services) {
     saveMarkup:saveMarkup,
     saveDocument:saveDocument,
     getUserSettings:getUserSettings,
+    mergeMarkup:markup.merge,
 		version: function() { return require('./package.json').version; }
 	};
 	if (services) {
