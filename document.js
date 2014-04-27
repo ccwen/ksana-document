@@ -412,6 +412,9 @@ var newPage = function(opts) {
 	Object.freeze(PG);
 	return PG;
 };
+var mergeMarkup = function(type) {
+	return require("./markup").merge(this.__markups__(), type||"suggest");
+}
 var createDocument = function(docjson,markupjson) {
 	var DOC={};
 	var pages=[];
@@ -606,6 +609,7 @@ var createDocument = function(docjson,markupjson) {
 	DOC.findPage=findPage;
 	DOC.pageByName=pageByName;
 	DOC.toJSONString=toJSONString;
+	DOC.mergeMarkup=mergeMarkup;
 	if (docjson) DOC.createPages(docjson,markupjson);
 	dirty=0;
 	

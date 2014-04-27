@@ -121,7 +121,6 @@ var installservice=function(services) {
     saveMarkup:saveMarkup,
     saveDocument:saveDocument,
     getUserSettings:getUserSettings,
-    mergeMarkup:markup.merge,
 		version: function() { return require('./package.json').version; }
 	};
 	if (services) {
