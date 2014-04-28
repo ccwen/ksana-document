@@ -46,8 +46,7 @@ var serializeMarkup=function(doc) {
 	for (var i=0;i<doc.pageCount;i++) {
 		var M=doc.getPage(i).__markups__();
 
-		var markups=JSON.parse(JSON.stringify(M))
-		.sort(sortfunc);
+		var markups=JSON.parse(JSON.stringify(M)).sort(sortfunc);
 
 		for (var j=0;j<markups.length;j++) {
 			var m=markups[j];

@@ -173,7 +173,7 @@ var getAncestors=function() {
 	return ancestor;
 };
 
-var clear=function(M,start,len) { //return number of item removed
+var clear=function(M,start,len,author) { //return number of item removed
 	var count=0;
 	if (typeof start=='undefined') {
 		count=M.length;
@@ -184,6 +184,7 @@ var clear=function(M,start,len) { //return number of item removed
 	var end=start+len;
 	for (var i=M.length-1;i>=0;--i) {
 		if (M[i].start>=start && M[i].start+M[i].len<=end) {
+			if (author && author!=M[i].payload.author) continue;
 			M.splice(i,1);
 			count++;
 		}
@@ -191,11 +192,13 @@ var clear=function(M,start,len) { //return number of item removed
 	this.doc.markDirty();
 	return count;
 };
-var clearRevisions=function(start,len) {
-	clear.apply(this,[this.__revisions__(),start,len]);
+var clearRevisions=function(start,len,author) {
+	clear.apply(this,[this.__revisions__(),start,len,author]);
+	this.doc.markDirty();
 };
-var clearMarkups=function(start,len) {
-	clear.apply(this,[this.__markups__(),start,len]);
+var clearMarkups=function(start,len,author) {
+	clear.apply(this,[this.__markups__(),start,len,author]);
+	this.doc.markDirty();
 };
 var isLeafPage=function() {
 	return (this.__mutant__().length===0);
@@ -216,8 +219,9 @@ var revertRevision=function(revs,parentinscription) {
 	revert.sort(function(a,b){return b.start-a.start;});
 	return revert;
 };
-var markupAt=function(pos) {
-	return this.__markups__().filter(function(m){
+var markupAt=function(pos,markups) {
+	var markups=markups||this.__markups__();
+	return markups.filter(function(m){
 		var len=m.len;if (!m.len) len=1;
 		return (pos>=m.start && pos<m.start+len);
 	});
@@ -308,6 +312,14 @@ var toggleMarkup=function(start,len,payload) {
 	}
 	this.addMarkup(start,len,payload);
 };
+var mergeMarkup = function(markups,offsets,type) {
+	markups=markups||this.__markups__();
+	var M=require("./markup");
+	M.addTokenOffset(markups,offsets);
+	var res= M.merge(markups, type||"suggest");
+	return M.applyTokenOffset(res,offsets);
+}
+
 var newPage = function(opts) {
 	var PG={};
 	var inscription="";
@@ -409,12 +421,10 @@ var newPage = function(opts) {
 	PG.toJSONString      = toJSONString;
 	PG.findMarkup				 = findMarkup;
 	PG.fission           = fission;
+	PG.mergeMarkup           = mergeMarkup;
 	Object.freeze(PG);
 	return PG;
 };
-var mergeMarkup = function(type) {
-	return require("./markup").merge(this.__markups__(), type||"suggest");
-}
 var createDocument = function(docjson,markupjson) {
 	var DOC={};
 	var pages=[];
@@ -609,7 +619,6 @@ var createDocument = function(docjson,markupjson) {
 	DOC.findPage=findPage;
 	DOC.pageByName=pageByName;
 	DOC.toJSONString=toJSONString;
-	DOC.mergeMarkup=mergeMarkup;
 	if (docjson) DOC.createPages(docjson,markupjson);
 	dirty=0;
 	
