@@ -74,7 +74,7 @@ var merge=function(markups,type){
 		if (out[i].s===out2[out2.length-1].s ) {
 			out2[out2.length-1].payload.choices.push(out[i].payload);
 		} else {
-			out2.push({s:out[i].s,payload:{type:type,choices:[out[i].payload]}});
+			out2.push({s:out[i].s,l:1,payload:{type:type,choices:[out[i].payload]}});
 		}
 	}
 	return combine(out2);
