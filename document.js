@@ -320,6 +320,14 @@ var mergeMarkup = function(markups,offsets,type) {
 	return M.applyTokenOffset(res,offsets);
 }
 
+var strikeout=function(start,length,user,type) {
+	this.clearMarkups(start,length,user);
+	markups=this.__markups__();
+	var M=require("./markup");
+	type=type||"suggest";
+	return M.strikeout(markups,start,length,user,type);
+}
+
 var newPage = function(opts) {
 	var PG={};
 	var inscription="";
@@ -327,6 +335,7 @@ var newPage = function(opts) {
 	var markups=[];
 	var revisions=[];
 	var mutant=[];
+
 
 	opts=opts||{};
 	opts.id=opts.id || 0; //root id==0
@@ -398,7 +407,6 @@ var newPage = function(opts) {
 	PG.setName           = function(n){ meta.name=n; return this;};
 	Object.defineProperty(PG,'name',{get:function(){return meta.name;}});
 	PG.__meta__        = function() {return meta;};
-
 	Object.defineProperty(PG,'daugtherStart',{get:function(){return meta.daugtherStart;}});
 	Object.defineProperty(PG,'daugtherCount',{get:function(){return meta.daugtherCount;}});
 	PG.clearRevisions    = clearRevisions;
@@ -421,7 +429,8 @@ var newPage = function(opts) {
 	PG.toJSONString      = toJSONString;
 	PG.findMarkup				 = findMarkup;
 	PG.fission           = fission;
-	PG.mergeMarkup           = mergeMarkup;
+	PG.mergeMarkup       = mergeMarkup;
+	PG.strikeout         = strikeout;
 	Object.freeze(PG);
 	return PG;
 };
@@ -596,10 +605,12 @@ var createDocument = function(docjson,markupjson) {
 	DOC.getPage=function(id) {return pages[id];};
 	DOC.markDirty=function() {dirty++;};
 	DOC.markClean=function() {dirty=0;};
-	DOC.setTags=function(T) {tags=T;};
+	DOC.setTags=function(T)  {tags=T;};
 	/*
 		external markups must be saved with version number.
 	*/
+
+
 	Object.defineProperty(DOC,'meta',{value:meta});
 	Object.defineProperty(DOC,'maxInscriptionLength',{value:4096});
 	Object.defineProperty(DOC,'version',{get:function(){return pages.length;}});

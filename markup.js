@@ -84,7 +84,10 @@ var addTokenOffset=function(markups,offsets) {
 		var m=markups[i],at,at2;
 		at=offsets.indexOf(m.start); //need optimized
 		if (m.len) at2=offsets.indexOf(m.start+m.len);
-		if (at==-1 || at2==-1) throw "markup position not at token boundary";
+		if (at==-1 || at2==-1) {
+			console.trace("markup position not at token boundary");
+			break;
+		}
 
 		m.s=at;
 		if (m.len) m.l=at2-at;
@@ -102,5 +105,12 @@ var applyTokenOffset=function(markups,offsets) {
 	}
 	return markups;
 }
+
+var strikeout=function(markups,start,len,user,type) {
+	var payload={type:type,author:user,text:""};
+	markups.push({start:start,len:len,payload:payload});
+}
 module.exports={merge:merge,quantize:quantize,
-	addTokenOffset:addTokenOffset,applyTokenOffset:applyTokenOffset}
+	addTokenOffset:addTokenOffset,applyTokenOffset:applyTokenOffset,
+	strikeout:strikeout
+}
