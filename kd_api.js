@@ -12,6 +12,7 @@ function getFiles(dirs,filtercb){
     var files = fs.readdirSync(dir);
     for(var i in files){
       if (!files.hasOwnProperty(i)) continue;
+      if (files[i][0]==".") continue;//skip hidden file
       var name = dir+'/'+files[i],config=null;
       if (filtercb(name)) {
           var json=name+'/ksana.json';
