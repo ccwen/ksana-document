@@ -265,6 +265,11 @@ var toJSONString=function(opts) {
 	}
 	return JSON.stringify(obj);
 };
+var filterMarkup=function(cb) {
+	return this.__markups__().filter(function(m){
+		return cb(m);
+	});
+}
 var findMarkup=function(query) { //same like jquery
 	var name=query.name;
 	var output=[];
@@ -428,6 +433,7 @@ var newPage = function(opts) {
 //	PG.getmutant          = getmutant;
 	PG.toJSONString      = toJSONString;
 	PG.findMarkup				 = findMarkup;
+	PG.filterMarkup			 = filterMarkup;
 	PG.fission           = fission;
 	PG.mergeMarkup       = mergeMarkup;
 	PG.strikeout         = strikeout;
