@@ -26,7 +26,8 @@ TODO , handle migration of fission page
 */
 var migrateMarkup=function(markup, rev) {
 	var end=markup.start+markup.len;
-	var newlen=(rev.payload.text.length-rev.len);
+	var text=rev.payload.text||"";
+	var newlen=(text.length-rev.len);
 	var revend=rev.start+rev.len;
 	var m=cloneMarkup(markup); //return a new copy
 
@@ -211,7 +212,8 @@ var revertRevision=function(revs,parentinscription) {
 		var	m=cloneMarkup(r);
 		var newtext=parentinscription.substr(r.start,r.len);
 		m.start+=offset;
-		m.len=m.payload.text.length;
+		var text=m.payload.text||"";
+		m.len=text.length;
 		m.payload.text=newtext;
 		offset+=m.len-newtext.length;
 		revert.push(m);
@@ -317,6 +319,7 @@ var toggleMarkup=function(start,len,payload) {
 	}
 	this.addMarkup(start,len,payload);
 };
+
 var mergeMarkup = function(markups,offsets,type) {
 	markups=markups||this.__markups__();
 	var M=require("./markup");
@@ -331,6 +334,12 @@ var strikeout=function(start,length,user,type) {
 	var M=require("./markup");
 	type=type||"suggest";
 	return M.strikeout(markups,start,length,user,type);
+}
+
+var preview=function(opts) { 
+	//suggestion is from UI , with insert in payload
+	var revisions=require("./markup").suggestion2revision(opts.suggestions);
+	return this.doc.evolvePage(this,{preview:true,revisions:revisions,markups:[]});
 }
 
 var newPage = function(opts) {
@@ -437,6 +446,7 @@ var newPage = function(opts) {
 	PG.fission           = fission;
 	PG.mergeMarkup       = mergeMarkup;
 	PG.strikeout         = strikeout;
+	PG.preview           = preview;
 	Object.freeze(PG);
 	return PG;
 };
@@ -515,13 +525,16 @@ var createDocument = function(docjson,markupjson) {
 
 	var evolvePage=function(pg,opts) {//apply revisions and upgrate markup
 		var nextgen;
-		if (opts && opts.preview) {
-			nextgen=newPage({parent:pg,doc:DOC});
+		opts=opts||{};
+		if (opts.preview) { 
+			nextgen=newPage({parent:pg,doc:DOC,id:-1});  //id cannot null
 		} else {
 			nextgen=createPage(pg);	
 		}
 		if (pg.id) pg.__mutant__().push(nextgen);
-		nextgen.__selfEvolve__( pg.__revisions__() , pg.__markups__() );
+		var revisions=opts.revisions||pg.__revisions__();
+		var markups=opts.markups||pg.__markups__();
+		nextgen.__selfEvolve__( revisions ,markups );
 
 		return nextgen;
 	};
@@ -618,7 +631,7 @@ var createDocument = function(docjson,markupjson) {
 
 
 	Object.defineProperty(DOC,'meta',{value:meta});
-	Object.defineProperty(DOC,'maxInscriptionLength',{value:4096});
+	Object.defineProperty(DOC,'maxInscriptionLength',{value:8192});
 	Object.defineProperty(DOC,'version',{get:function(){return pages.length;}});
 	Object.defineProperty(DOC,'pageCount',{get:function(){return pages.length;}});
 	Object.defineProperty(DOC,'dirty',{get:function() {return dirty>0; }});

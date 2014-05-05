@@ -106,11 +106,25 @@ var applyTokenOffset=function(markups,offsets) {
 	return markups;
 }
 
+var suggestion2revision=function(markups) {
+	var out=[];
+	for (var i=0;i<markups.length;i++) {
+		var m=markups[i];
+		var payload=m.payload;
+		if (payload.insert) {
+			out.push({start:m.start+m.len,len:0,payload:payload});
+		} else {
+			out.push({start:m.start,len:m.len,payload:payload});
+		}
+	}
+	return out;
+}
+
 var strikeout=function(markups,start,len,user,type) {
 	var payload={type:type,author:user,text:""};
 	markups.push({start:start,len:len,payload:payload});
 }
 module.exports={merge:merge,quantize:quantize,
 	addTokenOffset:addTokenOffset,applyTokenOffset:applyTokenOffset,
-	strikeout:strikeout
+	strikeout:strikeout, suggestion2revision : suggestion2revision
 }
