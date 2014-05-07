@@ -39,9 +39,17 @@ var classical=function(arr) {
 			out.push(React.DOM.span({"className":"wh"},wh));
 			inwh=false;
 		} else if (ch=='﹝') {
+
 			start=i+1;
 			inwarichu=true;
 		} else if (ch=='﹞') {
+			if (!inwarichu) { //in previous page
+				out=[];
+				inwarichu=true;
+				start=0; //reset
+				i=0;
+				continue;
+			}
 			newwarichu(i);
 			inwarichu=false;
 		} else{
@@ -49,6 +57,8 @@ var classical=function(arr) {
 		}
 		i++;
 	}
+	if (inwarichu) newwarichu(arr.length-1);
+
 	return React.DOM.span({"className":"vertical"},out);
 }
 module.exports={classical:classical}
