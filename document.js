@@ -342,6 +342,7 @@ var preview=function(opts) {
 	return this.doc.evolvePage(this,{preview:true,revisions:revisions,markups:[]});
 }
 
+
 var newPage = function(opts) {
 	var PG={};
 	var inscription="";
@@ -522,7 +523,6 @@ var createDocument = function(docjson,markupjson) {
 		}
 		return page;
 	};
-
 	var evolvePage=function(pg,opts) {//apply revisions and upgrate markup
 		var nextgen;
 		opts=opts||{};
