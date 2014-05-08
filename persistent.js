@@ -12,8 +12,8 @@ var open=function(fn,mfn) {
 
 	return {kd:kd,kdm:kdm}
 }
-var openLocal=function(fn,mfn) {
-	if (!fs.existsSync(fn)) throw "persistent.js::open file not found ";
+var loadLocal=function(fn,mfn) {
+if (!fs.existsSync(fn)) throw "persistent.js::open file not found ";
 	var content=fs.readFileSync(fn,'utf8');
 	var kd=null,kdm=null;
 	try {
@@ -26,7 +26,11 @@ var openLocal=function(fn,mfn) {
 	if (fs.existsSync(mfn)) {
 		kdm=JSON.parse(fs.readFileSync(mfn,'utf8'));	
 	}
-	var doc=D.createDocument(kd,kdm);
+	return {kd:kd,kdm:kdm};
+}
+var openLocal=function(fn,mfn) {
+	var json=loadLocal(fn,mfn);
+	var doc=D.createDocument(json.kd,json.kdm);
 	doc.meta.filename=fn;
 	return doc;
 };
@@ -66,7 +70,32 @@ var serializeMarkup=function(doc) {
 	}
 	return 	"[\n"+out.join(",\n")+"\n]";
 };
-var saveMarkup=function(doc,mfn) {
+
+
+var saveMarkup=function(markups,filename,pageid) { //same author
+	if (!markups || !markups.length) return null;
+	var author=markups[0].payload.author;
+	var mfn=filename+'m';
+	var json=loadLocal(filename,mfn);
+	var others=json.kdm.filter(function(m){return m.i!=pageid || m.payload.author != author});
+	for (var i=0;i<markups.length;i++) {
+		markups[i].i=pageid;
+	}
+	var others=others.concat(markups);
+	var sortfunc=function(a,b) {
+		//each page less than 64K
+		return (a.i*65536 +a.start) - (b.i*65536 +b.start);
+	}
+	others.sort(sortfunc);
+	var out=[];
+	for (var i=0;i<others.length;i++) {
+		out.push(JSON.stringify(others[i]));
+	}
+	return fs.writeFile(mfn,"[\n"+out.join(",\n")+"\n]",'utf8',function(err){
+		//		
+	});
+}
+var saveMarkupLocal=function(doc,mfn) {
 	if (!doc.meta.filename && !mfn) throw "missing filename";
 	if (!doc.dirty) return;
 	if (typeof mfn=="undefined") {

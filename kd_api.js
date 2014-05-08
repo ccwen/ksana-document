@@ -96,7 +96,7 @@ var openDocument=function(f) {
 
 var saveMarkup=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
-  return persistent.saveMarkup(opts.doc , opts.filename);
+  return persistent.saveMarkup(opts.markups , opts.filename,opts.pageid||opts.i);
 };
 var saveDocument=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
