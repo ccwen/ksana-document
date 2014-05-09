@@ -74,14 +74,18 @@ var serializeMarkup=function(doc) {
 
 var saveMarkup=function(markups,filename,pageid) { //same author
 	if (!markups || !markups.length) return null;
-	var author=markups[0].payload.author;
+	var author=markups[0].payload.author, others=[];
 	var mfn=filename+'m';
 	var json=loadLocal(filename,mfn);
-	var others=json.kdm.filter(function(m){return m.i!=pageid || m.payload.author != author});
+	if (!json.kdm || !json.kdm.length) {
+		others=[];
+	} else {
+		others=json.kdm.filter(function(m){return m.i!=pageid || m.payload.author != author});	
+	}
 	for (var i=0;i<markups.length;i++) {
 		markups[i].i=pageid;
 	}
-	var others=others.concat(markups);
+	others=others.concat(markups);
 	var sortfunc=function(a,b) {
 		//each page less than 64K
 		return (a.i*65536 +a.start) - (b.i*65536 +b.start);

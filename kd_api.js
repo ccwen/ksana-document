@@ -1,3 +1,4 @@
+if (typeof nodeRequire=='undefined')nodeRequire=require;
 
 function getFiles(dirs,filtercb){	
   var fs=nodeRequire('fs');
@@ -113,6 +114,7 @@ var getUserSettings=function(user) {
   return {};
 }
 var markup=require('./markup.js');
+var users=require('./users');
 var installservice=function(services) {
 	var API={ 
 		enumProject:enumProject,
@@ -121,6 +123,7 @@ var installservice=function(services) {
     openDocument:openDocument,
     saveMarkup:saveMarkup,
     saveDocument:saveDocument,
+    login:users.login,
     getUserSettings:getUserSettings,
 		version: function() { return require('./package.json').version; }
 	};

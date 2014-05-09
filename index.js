@@ -2,7 +2,8 @@
 xml:require('./xml'),
 api:require('./kd_api'),
 tokenizers:require('./tokenizers')	,
-typeset:require('./typeset')
+typeset:require('./typeset'),
+crypto:require('./sha1')
 }
 
 if (typeof process!="undefined") {
