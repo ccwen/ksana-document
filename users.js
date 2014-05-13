@@ -12,7 +12,7 @@ var loadpasswd=function(){
 var login=function(opts) {
 	opts=opts||{};
 	var password=opts.password||opts.pw;
-var out={name:opts.name,error:"user not found"};
+	var out={name:opts.name,error:"user not found"};
 	if (!passwords.length) loadpasswd();
 	for (var i=0;i<passwords.length;i++) {
 		var u=passwords[i];

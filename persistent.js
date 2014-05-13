@@ -127,6 +127,7 @@ var saveDocumentTags=function(doc,fn) {
 };
 
 module.exports={open:open,
+	loadLocal:loadLocal,
 	saveDocument:saveDocument,
 	saveDocumentTags:saveDocumentTags,
 	saveMarkup:saveMarkup,

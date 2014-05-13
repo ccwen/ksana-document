@@ -493,7 +493,8 @@ var createDocument = function(docjson,markupjson) {
 
 	var createPages=function(json,markups) {
 		var count=0,i;
-		for (i=1;i<json.length;i++) {
+		for (i=0;i<json.length;i++) {
+			if (i==0 && !json[i].t) continue; //might be header
 			createPage(json[i]);
 		}
 
