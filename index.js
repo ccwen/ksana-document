@@ -11,6 +11,9 @@ if (typeof process!="undefined") {
 	API.persistent=require('./persistent');
 	API.indexer=require('./indexer');
 	API.projects=require('./projects');
+	API.ydb=require('./ydb');
+	API.ydbfs=require('./ydbfs');
 	API.ydbw=require('./ydbw');
+	API.ydbpool=require('./ydbpool');
 }
 module.exports=API;

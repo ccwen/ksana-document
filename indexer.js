@@ -21,14 +21,19 @@ var status={progress:1,done:false};
 var session={};
 var api=null;
 var isSkip=null;
-var isSeachable=null;
+var normalize=null;
 var tokenize=null;
 
 var putPosting=function(tk) {
-	var	posting=session.postings[tk];
-	if (!posting) {
-		session.postingCount++;
-		posting=session.postings[tk]=[];
+	var	postingid=session.json.tokens[tk];
+	var out=session.json;
+
+	if (!postingid) {
+		session.json.tokens[tk]=out.postingCount+1;
+		posting=out.postings[out.postingCount]=[];
+		out.postingCount++;
+	} else {
+		posting=out.postings[postingid-1];
 	}
 	posting.push(session.vpos);
 }
@@ -46,7 +51,7 @@ var putExtra=function(arr_of_key_vpos_payload) {
 var putPage=function(docPage) {
 	var tokenized=tokenize(docPage.inscription);
 
-	for (var i=0;i<tokenized.length;i++) {
+	for (var i=0;i<tokenized.tokens.length;i++) {
 		var t=tokenized.tokens[i];
 		var normalized=normalize(t);
 		if (normalized) {
@@ -69,12 +74,13 @@ var putFile=function(fn) {
 	var doc=persistent.createLocal(fn);
 	var shortfn=shortFilename(fn);
 
-	var fileinfo={pageNames:[],pageOffset:[]};
+	var fileinfo={pages:[],pageNames:[],pageOffset:[]};
 	session.json.files.push(fileinfo);
 	session.json.fileNames.push(shortfn);
 	session.json.fileOffset.push(session.vpos);
-	for (var i=0;i<doc.pageCount;i++) {
+	for (var i=1;i<doc.pageCount;i++) {
 		var pg=doc.getPage(i);
+		fileinfo.pages.push(pg.inscription);
 		fileinfo.pageNames.push(pg.name);
 		fileinfo.pageOffset.push(session.vpos);
 		putPage(pg);
@@ -85,7 +91,8 @@ var initSession=function() {
 		files:[],
 		fileNames:[],
 		fileOffset:[],
-		postings:{},
+		postings:[],
+		tokens:{},
 		postingCount:0,
 	};
 	var session={vpos:1, json:json , 
@@ -100,7 +107,7 @@ var initIndexer=function() {
 	
 	api=nodeRequire("./customfunc.js").getAPI(session.options.template);
 	
-	isSearchable=api["isSearchable"];
+	normalize=api["normalize"];
 	isSkip=api["isSkip"];
 	tokenize=api["tokenize"];
 	setTimeout(indexstep,1);
@@ -136,8 +143,8 @@ var finalize=function(cb) {
 	//output=api("optimize")(session.json,session.indexopt.template);
 
 	var ydb =nodeRequire("./ydbw")();
-	ydb.save(session.json);
-	debugger;
+	ydb.save(session.json,null,{autodelete:true});
+	
 	ydb.writeFile(ydbfn,function(total,written) {
 		status.progress=written/total;
 		if (total==written) cb();
