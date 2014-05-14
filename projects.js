@@ -78,21 +78,22 @@ var _names=function() {
 	//search for local 
 	var folders= getFiles(['./ksana_databases','../ksana_databases','../../ksana_databases'],function(name){
       if (fs.statSync(name).isDirectory()){
-        return fs.existsSync(name+'/'+'ksana.json');
+        return fs.existsSync(name+'/ksana.json');
       }
   });
 
 	return folders;
 }
 
-var allFiles=function(projname) {
+var fullInfo=function(projname) {
   var proj=_names().filter(function(f){ return f.shortname==projname});
   if (!proj.length) return [];
   var files=[];
+  var ksana=JSON.parse(fs.readFileSync(proj[0].filename+'/ksana.json','utf8'));
   _folders(proj[0].filename).map(function(f){
     files=files.concat(files,_files(f.filename));
   })
-  return {project:proj[0],files: files.map(function(f){return f.filename})};
+  return {ksana:ksana, project:proj[0],files: files.map(function(f){return f.filename})};
 }
 
-module.exports={names:_names,folders:_folders,files:_files,allFiles:allFiles};
+module.exports={names:_names,folders:_folders,files:_files,fullInfo:allFiles};

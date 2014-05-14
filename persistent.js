@@ -2,6 +2,7 @@ if (typeof nodeRequire!="function") nodeRequire=require;
 var maxFileSize=512*1024;//for github
 var D=require("./document");
 var fs=nodeRequire("fs"); 
+/*
 var open=function(fn,mfn) {
 	var kd,kdm="";
 	var kd=fs.readFileSync(fn,'utf8');
@@ -12,6 +13,7 @@ var open=function(fn,mfn) {
 
 	return {kd:kd,kdm:kdm}
 }
+*/
 var loadLocal=function(fn,mfn) {
 if (!fs.existsSync(fn)) throw "persistent.js::open file not found ";
 	var content=fs.readFileSync(fn,'utf8');
@@ -28,7 +30,8 @@ if (!fs.existsSync(fn)) throw "persistent.js::open file not found ";
 	}
 	return {kd:kd,kdm:kdm};
 }
-var openLocal=function(fn,mfn) {
+/* load json and create document */
+var createLocal=function(fn,mfn) {
 	var json=loadLocal(fn,mfn);
 	var doc=D.createDocument(json.kd,json.kdm);
 	doc.meta.filename=fn;
@@ -126,8 +129,9 @@ var saveDocumentTags=function(doc,fn) {
 	return fs.writeFileSync(fn,out,'utf8');
 };
 
-module.exports={open:open,
+module.exports={
 	loadLocal:loadLocal,
+	createLocal:createLocal,
 	saveDocument:saveDocument,
 	saveDocumentTags:saveDocumentTags,
 	saveMarkup:saveMarkup,
