@@ -10,7 +10,7 @@ var isSkip1=function(token) {
 	//return (t=="" || t=="　");
 }
 
-var simple={
+var simple1={
 	func:{
 		tokenize:tokenizers.simple,
 		normalize: normalize,
@@ -19,4 +19,4 @@ var simple={
 	}
 	
 }
-module.exports={"simple1":simple}
+module.exports={"simple1":simple1}

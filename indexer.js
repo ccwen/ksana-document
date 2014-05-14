@@ -1,8 +1,5 @@
 if (typeof nodeRequire=='undefined')nodeRequire=require;
-var fs=nodeRequire("fs");
-var projects=nodeRequire("ksana-document").projects;
-var customfunc=nodeRequire("customfunc");
-var ydbw=nodeRequire("ydbw");
+
 /*
   text:       [ [page_text][page_text] ]
   pagenames:  []
@@ -45,11 +42,9 @@ var putExtra=function(arr_of_key_vpos_payload) {
   // structure
   // key , 
 }
+
 var putPage=function(docPage) {
 	var tokenized=tokenize(docPage.inscription);
-
-	session.json.pagename.push(docPage.name);
-	session.json.pageoffset.push(session.vpos);
 
 	for (var i=0;i<tokenized.length;i++) {
 		var t=tokenized.tokens[i];
@@ -64,20 +59,32 @@ var putPage=function(docPage) {
 
 	session.indexedTextLength+= docPage.inscription.length;
 }
-
-var indexfile=function(fn) {
+var shortFilename=function(fn) {
+	var arr=fn.split('/');
+	while (arr.length>2) arr.shift();
+	return arr.join('/');
+}
+var putFile=function(fn) {
 	var persistent=nodeRequire("ksana-document").persistent;
 	var doc=persistent.createLocal(fn);
+	var shortfn=shortFilename(fn);
 
+	var fileinfo={pageNames:[],pageOffset:[]};
+	session.json.files.push(fileinfo);
+	session.json.fileNames.push(shortfn);
+	session.json.fileOffset.push(session.vpos);
 	for (var i=0;i<doc.pageCount;i++) {
 		var pg=doc.getPage(i);
+		fileinfo.pageNames.push(pg.name);
+		fileinfo.pageOffset.push(session.vpos);
 		putPage(pg);
 	}
 }
 var initSession=function() {
 	var json={
-		pagename:[],
-		pageoffset:[],
+		files:[],
+		fileNames:[],
+		fileOffset:[],
 		postings:{},
 		postingCount:0,
 	};
@@ -87,21 +94,21 @@ var initSession=function() {
 	return session;
 }
 var initIndexer=function() {
-	var session=initSession();
+	session=initSession();
 	session.filenow=0;
 	session.files=projinfo.files;
-
-	api=customfunc.getAPI(projinfo.ksana.template);
 	
-	isSearchable=api("isSearchable");
-	isSkip=api("isSkip");
-	tokenize=api("tokenize");
+	api=nodeRequire("./customfunc.js").getAPI(session.options.template);
+	
+	isSearchable=api["isSearchable"];
+	isSkip=api["isSkip"];
+	tokenize=api["tokenize"];
 	setTimeout(indexstep,1);
 }
 
 var getMeta=function() {
 	var meta={};
-	meta.apiversion=api.getVersion();
+	meta.template=session.options.template;
 	meta.name=projinfo.project.shortname;
 	return meta;
 }
@@ -111,31 +118,45 @@ var backupFilename=function(ydbfn) {
 	return ydbfn+"k"; //todo add date in the middle
 }
 
+var backup=function(ydbfn) {
+	var fs=nodeRequire('fs');
+	if (fs.existsSync(ydbfn)) {
+		var bkfn=ydbfn+'k';
+		if (fs.existsSync(bkfn)) fs.unlinkSync(bkfn);
+		fs.renameSync(ydbfn,bkfn);
+	}
+}
 var finalize=function(cb) {
 	var opt=session.options;
 	var ydbfn=projinfo.project.filename+'.ydb';
-	output.meta=getMeta();
-	fs.renameSync(ydbfn,backupFilename(ydbfn));
+	session.json.meta=getMeta();
+	
+	backup(ydbfn);
 	status.message='writing '+ydbfn;
-	output=api("optimize")(session.json,session.indexopt.template);
-	ydb.writeFile(fn,function(total,written) {
+	//output=api("optimize")(session.json,session.indexopt.template);
+
+	var ydb =nodeRequire("./ydbw")();
+	ydb.save(session.json);
+	debugger;
+	ydb.writeFile(ydbfn,function(total,written) {
 		status.progress=written/total;
 		if (total==written) cb();
 	});
 }
 
 var indexstep=function() {
+	
 	if (session.filenow<session.files.length) {
 		status.filename=session.files[session.filenow];
 		status.progress=Math.floor((session.filenow/session.files.length)*100);
-		indexfile(status.filename);
+		putFile(status.filename);
 		session.filenow++;
 		setTimeout(indexstep,1); //rest for 1 ms to response status
 	} else {
 		finalize(function() {
 			status.done=true;
 			indexing=false;
-		}
+		});	
 	}
 }
 
@@ -146,7 +167,7 @@ var start=function(projname) {
 	if (indexing) return null;
 	indexing=true;
 
-	projinfo=projects.fullInfo(projname);
+	projinfo=nodeRequire("ksana-document").projects.fullInfo(projname);
 	if (!projinfo.files.length) return null;//nothing to index
 
 	initIndexer();

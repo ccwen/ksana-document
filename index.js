@@ -4,8 +4,8 @@ api:require('./kd_api'),
 tokenizers:require('./tokenizers')	,
 typeset:require('./typeset'),
 crypto:require('./sha1'),
-customfunc=require('./customfunc'),
-templates=require('./templates')
+customfunc:require('./customfunc'),
+templates:require('./templates')
 }
 if (typeof process!="undefined") {
 	API.persistent=require('./persistent');

@@ -89,6 +89,7 @@ var fullInfo=function(projname) {
   var proj=_names().filter(function(f){ return f.shortname==projname});
   if (!proj.length) return [];
   var files=[];
+  var fs=nodeRequire('fs');
   var ksana=JSON.parse(fs.readFileSync(proj[0].filename+'/ksana.json','utf8'));
   _folders(proj[0].filename).map(function(f){
     files=files.concat(files,_files(f.filename));
@@ -96,4 +97,4 @@ var fullInfo=function(projname) {
   return {ksana:ksana, project:proj[0],files: files.map(function(f){return f.filename})};
 }
 
-module.exports={names:_names,folders:_folders,files:_files,fullInfo:allFiles};
+module.exports={names:_names,folders:_folders,files:_files,fullInfo:fullInfo};
