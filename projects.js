@@ -36,7 +36,7 @@ function getFiles(dirs,filtercb){
   return out;
 }
 
-var _folders=function(path) {
+var listFolders=function(path) {
   var fs=nodeRequire('fs');
   var folders= getFiles( path ,function(name){
       return fs.statSync(name).isDirectory();
@@ -54,7 +54,7 @@ var _folders=function(path) {
   }
   return folders;
 };
-var _files=function(path) {
+var listFiles=function(path) {
   var fs=nodeRequire('fs');
   var files= getFiles( path,function(name){
       return name.indexOf(".kd")===name.length-3;
@@ -73,7 +73,7 @@ var _files=function(path) {
   return files;
 };
 
-var _names=function() {
+var listProject=function() {
   var fs=nodeRequire('fs');
 	//search for local 
 	var folders= getFiles(['./ksana_databases','../ksana_databases','../../ksana_databases'],function(name){
@@ -86,15 +86,24 @@ var _names=function() {
 }
 
 var fullInfo=function(projname) {
-  var proj=_names().filter(function(f){ return f.shortname==projname});
-  if (!proj.length) return [];
-  var files=[];
   var fs=nodeRequire('fs');
-  var ksana=JSON.parse(fs.readFileSync(proj[0].filename+'/ksana.json','utf8'));
-  _folders(proj[0].filename).map(function(f){
-    files=files.concat(files,_files(f.filename));
+  if (fs.existsSync(projname+'/ksana.json')) {//user provide a folder
+    var projectpath=projname;
+    var name=projname;
+  } else { //try id
+    var proj=listProject().filter(function(f){ return f.shortname==projname});
+    if (!proj.length) return null;
+    var projectpath=proj[0].filename;
+    var name=proj[0].shortname;
+  }
+
+  var files=[];  
+  var ksana=JSON.parse(fs.readFileSync(projectpath+'/ksana.json','utf8'));    
+
+  listFolders(projectpath).map(function(f){
+    files=files.concat(files,listFiles(f.filename));
   })
-  return {ksana:ksana, project:proj[0],files: files.map(function(f){return f.filename})};
+  return {name:name,filename:projectpath,ksana:ksana,files: files.map(function(f){return f.filename})};
 }
 
-module.exports={names:_names,folders:_folders,files:_files,fullInfo:fullInfo};
+module.exports={names:listProject,folders:listFolders,files:listFiles,fullInfo:fullInfo};

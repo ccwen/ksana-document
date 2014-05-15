@@ -116,7 +116,7 @@ var initIndexer=function() {
 var getMeta=function() {
 	var meta={};
 	meta.template=session.options.template;
-	meta.name=projinfo.project.shortname;
+	meta.name=projinfo.name;
 	return meta;
 }
 
@@ -135,7 +135,7 @@ var backup=function(ydbfn) {
 }
 var finalize=function(cb) {
 	var opt=session.options;
-	var ydbfn=projinfo.project.filename+'.ydb';
+	var ydbfn=projinfo.filename+'.ydb';
 	session.json.meta=getMeta();
 	
 	backup(ydbfn);
