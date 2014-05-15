@@ -314,6 +314,16 @@ var Create=function(path,opts) {
 		}]);
 	}
 
+	var getSync=function(path) {
+		if (!CACHE) return undefined;	
+		var o=CACHE;
+		for (var i=0;i<path.length;i++) {
+			var r=o[path[i]] ;
+			if (r===undefined) return undefined;
+			o=r;
+		}
+		return o;
+	}
 	var get=function(path,recursive,cb) {
 		if (typeof path=='undefined') path=[];
 		if (typeof recursive=='function') {
@@ -322,6 +332,7 @@ var Create=function(path,opts) {
 		}
 		recursive=recursive||false;
 		var that=this;
+		if (typeof cb!='function') return getSync(path);
 
 		reset.apply(this,[function(){
 

@@ -29,11 +29,11 @@ var putPosting=function(tk) {
 	var out=session.json;
 
 	if (!postingid) {
-		session.json.tokens[tk]=out.postingCount+1;
-		posting=out.postings[out.postingCount]=[];
 		out.postingCount++;
+		posting=out.postings[out.postingCount]=[];
+		session.json.tokens[tk]=out.postingCount;
 	} else {
-		posting=out.postings[postingid-1];
+		posting=out.postings[postingid];
 	}
 	posting.push(session.vpos);
 }
@@ -91,7 +91,7 @@ var initSession=function() {
 		files:[],
 		fileNames:[],
 		fileOffset:[],
-		postings:[],
+		postings:[[0]], //first one is always empty, because tokenid cannot be 0
 		tokens:{},
 		postingCount:0,
 	};

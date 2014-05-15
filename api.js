@@ -48,7 +48,10 @@ var getProjectFolders=function(p) {
 var getProjectFiles=function(p) {
   return nodeRequire("ksana-document").projects.files(p.filename);
 }
-
+var kse=require("./kse");
+var search=function(opts) {
+  return kse.search(opts);
+}
 var markup=require('./markup.js');
 var users=require('./users');
 var installservice=function(services) {
@@ -64,6 +67,7 @@ var installservice=function(services) {
     buildIndex:buildIndex,
     buildStatus:buildStatus,
     stopIndex:stopIndex,
+    search:search,
 		version: function() { return require('./package.json').version; }
 	};
 	if (services) {
