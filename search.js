@@ -215,10 +215,10 @@ var newQuery =function(engine,query,opts) {
 var loadPostings=function(engine,terms,cb) {
 	var tokenkeys=terms.map(function(t){return ["tokens",t.key] });
 
-	engine.preload(tokenkeys,function(postingid){
+	engine.gets(tokenkeys,function(postingid){
 		var postingkeys=postingid.map(function(t){return ["postings",t]});
 		
-		engine.preload(postingkeys,function(postings){
+		engine.gets(postingkeys,function(postings){
 			postings.map(function(p,i) { terms[i].posting=p });
 			cb();
 		})
@@ -253,7 +253,7 @@ var main=function(engine,q,opts,cb){
 	var Q=engine.queryCache[q];
 	if (!Q) Q=newQuery(engine,q,opts);
 	if (!Q || Q.phase==5) {
-		cb(R);
+		cb.apply(engine.context,[R]);
 		return R;
 	}
 
@@ -279,7 +279,7 @@ var main=function(engine,q,opts,cb){
 		}
 		//boolsearch.search.apply(this,[opts]);
 
-		cb(R);
+		cb.apply(engine.context,[R]);
 	});
 }
 
