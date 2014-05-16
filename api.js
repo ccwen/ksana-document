@@ -54,11 +54,7 @@ var search=function(opts) {
 }
 var get=function(opts,cb) {
   require("./kde").openLocal(opts.db,function(engine){
-    if (opts.keys) {
-      engine.gets(opts.keys,function(data){cb(0,data)}); //0 is err code
-    } else if (opts.key) {
       engine.get(opts.key,function(data){cb(0,data)});
-    }
   });
 }
 get.async=true;

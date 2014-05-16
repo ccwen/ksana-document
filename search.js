@@ -215,10 +215,10 @@ var newQuery =function(engine,query,opts) {
 var loadPostings=function(engine,terms,cb) {
 	var tokenkeys=terms.map(function(t){return ["tokens",t.key] });
 
-	engine.gets(tokenkeys,function(postingid){
+	engine.get(tokenkeys,function(postingid){
 		var postingkeys=postingid.map(function(t){return ["postings",t]});
 		
-		engine.gets(postingkeys,function(postings){
+		engine.get(postingkeys,function(postings){
 			postings.map(function(p,i) { terms[i].posting=p });
 			cb();
 		})

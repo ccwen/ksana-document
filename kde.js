@@ -9,6 +9,32 @@ var pool={},localPool={};
 var customfunc=require("./customfunc");
 
 
+var gets=function(keys,cb) { //get many data with one call
+	if (!keys) return ;
+	if (typeof keys=='string') {
+		keys=[keys];
+	}
+	var engine=this, output=[];
+
+	var makecb=function(key){
+		return function(data){
+				if (!(typeof data =='object' && data.__empty)) output.push(data);
+				engine.get(key,taskqueue.shift());
+		};
+	};
+
+	var taskqueue=[];
+	for (var i=0;i<keys.length;i++) {
+			taskqueue.push(makecb(keys[i]));
+	};
+
+	taskqueue.push(function(data){
+		output.push(data);
+		cb(output,keys); //return to caller
+	});
+
+	taskqueue.shift()({__empty:true}); //run the task
+}
 var createLocalEngine=function(ydb,cb) {
 	var engine={lastAccess:new Date(), ydb:ydb};
 
@@ -18,10 +44,17 @@ var createLocalEngine=function(ydb,cb) {
 		cb(engine);
 	});
 
-	engine.gets=gets;
 	engine.queryCache={};
 	engine.postingCache={}; //cache for merged posting
-	engine.get=function(key,recursive,cb) {return engine.ydb.get(key,recursive,cb);};	
+	engine.get=function(key,recursive,cb) {
+		if (typeof recursive=="function") cb=recursive;
+		if (typeof key=="string") key=[key];
+		if (typeof key[0] =="object") {
+			return gets.apply(engine,[key,cb]);
+		} else {
+			return engine.ydb.get(key,recursive,cb);	
+		}
+	};	
 	return engine;
 }
 
@@ -67,32 +100,6 @@ var createEngine=function(ydbid) {
 	return engine;
 }
 
-var gets=function(keys,cb) { //get many data with one call
-	if (!keys) return ;
-	if (typeof keys=='string') {
-		keys=[keys];
-	}
-	var engine=this, output=[];
-
-	var makecb=function(key){
-		return function(data){
-				if (!(typeof data =='object' && data.__empty)) output.push(data);
-				engine.get(key,taskqueue.shift());
-		};
-	};
-
-	var taskqueue=[];
-	for (var i=0;i<keys.length;i++) {
-			taskqueue.push(makecb(keys[i]));
-	};
-
-	taskqueue.push(function(data){
-		output.push(data);
-		cb(output,keys); //return to caller
-	});
-
-	taskqueue.shift()({__empty:true}); //run the task
-}
 
 var open=function(ydbid,context) {
 	var engine=localPool[ydbid];
