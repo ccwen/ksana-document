@@ -1,3 +1,9 @@
+/*
+  Ksana Search Engine.
+
+  need a KDE instance to be functional
+
+*/
 var search=require("./search");
 var kde=require("./kde");
 

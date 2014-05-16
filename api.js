@@ -8,11 +8,11 @@ var enumProject=function() {
   return nodeRequire("ksana-document").projects.names();
 };
 
-var openDocument=function(f) {
+var loadDocumentJSON=function(f) {
   var persistent=nodeRequire('ksana-document').persistent;
   //if empty file, create a empty
-  var doc=persistent.open(f);
-  return doc;
+  var docjson=persistent.loadLocal(f);
+  return docjson;
 };
 
 var saveMarkup=function(opts) {
@@ -34,7 +34,7 @@ var getUserSettings=function(user) {
   return {};
 }
 var buildIndex=function(projname) {
-  var indexer=nodeRequire('ksana-document').indexer.start();
+  nodeRequire('ksana-document').indexer.start(projname);
 }
 var buildStatus=function(session) {
   return nodeRequire("ksana-document").indexer.status(session);
@@ -48,10 +48,21 @@ var getProjectFolders=function(p) {
 var getProjectFiles=function(p) {
   return nodeRequire("ksana-document").projects.files(p.filename);
 }
-var kse=require("./kse");
+
 var search=function(opts) {
-  return kse.search(opts);
+  return require("./kse").search(opts);
 }
+var get=function(opts,cb) {
+  require("./kde").openLocal(opts.db,function(engine){
+    if (opts.keys) {
+      engine.gets(opts.keys,function(data){cb(0,data)}); //0 is err code
+    } else if (opts.key) {
+      engine.get(opts.key,function(data){cb(0,data)});
+    }
+  });
+}
+get.async=true;
+
 var markup=require('./markup.js');
 var users=require('./users');
 var installservice=function(services) {
@@ -59,7 +70,7 @@ var installservice=function(services) {
 		enumProject:enumProject,
     getProjectFolders:getProjectFolders,
     getProjectFiles:getProjectFiles,
-    openDocument:openDocument,
+    loadDocumentJSON:loadDocumentJSON,
     saveMarkup:saveMarkup,
     saveDocument:saveDocument,
     login:users.login,
@@ -68,6 +79,7 @@ var installservice=function(services) {
     buildStatus:buildStatus,
     stopIndex:stopIndex,
     search:search,
+    get:get,
 		version: function() { return require('./package.json').version; }
 	};
 	if (services) {

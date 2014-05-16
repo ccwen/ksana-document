@@ -13,6 +13,7 @@ var parseTerm = function(engine,raw,opts) {
 	term=engine.customfunc.normalize(term);
 	
 	if (lastchar=='%') {
+		throw "not implement yet"
 		res.variants=getTermVariants.apply(this,[term.substring(0,term.length-1)]).variants;
 		res.op='prefix'
 	} else if (lastchar=='^') {
@@ -260,6 +261,19 @@ var main=function(engine,q,opts,cb){
 		Q.phrases.forEach(loadPhrase.bind(Q));
 	
 		//groupBy();
+		/*
+		  client receive all folders and files by opening a database.
+
+			return total hit
+			hit groupby folder  [folderid:hit]
+			hit groupby files.  [fileid:hit] only send with hit
+			what happen if user add new file?
+		
+
+			excerpt on server side. ( cross multiple page excerpt)
+			per page highlighting on client side.
+
+		*/
 		if (Q.phrases.length==1) {
 			R.raw=Q.phrases[0].posting;
 		}

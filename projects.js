@@ -1,3 +1,7 @@
+/*
+  given a project id, find all folders and files
+  projects be should under ksana_databases, like node_modules
+*/
 if (typeof nodeRequire=='undefined')nodeRequire=require;
 function getFiles(dirs,filtercb){	
   var fs=nodeRequire('fs');

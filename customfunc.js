@@ -14,22 +14,21 @@
   for client and server side
   
 */
-var templates=require("./templates");
-var lastest=1;
-var template_simple="simple";
-var optimize=function(json,template) {
-	template=template||template_simple;
+var configs=require("./configs");
+var config_simple="simple1";
+var optimize=function(json,config) {
+	config=config||config_simple;
 	return json;
 }
 
-var getAPI=function(template) {
-	template=template||template_simple;
-	var func=templates[template].func;
+var getAPI=function(config) {
+	config=config||config_simple;
+	var func=configs[config].func;
 
-	if (template=="simple1") {
+	if (config=="simple1") {
 		//add common custom function here
 		func.optimize=optimize;
-	} else throw "template "+template +"not supported";
+	} else throw "config "+config +"not supported";
 
 	return func;
 }

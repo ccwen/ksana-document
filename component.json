@@ -12,8 +12,12 @@
   "main": "index.js",
   "scripts": [
     "index.js","document.js",
-    "kd_api.js","xml.js","template_accelon.js",
-    "files.js","persistent.js","tokenizers.js","markup.js","typeset.js","sha1.js","users.js"
+    "api.js","xml.js","template_accelon.js",
+    "persistent.js","tokenizers.js","markup.js","typeset.js",
+    "sha1.js","users.js","customfunc.js","configs.js",
+    "projects.js","indexer.js",
+    "ydb.js","ydbfs.js", "ydbw.js","kse.js","kde.js","boolsearch.js",
+    "search.js","plist.js"
   ],
   "remotes": []
 }

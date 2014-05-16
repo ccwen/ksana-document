@@ -17,7 +17,7 @@ if (typeof nodeRequire=='undefined')nodeRequire=require;
 
 var indexing=false; //only allow one indexing task
 var projinfo=null;
-var status={progress:1,done:false};
+var status={progress:0,done:false}; //progress ==1 completed
 var session={};
 var api=null;
 var isSkip=null;
@@ -95,17 +95,17 @@ var initSession=function() {
 		tokens:{},
 		postingCount:0,
 	};
-	var session={vpos:1, json:json , 
+	var session={vpos:1, json:json ,
 		           indexedTextLength:0,
-		           options: projinfo.ksana.indexopt };
+		           options: projinfo.ksana.ydbmeta };
 	return session;
 }
 var initIndexer=function() {
 	session=initSession();
 	session.filenow=0;
 	session.files=projinfo.files;
-	
-	api=nodeRequire("./customfunc.js").getAPI(session.options.template);
+	status.done=false;
+	api=nodeRequire("ksana-document").customfunc.getAPI(session.options.config);
 	
 	normalize=api["normalize"];
 	isSkip=api["isSkip"];
@@ -115,7 +115,7 @@ var initIndexer=function() {
 
 var getMeta=function() {
 	var meta={};
-	meta.template=session.options.template;
+	meta.config=session.options.config;
 	meta.name=projinfo.name;
 	return meta;
 }
@@ -140,12 +140,12 @@ var finalize=function(cb) {
 	
 	backup(ydbfn);
 	status.message='writing '+ydbfn;
-	//output=api("optimize")(session.json,session.indexopt.template);
+	//output=api("optimize")(session.json,session.ydbmeta.config);
 
-	var ydb =nodeRequire("./ydbw")();
-	ydb.save(session.json,null,{autodelete:true});
+	var ydbw =nodeRequire("ksana-document").ydbw(ydbfn);
+	ydbw.save(session.json,null,{autodelete:true});
 	
-	ydb.writeFile(ydbfn,function(total,written) {
+	ydbw.writeFile(ydbfn,function(total,written) {
 		status.progress=written/total;
 		if (total==written) cb();
 	});
@@ -155,7 +155,7 @@ var indexstep=function() {
 	
 	if (session.filenow<session.files.length) {
 		status.filename=session.files[session.filenow];
-		status.progress=Math.floor((session.filenow/session.files.length)*100);
+		status.progress=session.filenow/session.files.length;
 		putFile(status.filename);
 		session.filenow++;
 		setTimeout(indexstep,1); //rest for 1 ms to response status
@@ -175,6 +175,7 @@ var start=function(projname) {
 	indexing=true;
 
 	projinfo=nodeRequire("ksana-document").projects.fullInfo(projname);
+
 	if (!projinfo.files.length) return null;//nothing to index
 
 	initIndexer();
@@ -182,8 +183,9 @@ var start=function(projname) {
   return status;
 }
 
-var stop=function(status) {
+var stop=function() {
   status.done=true;
+  status.message="User Abort";
   indexing=false;
   return status;
 }

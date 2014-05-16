@@ -147,7 +147,7 @@ var Yfs=function(path,opts) {
 	this.writeOffset=writeOffset; //5 bytes offset
 	this.writeStringArray=writeStringArray;
 	this.writeFixedArray=writeFixedArray;
-	Object.defineProperty(this, "buffer", {get : function(){ return dbuf; }});
+	Object.defineProperty(this, "buf", {get : function(){ return dbuf; }});
 	
 	return this;
 }
@@ -156,6 +156,8 @@ var Create=function(opts) {
 	opts=opts||{};
 	var yfs=new Yfs(opts);
 	var cur=0;
+
+	var handle={};
 	
 	//no signature
 	var writeVInt =function(arr) {
@@ -261,7 +263,7 @@ var Create=function(opts) {
 		open({type:DT.array,key:key});
 	}
 	var saveInts=function(arr,key,func) {
-		func.apply(this,[arr,key]);
+		func.apply(handle,[arr,key]);
 	}
 	var close = function(opt) {
 		if (!folders.length) throw 'empty stack';
@@ -319,7 +321,7 @@ var Create=function(opts) {
 		opts=opts||{};
 		
 		if (typeof J=="null" || typeof J=="undefined") {
-			throw 'cannot save null value of '+key+' folders'+JSON.stringify(folders);
+			throw 'cannot save null value of ['+key+'] folders'+JSON.stringify(folders);
 			return;
 		}
 		var type=J.constructor.name;
@@ -369,13 +371,11 @@ var Create=function(opts) {
 		return cur;
 	}
 
-	Object.defineProperty(this, "buffer", {get : function(){ return yfs.buffer; }});
-	Object.defineProperty(this, "size", {get : function(){ return cur; }});
-
+	Object.defineProperty(handle, "size", {get : function(){ return cur; }});
 
 	var writeFile=function(fn,opts,cb) {
 		var fs=require('fs');
-		var totalbyte=this.currentsize();
+		var totalbyte=handle.currentsize();
 		var written=0,batch=0;
 		
 		if (typeof cb=="undefined" || typeof opts=="function") { //do not have
@@ -400,32 +400,32 @@ var Create=function(opts) {
 				var bufstart=batchsize*batch;
 				var bufend=bufstart+batchsize;
 				if (bufend>totalbyte) bufend=totalbyte;
-				var sliced=yfs.buffer.slice(bufstart,bufend);
+				var sliced=yfs.buf.slice(bufstart,bufend);
 				written+=sliced.length;
 				fs.appendFile(fn,sliced,writeCb(totalbyte,written, cb,next));
 			}
 		}
-		var batches=1+Math.floor(this.size/batchsize);
+		var batches=1+Math.floor(handle.size/batchsize);
 		next();
 	}
-	this.free=free;
-	this.saveI32=saveI32;
-	this.saveUI8=saveUI8;
-	this.saveBool=saveBool;
-	this.saveString=saveString;
-	this.saveVInt=saveVInt;
-	this.savePInt=savePInt;
-	this.saveInts=saveInts;
-	this.saveBlob=saveBlob;
-	this.save=save;
-	this.openArray=openArray;
-	this.openObject=openObject;
-	this.stringEncoding=stringEncoding;
+	handle.free=free;
+	handle.saveI32=saveI32;
+	handle.saveUI8=saveUI8;
+	handle.saveBool=saveBool;
+	handle.saveString=saveString;
+	handle.saveVInt=saveVInt;
+	handle.savePInt=savePInt;
+	handle.saveInts=saveInts;
+	handle.saveBlob=saveBlob;
+	handle.save=save;
+	handle.openArray=openArray;
+	handle.openObject=openObject;
+	handle.stringEncoding=stringEncoding;
 	//this.integerEncoding=integerEncoding;
-	this.close=close;
-	this.writeFile=writeFile;
-	this.currentsize=currentsize;
-	return this;
+	handle.close=close;
+	handle.writeFile=writeFile;
+	handle.currentsize=currentsize;
+	return handle;
 }
 
 module.exports=Create;
