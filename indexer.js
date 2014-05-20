@@ -77,7 +77,8 @@ var putFile=function(fn) {
 	var fileinfo={pages:[],pageNames:[],pageOffset:[]};
 	session.json.files.push(fileinfo);
 	session.json.fileNames.push(shortfn);
-	session.json.fileOffset.push(session.vpos);
+	session.json.fileOffsets.push(session.vpos);
+	status.message="indexing "+fn;
 	for (var i=1;i<doc.pageCount;i++) {
 		var pg=doc.getPage(i);
 		fileinfo.pages.push(pg.inscription);
@@ -90,7 +91,7 @@ var initSession=function() {
 	var json={
 		files:[],
 		fileNames:[],
-		fileOffset:[],
+		fileOffsets:[],
 		postings:[[0]], //first one is always empty, because tokenid cannot be 0
 		tokens:{},
 		postingCount:0,
@@ -135,17 +136,19 @@ var backup=function(ydbfn) {
 }
 var finalize=function(cb) {
 	var opt=session.options;
-	var ydbfn=projinfo.filename+'.ydb';
+	var kdbfn=projinfo.name+'.kdb';
+
+	session.json.fileOffsets.push(session.vpos); //serve as terminator
 	session.json.meta=getMeta();
 	
-	backup(ydbfn);
-	status.message='writing '+ydbfn;
+	backup(kdbfn);
+	status.message='writing '+kdbfn;
 	//output=api("optimize")(session.json,session.ydbmeta.config);
 
-	var ydbw =nodeRequire("ksana-document").ydbw(ydbfn);
-	ydbw.save(session.json,null,{autodelete:true});
+	var kdbw =nodeRequire("ksana-document").kdbw(kdbfn);
+	kdbw.save(session.json,null,{autodelete:true});
 	
-	ydbw.writeFile(ydbfn,function(total,written) {
+	kdbw.writeFile(kdbfn,function(total,written) {
 		status.progress=written/total;
 		if (total==written) cb();
 	});
@@ -179,8 +182,8 @@ var start=function(projname) {
 	if (!projinfo.files.length) return null;//nothing to index
 
 	initIndexer();
-  status.projectname=projname;
-  return status;
+ 	status.projectname=projname;
+  	return status;
 }
 
 var stop=function() {

@@ -54,7 +54,7 @@ var search=function(opts) {
 }
 var get=function(opts,cb) {
   require("./kde").openLocal(opts.db,function(engine){
-      engine.get(opts.key,function(data){cb(0,data)});
+      engine.get(opts.key,opts.recursive,function(data){cb(0,data)});
   });
 }
 get.async=true;
@@ -63,20 +63,20 @@ var markup=require('./markup.js');
 var users=require('./users');
 var installservice=function(services) {
 	var API={ 
-		enumProject:enumProject,
-    getProjectFolders:getProjectFolders,
-    getProjectFiles:getProjectFiles,
-    loadDocumentJSON:loadDocumentJSON,
-    saveMarkup:saveMarkup,
-    saveDocument:saveDocument,
-    login:users.login,
-    getUserSettings:getUserSettings,
-    buildIndex:buildIndex,
-    buildStatus:buildStatus,
-    stopIndex:stopIndex,
-    search:search,
-    get:get,
-		version: function() { return require('./package.json').version; }
+        enumProject:enumProject
+        ,getProjectFolders:getProjectFolders
+        ,getProjectFiles:getProjectFiles
+        ,loadDocumentJSON:loadDocumentJSON
+        ,saveMarkup:saveMarkup
+        ,saveDocument:saveDocument
+        ,login:users.login
+        ,getUserSettings:getUserSettings
+        ,buildIndex:buildIndex
+        ,buildStatus:buildStatus
+        ,stopIndex:stopIndex
+        ,search:search
+        ,get:get
+	  ,version: function() { return require('./package.json').version; }
 	};
 	if (services) {
 		services.document=API;

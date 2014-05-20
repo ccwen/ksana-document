@@ -16,7 +16,7 @@
     "persistent.js","tokenizers.js","markup.js","typeset.js",
     "sha1.js","users.js","customfunc.js","configs.js",
     "projects.js","indexer.js",
-    "ydb.js","ydbfs.js", "ydbw.js","kse.js","kde.js","boolsearch.js",
+    "kdb.js","kdbfs.js", "kdbw.js","kse.js","kde.js","boolsearch.js",
     "search.js","plist.js"
   ],
   "remotes": []

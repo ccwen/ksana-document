@@ -242,7 +242,6 @@ var groupBy=function(Q,posting) {
 		}
 		docfreq[that.groupunit]={doclist:P.docs,freq:P.freq};
 	});
-	this.phase=2;
 	return this;
 }
 
@@ -252,10 +251,6 @@ var main=function(engine,q,opts,cb){
 	var R={query:q,opts:opts,dbname:engine.dbname,result:[]};
 	var Q=engine.queryCache[q];
 	if (!Q) Q=newQuery(engine,q,opts);
-	if (!Q || Q.phase==5) {
-		cb.apply(engine.context,[R]);
-		return R;
-	}
 
 	loadPostings(engine,Q.terms,function(){
 		Q.phrases.forEach(loadPhrase.bind(Q));

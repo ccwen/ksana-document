@@ -53,12 +53,12 @@ var pack_int = function (ar, savedelta) { // pack ar into
   } while (i < ar.length);
   return r;
 }
-var Yfs=function(path,opts) {
+var Kfs=function(path,opts) {
 	
 	var handle=null;
 	opts=opts||{};
 	opts.size=opts.size||65536*2048; 
-	console.log('ydb estimate size:',opts.size);
+	console.log('kdb estimate size:',opts.size);
 	var dbuf=new Buffer(opts.size);
 	var cur=0;//dbuf cursor
 	
@@ -154,7 +154,7 @@ var Yfs=function(path,opts) {
 
 var Create=function(opts) {
 	opts=opts||{};
-	var yfs=new Yfs(opts);
+	var kfs=new Kfs(opts);
 	var cur=0;
 
 	var handle={};
@@ -162,7 +162,7 @@ var Create=function(opts) {
 	//no signature
 	var writeVInt =function(arr) {
 		var o=pack_int(arr,false);
-		yfs.writeFixedArray(o,cur,1);
+		kfs.writeFixedArray(o,cur,1);
 		cur+=o.length;
 	}
 	var writeVInt1=function(value) {
@@ -171,13 +171,13 @@ var Create=function(opts) {
 	//for postings
 	var writePInt =function(arr) {
 		var o=pack_int(arr,true);
-		yfs.writeFixedArray(o,cur,1);
+		kfs.writeFixedArray(o,cur,1);
 		cur+=o.length;
 	}
 	
 	var saveVInt = function(arr,key) {
 		var start=cur;
-		cur+=yfs.writeSignature(DT.vint,cur);
+		cur+=kfs.writeSignature(DT.vint,cur);
 		writeVInt(arr);
 		var written = cur-start;
 		pushitem(key,written);
@@ -185,7 +185,7 @@ var Create=function(opts) {
 	}
 	var savePInt = function(arr,key) {
 		var start=cur;
-		cur+=yfs.writeSignature(DT.pint,cur);
+		cur+=kfs.writeSignature(DT.pint,cur);
 		writePInt(arr);
 		var written = cur-start;
 		pushitem(key,written);
@@ -194,40 +194,40 @@ var Create=function(opts) {
 
 	
 	var saveUI8 = function(value,key) {
-		var written=yfs.writeUI8(value,cur);
+		var written=kfs.writeUI8(value,cur);
 		cur+=written;
 		pushitem(key,written);
 		return written;
 	}
 	var saveBool=function(value,key) {
-		var written=yfs.writeBool(value,cur);
+		var written=kfs.writeBool(value,cur);
 		cur+=written;
 		pushitem(key,written);
 		return written;
 	}
 	var saveI32 = function(value,key) {
-		var written=yfs.writeI32(value,cur);
+		var written=kfs.writeI32(value,cur);
 		cur+=written;
 		pushitem(key,written);
 		return written;
 	}	
 	var saveString = function(value,key,encoding) {
 		encoding=encoding||stringencoding;
-		var written=yfs.writeString(value,cur,encoding);
+		var written=kfs.writeString(value,cur,encoding);
 		cur+=written;
 		pushitem(key,written);
 		return written;
 	}
 	var saveStringArray = function(arr,key,encoding) {
 		encoding=encoding||stringencoding;
-		var written=yfs.writeStringArray(arr,cur,encoding);
+		var written=kfs.writeStringArray(arr,cur,encoding);
 		cur+=written;
 		pushitem(key,written);
 		return written;
 	}
 	
 	var saveBlob = function(value,key) {
-		var written=yfs.writeBlob(value,cur);
+		var written=kfs.writeBlob(value,cur);
 		cur+=written;
 		pushitem(key,written);
 		return written;
@@ -247,8 +247,8 @@ var Create=function(opts) {
 		var start=cur;
 		var key=opt.key || null;
 		var type=opt.type||DT.array;
-		cur+=yfs.writeSignature(type,cur);
-		cur+=yfs.writeOffset(0x0,cur); // pre-alloc space for offset
+		cur+=kfs.writeSignature(type,cur);
+		cur+=kfs.writeOffset(0x0,cur); // pre-alloc space for offset
 		var folder={
 			type:type, key:key,
 			start:start,datastart:cur,
@@ -269,7 +269,7 @@ var Create=function(opts) {
 		if (!folders.length) throw 'empty stack';
 		var folder=folders.pop();
 		//jump to lengths and keys
-		yfs.writeOffset( cur-folder.datastart, folder.datastart-5);
+		kfs.writeOffset( cur-folder.datastart, folder.datastart-5);
 		var itemcount=folder.itemslength.length;
 		//save lengths
 		writeVInt1(itemcount);
@@ -277,7 +277,7 @@ var Create=function(opts) {
 		
 		if (folder.type===DT.object) {
 			//use utf8 for keys
-			cur+=yfs.writeStringArray(folder.keys,cur,'utf8');
+			cur+=kfs.writeStringArray(folder.keys,cur,'utf8');
 		}
 		written=cur-folder.start;
 		pushitem(folder.key,written);
@@ -365,7 +365,7 @@ var Create=function(opts) {
 	
 	var free=function() {
 		while (folders.length) close();
-		yfs.free();
+		kfs.free();
 	}
 	var currentsize=function() {
 		return cur;
@@ -400,7 +400,7 @@ var Create=function(opts) {
 				var bufstart=batchsize*batch;
 				var bufend=bufstart+batchsize;
 				if (bufend>totalbyte) bufend=totalbyte;
-				var sliced=yfs.buf.slice(bufstart,bufend);
+				var sliced=kfs.buf.slice(bufstart,bufend);
 				written+=sliced.length;
 				fs.appendFile(fn,sliced,writeCb(totalbyte,written, cb,next));
 			}

@@ -24,10 +24,11 @@ var optimize=function(json,config) {
 var getAPI=function(config) {
 	config=config||config_simple;
 	var func=configs[config].func;
-
+	func.optimize=optimize;
 	if (config=="simple1") {
 		//add common custom function here
-		func.optimize=optimize;
+	} else if (config=="tibetan1") {
+
 	} else throw "config "+config +"not supported";
 
 	return func;

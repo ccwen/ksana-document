@@ -1,5 +1,5 @@
 /*
-	YADB version 3.0 GPL
+	KDB version 3.0 GPL
 	yapcheahshen@gmail.com
 	2013/12/28
 	asyncronize version of yadb
@@ -9,7 +9,7 @@
 
   
 */
-var Yfs=require('./ydbfs');	
+var Kfs=require('./kdbfs');	
 
 var DT={
 	uint8:'1', //unsigned 1 byte integer
@@ -424,9 +424,9 @@ var Create=function(path,opts) {
 		this.exists=exists;
 	}
 
-	var yfs=new Yfs(path,opts);
-	this.fs=yfs;
-	this.size=yfs.size;
+	var kfs=new Kfs(path,opts);
+	this.fs=kfs;
+	this.size=kfs.size;
 	setupapi.call(this);
 	
 	return this;

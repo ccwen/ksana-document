@@ -92,8 +92,10 @@ var listProject=function() {
 var fullInfo=function(projname) {
   var fs=nodeRequire('fs');
   if (fs.existsSync(projname+'/ksana.json')) {//user provide a folder
+    var normalized=require('path').resolve(projname);
+    normalized=normalized.substring(normalized.lastIndexOf(require('path').sep)+1);
     var projectpath=projname;
-    var name=projname;
+    var name=normalized;
   } else { //try id
     var proj=listProject().filter(function(f){ return f.shortname==projname});
     if (!proj.length) return null;
@@ -105,7 +107,8 @@ var fullInfo=function(projname) {
   var ksana=JSON.parse(fs.readFileSync(projectpath+'/ksana.json','utf8'));    
 
   listFolders(projectpath).map(function(f){
-    files=files.concat(files,listFiles(f.filename));
+    var ff=listFiles(f.filename);
+    files=files.concat(ff);
   })
   return {name:name,filename:projectpath,ksana:ksana,files: files.map(function(f){return f.filename})};
 }
