@@ -39,12 +39,12 @@ var _gets=function(keys,cb) { //get many data with one call
 
 	taskqueue.shift()({__empty:true}); //run the task
 }
-var createLocalEngine=function(ydb,cb) {
-	var engine={lastAccess:new Date(), ydb:ydb};
+var createLocalEngine=function(kdb,cb) {
+	var engine={lastAccess:new Date(), kdb:kdb};
 
-	ydb.get(["meta"],true,function(res){
+	kdb.get(["meta"],true,function(res){
 		engine.dbname=res.name;
-		engine.customfunc=customfunc.getAPI(res.template);
+		engine.customfunc=customfunc.getAPI(res.cofig);
 		cb(engine);
 	});
 
@@ -56,7 +56,7 @@ var createLocalEngine=function(ydb,cb) {
 		if (typeof key[0] =="object") {
 			return _gets.apply(engine,[key,cb]);
 		} else {
-			return engine.ydb.get(key,recursive,cb);	
+			return engine.kdb.get(key,recursive,cb);	
 		}
 	};	
 	return engine;
@@ -91,7 +91,7 @@ var getRemote=function(key,recursive,cb) {
 		}
 		//now ask server for unknown datum
 		engine.traffic++;
-		var opts={key:keys,recursive:recursive,db:engine.ydbid};
+		var opts={key:keys,recursive:recursive,db:engine.kdbid};
 		$kse("get",opts).done(function(datum){
 			//merge the server result with cached 
 			for (var i=0;i<output.length;i++) {
@@ -107,11 +107,12 @@ var getRemote=function(key,recursive,cb) {
 		var cachekey=key.join("\0");
 		var data=engine.cache[cachekey];
 		if (typeof data!="undefined") {
-			cb.apply(engine.context,[data]);
+			if (cb) cb.apply(engine.context,[data]);
+			return data;//in cache , return immediately
 		} else {
 			engine.traffic++;
 			engine.fetched++;
-			var opts={key:key,recursive:recursive,db:engine.ydbid};
+			var opts={key:key,recursive:recursive,db:engine.kdbid};
 			$kse("get",opts).done(function(data){
 				engine.cache[cachekey]=data;
 				cb.apply(engine.context,[data]);	
@@ -121,30 +122,34 @@ var getRemote=function(key,recursive,cb) {
 }
 
 
-var createEngine=function(ydbid) {
+var createEngine=function(kdbid) {
 	var $kse=Require("ksanaforge-kse").$yase; 
-	var engine={lastAccess:new Date(), ydbid:ydbid, cache:{} , 
+	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
 
-	$kse("get",{key:["meta"], recursive:true, db:ydbid} ).done(function(meta){
-		console.log("remote kde connection ["+ydbid+"] established.");
+	$kse("get",{key:["meta"], recursive:true, db:kdbid} ).done(function(meta){
+		console.log("remote kde connection ["+kdbid+"] established.");
 		engine.dbname=meta.name;
-		engine.customfunc=customfunc.getAPI(meta.template);
+		engine.customfunc=customfunc.getAPI(meta.config);
 		engine.cache["meta"]=meta; //put into cache manually
-		engine.ready=true;
 	});
 
+	$kse("get",{key:[["fileNames"],["fileOffsets"]], recursive:true,db:kdbid}).done(function(res){
+		engine.cache["fileNames"]=res[0];
+		engine.cache["fileOffsets"]=res[1];
+		engine.ready=true;
+	})
 	engine.setContext=function(ctx) {this.context=ctx};
 	engine.get=getRemote;
 	return engine;
 }
+ 
 
-
-var open=function(ydbid,context) {
-	var engine=localPool[ydbid];
+var open=function(kdbid,context) {
+	var engine=localPool[kdbid];
 	if (engine) return engine;
-	engine=createEngine(ydbid,context);
-	localPool[ydbid]=engine;
+	engine=createEngine(kdbid,context);
+	localPool[kdbid]=engine;
 	return engine;
 }
 

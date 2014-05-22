@@ -251,29 +251,16 @@ var main=function(engine,q,opts,cb){
 	var R={query:q,opts:opts,dbname:engine.dbname,result:[]};
 	var Q=engine.queryCache[q];
 	if (!Q) Q=newQuery(engine,q,opts);
-
+	engine.queryCache[q]=Q;
 	loadPostings(engine,Q.terms,function(){
 		Q.phrases.forEach(loadPhrase.bind(Q));
-	
-		//groupBy();
-		/*
-		  client receive all folders and files by opening a database.
-
-			return total hit
-			hit groupby folder  [folderid:hit]
-			hit groupby files.  [fileid:hit] only send with hit
-			what happen if user add new file?
-		
-
-			excerpt on server side. ( cross multiple page excerpt)
-			per page highlighting on client side.
-
-		*/
 		if (Q.phrases.length==1) {
 			R.raw=Q.phrases[0].posting;
+		} else {
+			//multiple terms
 		}
-		//boolsearch.search.apply(this,[opts]);
-
+		var fileOffsets=Q.engine.get("fileOffsets");
+		R.byFile=Q.byFile=plist.groupbyposting(R.raw, fileOffsets);
 		cb.apply(engine.context,[R]);
 	});
 }
