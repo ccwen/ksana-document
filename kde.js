@@ -122,10 +122,11 @@ var getRemote=function(key,recursive,cb) {
 }
 
 
-var createEngine=function(kdbid) {
+var createEngine=function(kdbid,cb) {
 	var $kse=Require("ksanaforge-kse").$yase; 
 	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
+	engine.setContext=function(ctx) {this.context=ctx};
 
 	$kse("get",{key:["meta"], recursive:true, db:kdbid} ).done(function(meta){
 		console.log("remote kde connection ["+kdbid+"] established.");
@@ -138,17 +139,20 @@ var createEngine=function(kdbid) {
 		engine.cache["fileNames"]=res[0];
 		engine.cache["fileOffsets"]=res[1];
 		engine.ready=true;
+		if (cb) cb(engine);
 	})
-	engine.setContext=function(ctx) {this.context=ctx};
 	engine.get=getRemote;
 	return engine;
 }
  
 
-var open=function(kdbid,context) {
+var open=function(kdbid,cb) {
 	var engine=localPool[kdbid];
-	if (engine) return engine;
-	engine=createEngine(kdbid,context);
+	if (engine) {
+		if (cb) cb(engine);
+		return engine;
+	}
+	engine=createEngine(kdbid,cb);
 	localPool[kdbid]=engine;
 	return engine;
 }

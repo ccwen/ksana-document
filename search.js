@@ -244,7 +244,22 @@ var groupBy=function(Q,posting) {
 	});
 	return this;
 }
-
+var groupByFolder=function(engine,filehits) {
+	var files=engine.get("fileNames");
+	var prevfolder="",hits=0,out=[];
+	for (var i=0;i<filehits.length;i++) {
+		var fn=files[i];
+		var folder=fn.substring(0,fn.indexOf('/'));
+		if (prevfolder && prevfolder!=folder) {
+			out.push(hits);
+			hits=0;
+		}
+		hits+=filehits[i].length;
+		prevfolder=folder;
+	}
+	out.push(hits);
+	return out;
+}
 var main=function(engine,q,opts,cb){
 	opts=opts||q;
 
@@ -261,6 +276,9 @@ var main=function(engine,q,opts,cb){
 		}
 		var fileOffsets=Q.engine.get("fileOffsets");
 		R.byFile=Q.byFile=plist.groupbyposting(R.raw, fileOffsets);
+		R.byFile.shift();R.byFile.pop();
+		R.byFolder=Q.byFolder=groupByFolder(engine,Q.byFile);
+
 		cb.apply(engine.context,[R]);
 	});
 }
