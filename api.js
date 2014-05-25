@@ -8,10 +8,12 @@ var enumProject=function() {
   return nodeRequire("ksana-document").projects.names();
 };
 
-var loadDocumentJSON=function(f) {
+var loadDocumentJSON=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
+  var ppath=getProjectPath(opts.project);
+  var path=nodeRequire('path');
   //if empty file, create a empty
-  var docjson=persistent.loadLocal(f);
+  var docjson=persistent.loadLocal(  path.resolve(ppath,opts.file));
   return docjson;
 };
 

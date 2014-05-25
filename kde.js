@@ -45,11 +45,17 @@ var createLocalEngine=function(kdb,cb) {
 	kdb.get(["meta"],true,function(res){
 		engine.dbname=res.name;
 		engine.customfunc=customfunc.getAPI(res.cofig);
-		cb(engine);
+		//if (cb) cb(engine);
+	});
+
+	kdb.get([["fileNames"],["fileOffsets"]], true,function(res){
+		engine.ready=true;
+		if (cb) cb(engine);
 	});
 
 	engine.queryCache={};
 	engine.postingCache={}; //cache for merged posting
+
 	engine.get=function(key,recursive,cb) {
 		if (typeof recursive=="function") cb=recursive;
 		if (typeof key=="string") key=[key];
@@ -121,6 +127,16 @@ var getRemote=function(key,recursive,cb) {
 	}
 }
 
+var fileOffset=function(fn) {
+	var engine=this;
+
+	var files=engine.get("fileNames");
+	var offsets=engine.get("fileOffsets");
+	var i=files.indexOf(fn);
+	if (i==-1) return null;
+
+	return {start: offsets[i], end:offsets[i+1]-offsets[i]};
+}
 
 var createEngine=function(kdbid,cb) {
 	var $kse=Require("ksanaforge-kse").$yase; 
@@ -142,6 +158,7 @@ var createEngine=function(kdbid,cb) {
 		if (cb) cb(engine);
 	})
 	engine.get=getRemote;
+	engine.fileOffset=fileOffset;
 	return engine;
 }
  
