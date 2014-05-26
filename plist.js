@@ -59,7 +59,7 @@ var countbyposting = function (arr, posting) {
   return out;
 }
 
-var groupbyposting=function(arr,gposting,opts) {
+var groupbyposting=function(arr,gposting) { //relative vpos
   if (!gposting.length) return [arr.length];
   var out=[];
   for (var i=0;i<=gposting.length;i++) out[i]=[];
@@ -70,7 +70,27 @@ var groupbyposting=function(arr,gposting,opts) {
       while (p<gposting.length && i<arr.length && arr[i]<gposting[p]) {
         var start=0;
         if (p>0) start=gposting[p-1];
-        out[p].push(arr[i++]-start);
+        out[p].push(arr[i++]-start);  // relative
+      }      
+    } 
+    p++;
+  }
+  //remaining
+  while(i<arr.length) out[out.length-1].push(arr[i++]-gposting[gposting.length-1]);
+  return out;
+}
+var groupbyposting2=function(arr,gposting) { //absolute vpos
+  if (!gposting.length) return [arr.length];
+  var out=[];
+  for (var i=0;i<=gposting.length;i++) out[i]=[];
+  
+  var p=0,i=0,lasti=0;
+  while (i<arr.length && p<gposting.length) {
+    if (arr[i]<gposting[p]) {
+      while (p<gposting.length && i<arr.length && arr[i]<gposting[p]) {
+        var start=0;
+        if (p>0) start=gposting[p-1]; //absolute
+        out[p].push(arr[i++]);
       }      
     } 
     p++;
@@ -421,6 +441,7 @@ plist.groupbyslot=groupbyslot;
 plist.groupbyblock2=groupbyblock2;
 plist.countbyposting=countbyposting;
 plist.groupbyposting=groupbyposting;
+plist.groupbyposting2=groupbyposting2;
 plist.groupsum=groupsum;
 plist.combine=combine;
 module.exports=plist;

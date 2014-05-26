@@ -261,6 +261,44 @@ var groupByFolder=function(engine,filehits) {
 	out.push(hits);
 	return out;
 }
+var excerpt=function(engine,Q,R,opts,cb) {
+	var output=[];
+	var files=engine.get("files");
+	var fileOffsets=engine.get("fileOffsets");
+	var max=opts.max || 10, count=0;
+
+	var first=opts.range.start , start , end;
+	for (var i=0;i<fileOffsets.length;i++) {
+		if (fileOffsets[i]>first) break;
+		start=i;
+	}
+	var output=[];
+	for (var i=start;i<Q.byFile.length;i++) {
+		if (Q.byFile[i].length) {
+			end=i;
+			var pages=plist.groupbyposting2(Q.byFile[i],  files[i].pageOffset);
+			pages.shift();
+			for (var j=0;max>count && j<pages.length;j++) {
+				if (!pages[j].length) continue;
+				var offsets=pages[j].map(function(p){return p- fileOffsets[i]});
+				var name=files[i].pageNames[j];
+				output.push(  [i, j,  offsets, name]);
+				count++;
+			}
+			if (count>=max) break;
+		}
+	}
+	var pagekeys=output.map(function(p){
+		return ["fileContents",p[0],p[1]];
+	});
+	engine.get(pagekeys,function(pages){
+		for (var i=0;i<pages.length;i++) {
+			output[i][4]=pages[i];
+		}
+		cb(output);
+	});
+	
+}
 var main=function(engine,q,opts,cb){
 	opts=opts||q;
 
@@ -270,28 +308,31 @@ var main=function(engine,q,opts,cb){
 	engine.queryCache[q]=Q;
 	loadPostings(engine,Q.terms,function(){
 
-		if (!Q.phrases[0].posting) { //
+		if (!Q.phrases[0].posting.length) { //
 			Q.phrases.forEach(loadPhrase.bind(Q));
-			if (Q.phrases.length==1) {
-				R.raw=Q.phrases[0].posting;
-			} else {
+		}
+		if (Q.phrases.length==1) {
+			R.raw=Q.phrases[0].posting;
+		} else {
+			R.raw=Q.phrases[0].posting;
 				//multiple terms
-			}			
 		}
-
 		var fileOffsets=Q.engine.get("fileOffsets");
-		if (!Q.byFile) {
-			R.byFile=Q.byFile=plist.groupbyposting(R.raw, fileOffsets);
-			R.byFile.shift();R.byFile.pop();
-			R.byFolder=Q.byFolder=groupByFolder(engine,Q.byFile);			
+		if (!Q.byFile && R.raw) {
+			Q.byFile=plist.groupbyposting2(R.raw, fileOffsets);
+			Q.byFile.shift();Q.byFile.pop();
+			Q.byFolder=groupByFolder(engine,Q.byFile);			
 		}
-
-		if (typeof opts.range!=="undefined") {
-			//trim posting range
-			//fetch first n excerpt
-
-		}
-		cb.apply(engine.context,[R]);
+		R.byFile=Q.byFile;
+		R.byFolder=Q.byFolder;
+		if (opts.range) {
+			excerpt(engine,Q,R,opts,function(data) {
+				R.excerpt=data;
+				cb.apply(engine.context,[R]);
+			});
+		} else {
+			cb.apply(engine.context,[R]);	
+		}		
 	});
 }
 

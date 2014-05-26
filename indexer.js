@@ -74,27 +74,30 @@ var putFile=function(fn) {
 	var doc=persistent.createLocal(fn);
 	var shortfn=shortFilename(fn);
 
-	var fileinfo={pages:[],pageNames:[],pageOffset:[]};
-	session.json.files.push(fileinfo);
+	var fileInfo={pageNames:[],pageOffset:[]};
+	var fileContent=[];
+	session.json.files.push(fileInfo);
+	session.json.fileContents.push(fileContent);
 	session.json.fileNames.push(shortfn);
 	session.json.fileOffsets.push(session.vpos);
 	status.message="indexing "+fn;
 	for (var i=1;i<doc.pageCount;i++) {
 		var pg=doc.getPage(i);
-		fileinfo.pages.push(pg.inscription);
-		fileinfo.pageNames.push(pg.name);
-		fileinfo.pageOffset.push(session.vpos);
+		fileContent.push(pg.inscription);
+		fileInfo.pageNames.push(pg.name);
+		fileInfo.pageOffset.push(session.vpos);
 		putPage(pg);
 	}
 }
 var initSession=function() {
 	var json={
-		files:[],
-		fileNames:[],
-		fileOffsets:[],
-		postings:[[0]], //first one is always empty, because tokenid cannot be 0
-		tokens:{},
-		postingCount:0,
+		files:[]
+		,fileContents:[]
+		,fileNames:[]
+		,fileOffsets:[]
+		,postings:[[0]] //first one is always empty, because tokenid cannot be 0
+		,tokens:{}
+		,postingCount:0
 	};
 	var session={vpos:1, json:json ,
 		           indexedTextLength:0,

@@ -9,7 +9,7 @@ var pool={},localPool={};
 var customfunc=require("./customfunc");
 
 
-var _gets=function(keys,cb) { //get many data with one call
+var _gets=function(keys,recursive,cb) { //get many data with one call
 	if (!keys) return ;
 	if (typeof keys=='string') {
 		keys=[keys];
@@ -18,8 +18,8 @@ var _gets=function(keys,cb) { //get many data with one call
 
 	var makecb=function(key){
 		return function(data){
-				if (!(typeof data =='object' && data.__empty)) output.push(data);
-				engine.get(key,taskqueue.shift());
+				if (!(data && typeof data =='object' && data.__empty)) output.push(data);
+				engine.get(key,recursive,taskqueue.shift());
 		};
 	};
 
@@ -48,7 +48,7 @@ var createLocalEngine=function(kdb,cb) {
 		//if (cb) cb(engine);
 	});
 
-	kdb.get([["fileNames"],["fileOffsets"]], true,function(res){
+	kdb.get([["fileNames"],["fileOffsets"],["files"]], true,function(res){
 		engine.ready=true;
 		if (cb) cb(engine);
 	});
@@ -57,12 +57,22 @@ var createLocalEngine=function(kdb,cb) {
 	engine.postingCache={}; //cache for merged posting
 
 	engine.get=function(key,recursive,cb) {
-		if (typeof recursive=="function") cb=recursive;
-		if (typeof key=="string") key=[key];
-		if (typeof key[0] =="object") {
-			return _gets.apply(engine,[key,cb]);
+		if (typeof recursive=="function") {
+			cb=recursive;
+			recursive=false;
+		}
+		if (!key) {
+			if (cb) cb(null);
+			return null;
+		}
+		if (typeof key=="string") {
+			return engine.kdb.get([key],recursive,cb);
+		} else if (typeof key[0] =="string") {
+			return engine.kdb.get(key,recursive,cb);
+		} else if (typeof key[0] =="object") {
+			return _gets.apply(engine,[key,recursive,cb]);
 		} else {
-			return engine.kdb.get(key,recursive,cb);	
+			cb(null);	
 		}
 	};	
 	return engine;
@@ -77,11 +87,12 @@ var getRemote=function(key,recursive,cb) {
 	} 
 	if (typeof recursive=="function") {
 		cb=recursive;
+		recursive=false;
 	}
 	recursive=recursive||false;
 	if (typeof key=="string") key=[key];
 
-	if (typeof key[0]=="array") { //multiple keys
+	if (key[0] instanceof Array) { //multiple keys
 		var keys=[],output=[];
 		for (var i=0;i<key.length;i++) {
 			var cachekey=key[i].join("\0");
@@ -101,7 +112,7 @@ var getRemote=function(key,recursive,cb) {
 		$kse("get",opts).done(function(datum){
 			//merge the server result with cached 
 			for (var i=0;i<output.length;i++) {
-				if (typeof datum[i]!="null") {
+				if (datum[i] && keys[i]) {
 					var cachekey=keys[i].join("\0");
 					engine.cache[cachekey]=datum[i];
 					output[i]=datum[i];
@@ -138,6 +149,20 @@ var fileOffset=function(fn) {
 	return {start: offsets[i], end:offsets[i+1]-offsets[i]};
 }
 
+var folderOffset=function(folder) {
+	var engine=this;
+	var start=0,end=0;
+	var files=engine.get("fileNames");
+	var offsets=engine.get("fileOffsets");
+	for (var i=0;i<files.length;i++) {
+		if (files[i].substring(0,folder.length)==folder) {
+			if (!start) start=offsets[i];
+			end=offsets[i];
+		} else if (start) break;
+	}
+	return {start:start,end:end-start};
+}
+
 var createEngine=function(kdbid,cb) {
 	var $kse=Require("ksanaforge-kse").$yase; 
 	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
@@ -151,14 +176,16 @@ var createEngine=function(kdbid,cb) {
 		engine.cache["meta"]=meta; //put into cache manually
 	});
 
-	$kse("get",{key:[["fileNames"],["fileOffsets"]], recursive:true,db:kdbid}).done(function(res){
+	$kse("get",{key:[["fileNames"],["fileOffsets"],["files"]], recursive:true,db:kdbid}).done(function(res){
 		engine.cache["fileNames"]=res[0];
 		engine.cache["fileOffsets"]=res[1];
+		engine.cache["files"]=res[2];
 		engine.ready=true;
 		if (cb) cb(engine);
 	})
 	engine.get=getRemote;
 	engine.fileOffset=fileOffset;
+	engine.folderOffset=folderOffset;
 	return engine;
 }
  
