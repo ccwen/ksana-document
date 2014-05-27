@@ -53,11 +53,12 @@ var putPage=function(docPage) {
 
 	for (var i=0;i<tokenized.tokens.length;i++) {
 		var t=tokenized.tokens[i];
-		var normalized=normalize(t);
-		if (normalized) {
-			putPosting(normalized);
- 		} else {
- 			if (isSkip(t)) session.vpos--;
+
+		if (isSkip(t)) {
+			 session.vpos--;
+		} else {
+			var normalized=normalize(t);
+			if (normalized) 	putPosting(normalized);
  		}
  		session.vpos++;
 	}
@@ -88,6 +89,7 @@ var putFile=function(fn) {
 		fileInfo.pageOffset.push(session.vpos);
 		putPage(pg);
 	}
+	fileInfo.pageOffset.push(session.vpos); //ending terminator
 }
 var initSession=function() {
 	var json={

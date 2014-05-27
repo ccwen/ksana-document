@@ -1,6 +1,6 @@
 var plist=require("./plist");
 var boolsearch=require("./boolsearch");
-
+var excerpt=require("./excerpt");
 var parseTerm = function(engine,raw,opts) {
 	var res={raw:raw,variants:[],term:'',op:''};
 	var term=raw, op=0;
@@ -199,16 +199,11 @@ var newQuery =function(engine,query,opts) {
 	opts.op=operators;
 
 	var Q={engine:engine,opts:opts,query:query,
-		phrases:phrase_terms,terms:terms,
-		//load:load,groupBy:groupBy,run:run,
-		//getPhraseWidth:highlight.getPhraseWidth,
-		//highlight:highlight.highlight,
-		//termFrequency:termFrequency,
-		//slice:slice,
-		//doc2slot:doc2slot,
-		//indexOfSorted:plist.indexOfSorted,phase:0,
+		phrases:phrase_terms,terms:terms
 	};
-	Q.tokenize=function() {return engine.customfunc.tokenize.apply(that,arguments);}
+	Q.tokenize=function() {return engine.customfunc.tokenize.apply(engine,arguments);}
+	Q.isSkip=function() {return engine.customfunc.isSkip.apply(engine,arguments);}
+	Q.normalize=function() {return engine.customfunc.normalize.apply(engine,arguments);}
 	//Q.getRange=function() {return that.getRange.apply(that,arguments)};
 	//API.queryid='Q'+(Math.floor(Math.random()*10000000)).toString(16);
 	return Q;
@@ -261,44 +256,7 @@ var groupByFolder=function(engine,filehits) {
 	out.push(hits);
 	return out;
 }
-var excerpt=function(engine,Q,R,opts,cb) {
-	var output=[];
-	var files=engine.get("files");
-	var fileOffsets=engine.get("fileOffsets");
-	var max=opts.max || 10, count=0;
 
-	var first=opts.range.start , start , end;
-	for (var i=0;i<fileOffsets.length;i++) {
-		if (fileOffsets[i]>first) break;
-		start=i;
-	}
-	var output=[];
-	for (var i=start;i<Q.byFile.length;i++) {
-		if (Q.byFile[i].length) {
-			end=i;
-			var pages=plist.groupbyposting2(Q.byFile[i],  files[i].pageOffset);
-			pages.shift();
-			for (var j=0;max>count && j<pages.length;j++) {
-				if (!pages[j].length) continue;
-				var offsets=pages[j].map(function(p){return p- fileOffsets[i]});
-				var name=files[i].pageNames[j];
-				output.push(  [i, j,  offsets, name]);
-				count++;
-			}
-			if (count>=max) break;
-		}
-	}
-	var pagekeys=output.map(function(p){
-		return ["fileContents",p[0],p[1]];
-	});
-	engine.get(pagekeys,function(pages){
-		for (var i=0;i<pages.length;i++) {
-			output[i][4]=pages[i];
-		}
-		cb(output);
-	});
-	
-}
 var main=function(engine,q,opts,cb){
 	opts=opts||q;
 
@@ -326,7 +284,7 @@ var main=function(engine,q,opts,cb){
 		R.byFile=Q.byFile;
 		R.byFolder=Q.byFolder;
 		if (opts.range) {
-			excerpt(engine,Q,R,opts,function(data) {
+			excerpt.resultlist(engine,Q,R,opts,function(data) {
 				R.excerpt=data;
 				cb.apply(engine.context,[R]);
 			});
