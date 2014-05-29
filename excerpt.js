@@ -53,7 +53,7 @@ var hitInRange=function(Q,startvoff,endvoff) {
 	return res;
 }
 
-var resultlist=function(engine,Q,R,opts,cb) {
+var resultlist=function(engine,Q,opts,cb) {
 	var output=[];
 	var files=engine.get("files");
 	var fileOffsets=engine.get("fileOffsets");
@@ -83,11 +83,7 @@ var resultlist=function(engine,Q,R,opts,cb) {
 	var pagekeys=output.map(function(p){
 		return ["fileContents",p.file,p.page];
 	});
-	var relativeHits=function(hits,startoffset) {
-		return hits.map(function(h){
-			return [h[0]-startoffset, h[1],h[2]];
-		});
-	}
+
 	engine.get(pagekeys,function(pages){
 		for (var i=0;i<pages.length;i++) {
 			var startvpos=files[output[i].file].pageOffset[output[i].page];
@@ -95,7 +91,6 @@ var resultlist=function(engine,Q,R,opts,cb) {
 			var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, postings:output[3], Q:Q};
 			output[i].text=highlight(Q,o);
 			output[i].start=startvpos;
-			output[i].hits=relativeHits(o.hits,startvpos);
 		}
 		cb(output);
 	});
@@ -158,8 +153,8 @@ var highlight=function(Q,opts) {
 	var opt={text:opts.text,
 		hits:null,tag:'hl',abridged:opts.abridged,voff:opts.startvpos
 	};
-	opts.hits=opt.hits=hitInRange(opts.Q,opts.startvpos,opts.endvpos);
+	opt.hits=hitInRange(opts.Q,opts.startvpos,opts.endvpos);
 	return injectTag(Q,opt);
 }
 
-module.exports={resultlist:resultlist};
+module.exports={resultlist:resultlist, hitInRange:hitInRange};

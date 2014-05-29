@@ -137,7 +137,18 @@ var getRemote=function(key,recursive,cb) {
 		}
 	}
 }
+var pageOffset=function(fn,pagename) {
+	var engine=this;
+	var filenames=engine.get("fileNames");
+	var files=engine.get("files");
+	var i=filenames.indexOf(fn);
+	if (i==-1) return null;
 
+	var j=files[i].pageNames.indexOf(pagename);
+	if (j==-1) return null;
+
+	return {start: files[i].pageOffset[j] , end:files[i].pageOffset[j+1]};
+}
 var fileOffset=function(fn) {
 	var engine=this;
 
@@ -146,7 +157,7 @@ var fileOffset=function(fn) {
 	var i=files.indexOf(fn);
 	if (i==-1) return null;
 
-	return {start: offsets[i], end:offsets[i+1]-offsets[i]};
+	return {start: offsets[i], end:offsets[i+1]};
 }
 
 var folderOffset=function(folder) {
@@ -160,7 +171,7 @@ var folderOffset=function(folder) {
 			end=offsets[i];
 		} else if (start) break;
 	}
-	return {start:start,end:end-start};
+	return {start:start,end:end};
 }
 
 var createEngine=function(kdbid,cb) {
@@ -186,6 +197,7 @@ var createEngine=function(kdbid,cb) {
 	engine.get=getRemote;
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
+	engine.pageOffset=pageOffset;
 	return engine;
 }
  

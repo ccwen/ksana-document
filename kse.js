@@ -13,5 +13,6 @@ var _search=function(engine,q,opts,cb) {
 
 var api={
 	search:_search
+	,excerpt:require("./excerpt")
 }
 module.exports=api;

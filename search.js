@@ -198,7 +198,7 @@ var newQuery =function(engine,query,opts) {
 	}
 	opts.op=operators;
 
-	var Q={engine:engine,opts:opts,query:query,
+	var Q={dbname:engine.dbname,engine:engine,opts:opts,query:query,
 		phrases:phrase_terms,terms:terms
 	};
 	Q.tokenize=function() {return engine.customfunc.tokenize.apply(engine,arguments);}
@@ -260,7 +260,6 @@ var groupByFolder=function(engine,filehits) {
 var main=function(engine,q,opts,cb){
 	opts=opts||q;
 
-	var R={query:q,opts:opts,dbname:engine.dbname,result:[]};
 	var Q=engine.queryCache[q];
 	if (!Q) Q=newQuery(engine,q,opts);
 	engine.queryCache[q]=Q;
@@ -270,26 +269,24 @@ var main=function(engine,q,opts,cb){
 			Q.phrases.forEach(loadPhrase.bind(Q));
 		}
 		if (Q.phrases.length==1) {
-			R.raw=Q.phrases[0].posting;
+			Q.rawresult=Q.phrases[0].posting;
 		} else {
-			R.raw=Q.phrases[0].posting;
+			Q.rawresult=Q.phrases[0].posting;
 				//multiple terms
 		}
 		var fileOffsets=Q.engine.get("fileOffsets");
-		if (!Q.byFile && R.raw) {
-			Q.byFile=plist.groupbyposting2(R.raw, fileOffsets);
+		if (!Q.byFile && Q.rawresult) {
+			Q.byFile=plist.groupbyposting2(Q.rawresult, fileOffsets);
 			Q.byFile.shift();Q.byFile.pop();
 			Q.byFolder=groupByFolder(engine,Q.byFile);			
 		}
-		R.byFile=Q.byFile;
-		R.byFolder=Q.byFolder;
 		if (opts.range) {
-			excerpt.resultlist(engine,Q,R,opts,function(data) {
-				R.excerpt=data;
-				cb.apply(engine.context,[R]);
+			excerpt.resultlist(engine,Q,opts,function(data) {
+				Q.excerpt=data;
+				cb.apply(engine.context,[Q]);
 			});
 		} else {
-			cb.apply(engine.context,[R]);	
+			cb.apply(engine.context,[Q]);	
 		}		
 	});
 }
