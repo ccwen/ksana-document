@@ -126,8 +126,8 @@ var injectTag=function(Q,opts){
 				while (width) {
 					output+=tokens[i];
 					if (i>=tokens.length) break;
-					if (tokens[i][0]!='<') {voff++;width--;}
 					i++;
+					if (!Q.isSkip(tokens[i])) {voff++;width--;}
 				}
 				output+='</'+tag+'>';
 			} else {
@@ -137,8 +137,9 @@ var injectTag=function(Q,opts){
 		} else {
 			if (inrange) output+=tokens[i];
 			i++;
+			voff++;
 		}
-		voff++;
+		
 	}
 	while (i<tokens.length) {
 		if (inrange) output+= tokens[i];
