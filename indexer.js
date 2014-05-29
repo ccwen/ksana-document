@@ -123,6 +123,7 @@ var getMeta=function() {
 	var meta={};
 	meta.config=session.options.config;
 	meta.name=projinfo.name;
+	meta.vsize=session.vpos;
 	return meta;
 }
 

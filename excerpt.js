@@ -33,6 +33,7 @@ var getPhraseWidth=function (Q,phraseid,voff) {
 /* return [voff, phraseid, phrasewidth, optional_tagname] by slot range*/
 var hitInRange=function(Q,startvoff,endvoff) {
 	var res=[];
+	if (!Q || !Q.rawresult.length) return res;
 	for (var i=0;i<Q.phrases.length;i++) {
 		var P=Q.phrases[i];
 		if (!P.posting) continue;
@@ -105,8 +106,8 @@ var injectTag=function(Q,opts){
 	var voff=opts.voff;
 	var i=0,previnrange=false,inrange=false;
 	while (i<tokens.length) {
-		inrange=(j<hits.length && voff+surround*2>=hits[j][0] ||
-				(j>0 && j<=hits.length &&  hits[j-1][0]+surround>=voff));	
+		inrange=(j<hits.length && voff+surround>=hits[j][0] ||
+				(j>0 && j<=hits.length &&  hits[j-1][0]+surround*2>=voff));	
 
 		if (previnrange!=inrange) {
 			output+="...";
@@ -125,9 +126,9 @@ var injectTag=function(Q,opts){
 				output+= '<'+tag+' n="'+nphrase+'">';
 				while (width) {
 					output+=tokens[i];
+					if (!Q.isSkip(tokens[i])) {voff++;width--;}
 					if (i>=tokens.length) break;
 					i++;
-					if (!Q.isSkip(tokens[i])) {voff++;width--;}
 				}
 				output+='</'+tag+'>';
 			} else {

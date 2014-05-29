@@ -203,6 +203,10 @@ var createEngine=function(kdbid,cb) {
  
 
 var open=function(kdbid,cb) {
+	if (!kdbid) {
+		cb(null);
+		return null;
+	};
 	var engine=localPool[kdbid];
 	if (engine) {
 		if (cb) cb(engine);

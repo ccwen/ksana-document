@@ -139,7 +139,7 @@ var loadPhrase=function(phrase) {
 var newQuery =function(engine,query,opts) {
 	if (!query) return;
 	opts=opts||{};
-
+	query=engine.customfunc.normalize(query);
 	var phrases=query;
 	if (typeof query=='string') {
 		phrases=parseQuery(query);
@@ -262,6 +262,11 @@ var main=function(engine,q,opts,cb){
 
 	var Q=engine.queryCache[q];
 	if (!Q) Q=newQuery(engine,q,opts);
+	if (!Q) {
+		cb.apply(engine.context,[{rawresult:[]}]);
+		return;
+	};
+
 	engine.queryCache[q]=Q;
 	loadPostings(engine,Q.terms,function(){
 
