@@ -4,6 +4,8 @@ var getProjectPath=function(p) {
   var path=nodeRequire('path');
   return path.resolve(p.filename);
 };
+
+
 var enumProject=function() { 
   return nodeRequire("ksana-document").projects.names();
 };
@@ -16,10 +18,31 @@ var loadDocumentJSON=function(opts) {
   var docjson=persistent.loadLocal(  path.resolve(ppath,opts.file));
   return docjson;
 };
-
+var findProjectPath=function(dbid) {
+  var fs=nodeRequire("fs");
+  var path=nodeRequire('path');
+  var tries=[ //TODO , allow any depth
+               "./ksana_databases/"+dbid
+               ,"../ksana_databases/"+dbid
+               ,"../../ksana_databases/"+dbid
+               ,"../../../ksana_databases/"+dbid
+               ];
+    for (var i=0;i<tries.length;i++){
+      if (fs.existsSync(tries[i])) {
+        return path.resolve(tries[i]);
+      }
+    }
+    return null;
+}
 var saveMarkup=function(opts) {
+  var path=nodeRequire('path');
   var persistent=nodeRequire('ksana-document').persistent;
-  return persistent.saveMarkup(opts.markups , opts.filename,opts.pageid||opts.i);
+  var filename=opts.filename;
+  if (opts.dbid) {
+    var projectpath=findProjectPath(opts.dbid);
+    if (projectpath) filename=path.resolve(projectpath,filename);
+  } 
+  return persistent.saveMarkup(opts.markups, filename,opts.pageid||opts.i);
 };
 var saveDocument=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
