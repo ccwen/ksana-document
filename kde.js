@@ -8,7 +8,6 @@ if (typeof nodeRequire=='undefined')nodeRequire=require;
 var pool={},localPool={};
 var customfunc=require("./customfunc");
 
-
 var _gets=function(keys,recursive,cb) { //get many data with one call
 	if (!keys) return ;
 	if (typeof keys=='string') {
@@ -201,7 +200,10 @@ var createEngine=function(kdbid,cb) {
 	return engine;
 }
  
-
+var close=function(kdbid) {
+	var engine=localPool[kdbid];
+	if (engine) delete localPool[kdbid];
+}
 var open=function(kdbid,cb) {
 	if (!kdbid) {
 		cb(null);
@@ -252,4 +254,4 @@ var openLocal=function(kdbid,cb)  {
 	return engine;
 }
 
-module.exports={openLocal:openLocal, open:open};
+module.exports={openLocal:openLocal, open:open, close:close};
