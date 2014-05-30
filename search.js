@@ -136,10 +136,17 @@ var loadPhrase=function(phrase) {
   cache[phrase.key]=r;
   return Q;
 }
+var trimSpace=function(engine,query) {
+	var i=0;
+	isSkip=engine.customfunc.isSkip;
+	while (isSkip(query[i]) && i<query.length) i++;
+	return query.substring(i);
+}
 var newQuery =function(engine,query,opts) {
 	if (!query) return;
 	opts=opts||{};
-	query=engine.customfunc.normalize(query);
+	query=trimSpace(engine,query);
+
 	var phrases=query;
 	if (typeof query=='string') {
 		phrases=parseQuery(query);

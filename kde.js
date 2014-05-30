@@ -7,6 +7,7 @@ if (typeof nodeRequire=='undefined')nodeRequire=require;
 
 var pool={},localPool={};
 var customfunc=require("./customfunc");
+var link=require("./link");
 
 var _gets=function(keys,recursive,cb) { //get many data with one call
 	if (!keys) return ;
@@ -173,30 +174,33 @@ var folderOffset=function(folder) {
 	return {start:start,end:end};
 }
 
+
 var createEngine=function(kdbid,cb) {
 	var $kse=Require("ksanaforge-kse").$yase; 
 	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
 	engine.setContext=function(ctx) {this.context=ctx};
 
-	$kse("get",{key:["meta"], recursive:true, db:kdbid} ).done(function(meta){
-		console.log("remote kde connection ["+kdbid+"] established.");
-		engine.dbname=meta.name;
-		engine.customfunc=customfunc.getAPI(meta.config);
-		engine.cache["meta"]=meta; //put into cache manually
-	});
-
-	$kse("get",{key:[["fileNames"],["fileOffsets"],["files"]], recursive:true,db:kdbid}).done(function(res){
+	$kse("get",{key:[["fileNames"],["fileOffsets"],["files"],["meta"]], recursive:true,db:kdbid}).done(function(res){
 		engine.cache["fileNames"]=res[0];
 		engine.cache["fileOffsets"]=res[1];
 		engine.cache["files"]=res[2];
+
+		engine.dbname=res[3].name;
+		engine.customfunc=customfunc.getAPI(res[3].config);
+		engine.cache["meta"]=res[3]; //put into cache manually
+
 		engine.ready=true;
+		console.log("remote kde connection ["+kdbid+"] established.");
 		if (cb) cb(engine);
 	})
 	engine.get=getRemote;
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
+
+	engine.findLinkBy=link.findLinkBy;
+
 	return engine;
 }
  
@@ -248,10 +252,12 @@ var openLocal=function(kdbid,cb)  {
 					pool[kdbid]=engine;
 					cb(engine);
 				});
+				return engine;
 			}
 		}
 	}
-	return engine;
+	cb(null);
+	return null;
 }
 
 module.exports={openLocal:openLocal, open:open, close:close};

@@ -56,6 +56,9 @@ var search=function(opts) {
 }
 var get=function(opts,cb) {
   require("./kde").openLocal(opts.db,function(engine){
+      if (!engine) {
+        throw "database not found "+opts.db;
+      }
       engine.get(opts.key,opts.recursive,function(data){cb(0,data)});
   });
 }
