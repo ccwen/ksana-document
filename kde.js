@@ -191,7 +191,7 @@ var createEngine=function(kdbid,cb) {
 		engine.cache["meta"]=res[3]; //put into cache manually
 
 		engine.ready=true;
-		console.log("remote kde connection ["+kdbid+"] established.");
+		//console.log("remote kde connection ["+kdbid+"] established.");
 		if (cb) cb(engine);
 	})
 	engine.get=getRemote;

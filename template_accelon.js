@@ -73,12 +73,14 @@ var importxml=function(buf,opts) {
 	if (opts.whole) {
 		var name=opts.name||"";
 		var out=parseUnit(0,buf,doc);
+		if (opts.trim) out.inscription=out.inscription.trim();
 		var page=doc.createPage({name:name,text:out.inscription});
 		addMarkups(out.tags,page);
 	} else {
 		var units=splitUnit(buf,opts.sep || unitsep);
 		units.map(function(U,i){
 			var out=parseUnit(i,U[1],doc);
+			if (opts.trim) out.inscription=out.inscription.trim();
 			doc.createPage({text:out.inscription,name:U[0]});
 		});		
 	}

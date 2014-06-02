@@ -1,5 +1,5 @@
-var findLinkBy=function(start,len,cb) {
-	var engine=this;
-	cb([]);
+var findLinkBy=function(page,start,len,cb) {
+	var markups=page.markupAt(start);
+	cb(markups);
 }
 module.exports={findLinkBy:findLinkBy};
