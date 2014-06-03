@@ -107,6 +107,7 @@ var loadPhrase=function(phrase) {
 		cache[phrase.key]=phrase.posting=Q.terms[phrase.termid[0]].posting;
 		return Q;
 	}
+
 	var i=0, r=[],dis=0;
 	while(i<phrase.termid.length) {
 	  var T=Q.terms[phrase.termid[i]];
@@ -131,6 +132,7 @@ var loadPhrase=function(phrase) {
 		    }
 		}
 		dis++;	i++;
+		if (!r) return Q;
   }
   phrase.posting=r;
   cache[phrase.key]=r;

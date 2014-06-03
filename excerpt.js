@@ -60,7 +60,7 @@ var resultlist=function(engine,Q,opts,cb) {
 	var fileOffsets=engine.get("fileOffsets");
 	var max=opts.max || 20, count=0;
 
-	var first=opts.range.start , start , end;
+	var first=opts.range.start , start=0 , end;
 	for (var i=0;i<fileOffsets.length;i++) {
 		if (fileOffsets[i]>first) break;
 		start=i;
@@ -86,11 +86,13 @@ var resultlist=function(engine,Q,opts,cb) {
 	});
 
 	engine.get(pagekeys,function(pages){
-		for (var i=0;i<pages.length;i++) {
+		if (pages) for (var i=0;i<pages.length;i++) {
 			var startvpos=files[output[i].file].pageOffset[output[i].page];
 			var endvpos=files[output[i].file].pageOffset[output[i].page+1];
-			var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, postings:output[3], Q:Q};
-			output[i].text=highlight(Q,o);
+			var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q};
+			var hl=highlight(Q,o);
+			output[i].text=hl.text;
+			output[i].hits=hl.hits;
 			output[i].start=startvpos;
 		}
 		cb(output);
@@ -156,7 +158,7 @@ var highlight=function(Q,opts) {
 		hits:null,tag:'hl',abridged:opts.abridged,voff:opts.startvpos
 	};
 	opt.hits=hitInRange(opts.Q,opts.startvpos,opts.endvpos);
-	return injectTag(Q,opt);
+	return {text:injectTag(Q,opt),hits:opt.hits};
 }
 
 module.exports={resultlist:resultlist, hitInRange:hitInRange};

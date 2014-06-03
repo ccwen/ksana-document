@@ -132,7 +132,7 @@ var getRemote=function(key,recursive,cb) {
 			var opts={key:key,recursive:recursive,db:engine.kdbid};
 			$kse("get",opts).done(function(data){
 				engine.cache[cachekey]=data;
-				cb.apply(engine.context,[data]);	
+				if (cb) cb.apply(engine.context,[data]);	
 			});
 		}
 	}
