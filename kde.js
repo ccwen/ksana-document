@@ -180,7 +180,12 @@ var createEngine=function(kdbid,cb) {
 	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
 	engine.setContext=function(ctx) {this.context=ctx};
+	engine.get=getRemote;
+	engine.fileOffset=fileOffset;
+	engine.folderOffset=folderOffset;
+	engine.pageOffset=pageOffset;
 
+	engine.findLinkBy=link.findLinkBy;
 	$kse("get",{key:[["fileNames"],["fileOffsets"],["files"],["meta"]], recursive:true,db:kdbid}).done(function(res){
 		engine.cache["fileNames"]=res[0];
 		engine.cache["fileOffsets"]=res[1];
@@ -194,12 +199,7 @@ var createEngine=function(kdbid,cb) {
 		//console.log("remote kde connection ["+kdbid+"] established.");
 		if (cb) cb(engine);
 	})
-	engine.get=getRemote;
-	engine.fileOffset=fileOffset;
-	engine.folderOffset=folderOffset;
-	engine.pageOffset=pageOffset;
 
-	engine.findLinkBy=link.findLinkBy;
 
 	return engine;
 }
