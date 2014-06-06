@@ -156,6 +156,7 @@ var finalize=function(cb) {
 	
 	kdbw.writeFile(kdbfn,function(total,written) {
 		status.progress=written/total;
+		status.outputfn=kdbfn;
 		if (total==written) cb();
 	});
 }

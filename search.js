@@ -2,6 +2,7 @@ var plist=require("./plist");
 var boolsearch=require("./boolsearch");
 var excerpt=require("./excerpt");
 var parseTerm = function(engine,raw,opts) {
+	if (!raw) return;
 	var res={raw:raw,variants:[],term:'',op:''};
 	var term=raw, op=0;
 	var firstchar=term[0];
@@ -44,7 +45,8 @@ var orterm=function(engine,term,key) {
 var orTerms=function(engine,tokens,now) {
 	var raw=tokens[now];
 	var term=parseTerm(engine,raw);
-  orterm(engine,term,term.key);
+	if (!term) return;
+	orterm(engine,term,term.key);
 	while (isOrTerm(raw))  {
 		raw=tokens[++now];
 		var term2=parseTerm(engine,raw);
