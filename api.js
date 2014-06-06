@@ -85,6 +85,9 @@ var get=function(opts,cb) {
       engine.get(opts.key,opts.recursive,function(data){cb(0,data)});
   });
 }
+var setPath=function(path) {
+  nodeRequire("ksana-document").setPath(path);
+}
 get.async=true;
 
 var markup=require('./markup.js');
@@ -104,6 +107,7 @@ var installservice=function(services) {
         ,stopIndex:stopIndex
         ,search:search
         ,get:get
+        ,setPath:setPath
 	  ,version: function() { return require('./package.json').version; }
 	};
 	if (services) {

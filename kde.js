@@ -8,7 +8,7 @@ if (typeof nodeRequire=='undefined')nodeRequire=require;
 var pool={},localPool={};
 var customfunc=require("./customfunc");
 var link=require("./link");
-
+var apppath="";
 var _gets=function(keys,recursive,cb) { //get many data with one call
 	if (!keys) return ;
 	if (typeof keys=='string') {
@@ -235,6 +235,7 @@ var openLocal=function(kdbid,cb)  {
 	var kdbfn=kdbid+'.kdb';
 
 	var tries=["./"+kdbfn  //TODO , allow any depth
+	           ,apppath+"/"+kdbfn,
 	           ,"./ksana_databases/"+kdbfn
 	           ,"../"+kdbfn
 	           ,"../ksana_databases/"+kdbfn
@@ -245,6 +246,7 @@ var openLocal=function(kdbid,cb)  {
 	           ];
 
 	for (var i=0;i<tries.length;i++) {
+		console.log(tries[i]);
 		if (fs.existsSync(tries[i])) {
 			kdb=new Kdb(tries[i]);
 			if (kdb) {
@@ -259,5 +261,8 @@ var openLocal=function(kdbid,cb)  {
 	cb(null);
 	return null;
 }
-
-module.exports={openLocal:openLocal, open:open, close:close};
+var setPath=function(path) {
+	apppath=path;
+	console.log("set path",path)
+}
+module.exports={openLocal:openLocal, open:open, close:close, setPath:setPath};
