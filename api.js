@@ -13,7 +13,7 @@ var enumKdb=function(paths) {
   if (typeof paths=="string") {
     paths=[paths];
   }
-  var db=nodeRequire("./projects").getFiles(paths,function(p){
+  var db=nodeRequire("ksana-document").projects.getFiles(paths,function(p){
     return p.substring(p.length-4)==".kdb";
   });
   return db.map(function(d){

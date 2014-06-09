@@ -246,7 +246,7 @@ var openLocal=function(kdbid,cb)  {
 	           ];
 
 	for (var i=0;i<tries.length;i++) {
-		console.log(tries[i]);
+		//console.log(tries[i]);
 		if (fs.existsSync(tries[i])) {
 			kdb=new Kdb(tries[i]);
 			if (kdb) {
