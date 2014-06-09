@@ -106,9 +106,9 @@ var injectTag=function(Q,opts){
 
 	var tokens=Q.tokenize(opts.text).tokens;
 	var voff=opts.voff;
-	var i=0,previnrange=false,inrange=false;
+	var i=0,previnrange=!!opts.full ,inrange=!!opts.full;
 	while (i<tokens.length) {
-		inrange=(j<hits.length && voff+surround>=hits[j][0] ||
+		inrange=opts.full || (j<hits.length && voff+surround>=hits[j][0] ||
 				(j>0 && j<=hits.length &&  hits[j-1][0]+surround*2>=voff));	
 
 		if (previnrange!=inrange) {
@@ -189,7 +189,7 @@ var highlightPage=function(Q,pagename,opts,cb) {
 		var startvpos=files[page.file].pageOffset[page.page];
 		var endvpos=files[page.file].pageOffset[page.page+1];
 
-		var opt={text:page.text,hits:null,tag:'hl',voff:startvpos};
+		var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,full:true};
 		opt.hits=hitInRange(Q,startvpos,endvpos);
 		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),hits:opt.hits}]);
 	});
