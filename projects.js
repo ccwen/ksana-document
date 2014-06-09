@@ -6,7 +6,7 @@ if (typeof nodeRequire=='undefined')nodeRequire=require;
 function getFiles(dirs,filtercb){	
   var fs=nodeRequire('fs');
   var path=nodeRequire('path');
-	var out=[];
+  var out=[];
   var shortnames={}; //shortname must be unique
   if (typeof dirs=='string')dirs=[dirs];
 
@@ -113,4 +113,4 @@ var fullInfo=function(projname) {
   return {name:name,filename:projectpath,ksana:ksana,files: files.map(function(f){return f.filename})};
 }
 
-module.exports={names:listProject,folders:listFolders,files:listFiles,fullInfo:fullInfo};
+module.exports={getFiles:getFiles,names:listProject,folders:listFolders,files:listFiles,fullInfo:fullInfo};

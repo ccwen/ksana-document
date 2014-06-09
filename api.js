@@ -9,7 +9,17 @@ var getProjectPath=function(p) {
 var enumProject=function() { 
   return nodeRequire("ksana-document").projects.names();
 };
-
+var enumKdb=function(paths) {
+  if (typeof paths=="string") {
+    paths=[paths];
+  }
+  var db=nodeRequire("./projects").getFiles(paths,function(p){
+    return p.substring(p.length-4)==".kdb";
+  });
+  return db.map(function(d){
+    return d.shortname.substring(0,d.shortname.length-4)
+  });
+}
 var loadDocumentJSON=function(opts) {
   var persistent=nodeRequire('ksana-document').persistent;
   var ppath=getProjectPath(opts.project);
@@ -95,6 +105,7 @@ var users=require('./users');
 var installservice=function(services) {
 	var API={ 
         enumProject:enumProject
+        ,enumKdb:enumKdb
         ,getProjectFolders:getProjectFolders
         ,getProjectFiles:getProjectFiles
         ,loadDocumentJSON:loadDocumentJSON

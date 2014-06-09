@@ -82,6 +82,7 @@ var putFile=function(fn) {
 	session.json.fileNames.push(shortfn);
 	session.json.fileOffsets.push(session.vpos);
 	status.message="indexing "+fn;
+
 	for (var i=1;i<doc.pageCount;i++) {
 		var pg=doc.getPage(i);
 		fileContent.push(pg.inscription);

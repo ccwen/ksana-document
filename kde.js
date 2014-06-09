@@ -265,4 +265,5 @@ var setPath=function(path) {
 	apppath=path;
 	console.log("set path",path)
 }
+
 module.exports={openLocal:openLocal, open:open, close:close, setPath:setPath};

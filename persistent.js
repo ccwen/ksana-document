@@ -45,7 +45,7 @@ var serializeDocument=function(doc) {
 		if (P.parentId) obj.p=P.parentId;
 		out.push(JSON.stringify(obj));
 	}
-	return 	"[\n"+out.join(",\n")+"\n]";
+	return 	"[\n"+out.join("\n,")+"\n]";
 };
 var serializeXMLTag=function(doc) {
 	if (!doc.tags)return;
@@ -53,7 +53,7 @@ var serializeXMLTag=function(doc) {
 	for (var i=0;i<doc.tags.length;i++) {
 		out.push(JSON.stringify(doc.tags[i]));
 	}
-	return 	"[\n"+out.join(",\n")+"\n]";
+	return 	"[\n"+out.join("\n,")+"\n]";
 };
 var serializeMarkup=function(doc) {
 	var out=[];
@@ -71,7 +71,7 @@ var serializeMarkup=function(doc) {
 			out.push(JSON.stringify(m));
 		}
 	}
-	return 	"[\n"+out.join(",\n")+"\n]";
+	return 	"[\n"+out.join("\n,")+"\n]";
 };
 
 
@@ -98,7 +98,7 @@ var saveMarkup=function(markups,filename,pageid) { //same author
 	for (var i=0;i<others.length;i++) {
 		out.push(JSON.stringify(others[i]));
 	}
-	return fs.writeFile(mfn,"[\n"+out.join(",\n")+"\n]",'utf8',function(err){
+	return fs.writeFile(mfn,"[\n"+out.join("\n,")+"\n]",'utf8',function(err){
 		//		
 	});
 }
