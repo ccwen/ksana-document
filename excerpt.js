@@ -161,4 +161,37 @@ var highlight=function(Q,opts) {
 	return {text:injectTag(Q,opt),hits:opt.hits};
 }
 
-module.exports={resultlist:resultlist, hitInRange:hitInRange};
+var getPageByName=function(engine,pagename,cb) {
+	var files=engine.get("files");
+	var fileOffsets=engine.get("fileOffsets");
+	var file=-1,page=-1;
+	for (var i=0;i<files.length;i++) {
+		page=files[i].pageNames.indexOf(pagename);
+		if (page>-1) {
+			file=i;
+			break;
+		}
+	}
+	if (file==-1) return cb("");
+	var pagekeys=["fileContents",file,page];
+	engine.get(pagekeys,function(text){
+		cb.apply(engine.context,[{text:text,file:file,page:page}]);
+	});
+}
+var highlightPage=function(Q,pagename,opts,cb) {
+	if (typeof opts=="function") {
+		cb=opts;
+	}
+
+	if (!Q || !Q.engine) return cb(null);
+	var files=Q.engine.get("files");
+	getPageByName(Q.engine,pagename,function(page){
+		var startvpos=files[page.file].pageOffset[page.page];
+		var endvpos=files[page.file].pageOffset[page.page+1];
+
+		var opt={text:page.text,hits:null,tag:'hl',voff:startvpos};
+		opt.hits=hitInRange(Q,startvpos,endvpos);
+		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),hits:opt.hits}]);
+	});
+}
+module.exports={resultlist:resultlist, hitInRange:hitInRange, highlightPage:highlightPage,getPageByName:getPageByName};

@@ -280,7 +280,10 @@ var main=function(engine,q,opts,cb){
 
 	engine.queryCache[q]=Q;
 	loadPostings(engine,Q.terms,function(){
-
+		if (!Q.phrases[0].posting) {
+			cb.apply(engine.context,[{rawresult:[]}]);
+			return;			
+		}
 		if (!Q.phrases[0].posting.length) { //
 			Q.phrases.forEach(loadPhrase.bind(Q));
 		}
