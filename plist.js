@@ -393,31 +393,7 @@ var matchPosting=function(pl,gupl,start,end) {
   } 
   return {docs:docs,freq:freq};
 }
-//return an array of slot having any of pl item
-var matchSlot=function(pl,slotshift,start,end) {
-  start=start||0;
-  end=end||-1;
-  if (end==-1) end=Math.pow(2, 53); // max integer value
-  slotshift = slotshift || 16 ;
-  var g = Math.pow(2,slotshift);
-  var filtered=pl.filter(function(v){return v>=start && v<end});
-  var groups=filtered.map(function(v) {return Math.floor(v / g)});
-  var docs=unique(groups);
-  var freq=[];
-  var last=groups[0],count=1;
-  for (var i=1;i<groups.length;i++) {
-    if (groups[i]>last) {
-      freq.push(count);
-      last=i;
-      count=1;
-    } else {
-      count++;
-    }
-  }
-  freq.push(count);
-  //TODO term freq
-  return {docs:docs,freq:freq} ;
-}
+
 var trim=function(arr,start,end) {
   var s=indexOfSorted(arr,start);
   var e=indexOfSorted(arr,end);
@@ -434,7 +410,6 @@ plist.plnotfollow=plnotfollow;
 plist.unique=unique;
 plist.indexOfSorted=indexOfSorted;
 plist.matchPosting=matchPosting;
-plist.matchSlot=matchSlot;
 plist.trim=trim;
 
 plist.groupbyslot=groupbyslot;
