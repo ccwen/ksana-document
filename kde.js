@@ -42,16 +42,6 @@ var _gets=function(keys,recursive,cb) { //get many data with one call
 var createLocalEngine=function(kdb,cb) {
 	var engine={lastAccess:new Date(), kdb:kdb};
 
-	kdb.get(["meta"],true,function(res){
-		engine.dbname=res.name;
-		engine.customfunc=customfunc.getAPI(res.cofig);
-		//if (cb) cb(engine);
-	});
-
-	kdb.get([["fileNames"],["fileOffsets"],["files"]], true,function(res){
-		engine.ready=true;
-		if (cb) cb(engine);
-	});
 
 	engine.queryCache={};
 	engine.postingCache={}; //cache for merged posting
@@ -75,6 +65,16 @@ var createLocalEngine=function(kdb,cb) {
 			cb(null);	
 		}
 	};	
+
+	_gets.apply(engine,[[["fileNames"],["fileOffsets"],["files"],["meta"]], true,function(res){
+		console.log(res)
+		engine.dbname=res[0].name;
+		engine.customfunc=customfunc.getAPI(res[0].cofig);
+		engine.ready=true;
+		if (cb) cb(engine);
+	}]);
+
+
 	return engine;
 }
 

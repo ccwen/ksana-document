@@ -269,12 +269,14 @@ var groupByFolder=function(engine,filehits) {
 }
 
 var main=function(engine,q,opts,cb){
-	opts=opts||q;
-
+	if (typeof opts=="function") cb=opts;
+	opts=opts||{};
+	
 	var Q=engine.queryCache[q];
 	if (!Q) Q=newQuery(engine,q,opts);
 	if (!Q) {
-		cb.apply(engine.context,[{rawresult:[]}]);
+		if (engine.context) cb.apply(engine.context,[{rawresult:[]}]);
+		else cb({rawresult:[]});
 		return;
 	};
 
@@ -302,10 +304,12 @@ var main=function(engine,q,opts,cb){
 		if (opts.range) {
 			excerpt.resultlist(engine,Q,opts,function(data) {
 				Q.excerpt=data;
-				cb.apply(engine.context,[Q]);
+				if (engine.context) cb.apply(engine.context,[Q]);
+				else cb(Q);
 			});
 		} else {
-			cb.apply(engine.context,[Q]);	
+			if (engine.context) cb.apply(engine.context,[Q]);
+			else cb(Q);
 		}		
 	});
 }
