@@ -175,7 +175,11 @@ var folderOffset=function(folder) {
 }
 
 
-var createEngine=function(kdbid,cb) {
+var createEngine=function(kdbid,context,cb) {
+	if (typeof context=="function"){
+		cb=context;
+	}
+
 	var $kse=Require("ksanaforge-kse").$yase; 
 	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
@@ -184,6 +188,7 @@ var createEngine=function(kdbid,cb) {
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
+	if (typeof context=="object") engine.context=context;
 
 	engine.findLinkBy=link.findLinkBy;
 	$kse("get",{key:[["fileNames"],["fileOffsets"],["files"],["meta"]], recursive:true,db:kdbid}).done(function(res){
@@ -197,7 +202,7 @@ var createEngine=function(kdbid,cb) {
 
 		engine.ready=true;
 		//console.log("remote kde connection ["+kdbid+"] established.");
-		if (cb) cb(engine);
+		if (cb) cb.apply(context,[engine]);
 	})
 
 
@@ -208,17 +213,23 @@ var close=function(kdbid) {
 	var engine=localPool[kdbid];
 	if (engine) delete localPool[kdbid];
 }
-var open=function(kdbid,cb) {
+var open=function(kdbid,context,cb) {
+	if (typeof context=="function") {
+		cb=context;
+	}
+
 	if (!kdbid) {
 		cb(null);
 		return null;
 	};
+
 	var engine=localPool[kdbid];
 	if (engine) {
-		if (cb) cb(engine);
+		if (cb) cb.apply(engine.context,[engine]);
 		return engine;
 	}
-	engine=createEngine(kdbid,cb);
+	engine=createEngine(kdbid,context,cb);
+
 	localPool[kdbid]=engine;
 	return engine;
 }
