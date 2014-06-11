@@ -1,5 +1,5 @@
 if (typeof nodeRequire=='undefined')nodeRequire=require;
-
+var appPath=""; //for servermode
 var getProjectPath=function(p) {
   var path=nodeRequire('path');
   return path.resolve(p.filename);
@@ -12,6 +12,11 @@ var enumProject=function() {
 var enumKdb=function(paths) {
   if (typeof paths=="string") {
     paths=[paths];
+  }
+  if (appPath) {
+	  for (var i in paths) {
+	  	  paths[i]=require('path').resolve(appPath,paths[i]);
+	  }
   }
   var db=nodeRequire("ksana-document").projects.getFiles(paths,function(p){
     return p.substring(p.length-4)==".kdb";
@@ -96,6 +101,7 @@ var get=function(opts,cb) {
   });
 }
 var setPath=function(path) {
+  appPath=path;
   nodeRequire("ksana-document").setPath(path);
 }
 get.async=true;
