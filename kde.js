@@ -67,7 +67,6 @@ var createLocalEngine=function(kdb,cb) {
 	};	
 
 	_gets.apply(engine,[[["fileNames"],["fileOffsets"],["files"],["meta"]], true,function(res){
-		console.log(res)
 		engine.dbname=res[0].name;
 		engine.customfunc=customfunc.getAPI(res[0].cofig);
 		engine.ready=true;
@@ -247,6 +246,8 @@ var openLocal=function(kdbid,cb)  {
 
 	var tries=["./"+kdbfn  //TODO , allow any depth
 	           ,apppath+"/"+kdbfn,
+	           ,apppath+"/ksana_databases/"+kdbfn
+	           ,apppath+"/"+kdbfn,
 	           ,"./ksana_databases/"+kdbfn
 	           ,"../"+kdbfn
 	           ,"../ksana_databases/"+kdbfn
@@ -257,8 +258,9 @@ var openLocal=function(kdbid,cb)  {
 	           ];
 
 	for (var i=0;i<tries.length;i++) {
-		//console.log(tries[i]);
+		
 		if (fs.existsSync(tries[i])) {
+			console.log("kdb path: "+require('path').resolve(tries[i]));
 			kdb=new Kdb(tries[i]);
 			if (kdb) {
 				createLocalEngine(kdb,function(engine){

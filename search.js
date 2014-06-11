@@ -222,7 +222,7 @@ var newQuery =function(engine,query,opts) {
 var loadPostings=function(engine,terms,cb) {
 	var tokenkeys=terms.map(function(t){return ["tokens",t.key] });
 
-	engine.get(tokenkeys,function(postingid){
+	engine.get(tokenkeys,true,function(postingid){
 		var postingkeys=postingid.map(function(t){return ["postings",t]});
 		
 		engine.get(postingkeys,function(postings){
