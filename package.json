@@ -1,14 +1,14 @@
 {
-  "name": "dhammagear-document",
+  "name": "ksana-document",
   "version": "0.0.1",
-  "description": "dhammagear document",
+  "description": "ksana document",
   "main": "index.js",
   "scripts": {
     "test": "vows"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dhammagear/dhammagear-document"
+    "url": "https://github.com/ksanaforge/ksana-document"
   },
   "author": "yapcheahshen",
   "license": "GPL 3.0",

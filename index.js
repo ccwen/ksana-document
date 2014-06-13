@@ -6,6 +6,7 @@
 	,crypto:require('./sha1')
 	,customfunc:require('./customfunc')
 	,configs:require('./configs')
+	,languages:require('./languages')
 	,kde:require("./kde") //database engine
 	,kse:require('./kse') // search engine
 }

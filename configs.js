@@ -28,7 +28,6 @@ var tibetan1={
 		tokenize:tokenizers.tibetan
 		,normalize:normalize_tibetan
 		,isSkip:isSkip_tibetan
-		,romanize:require("./tibetan/wylie")
 	}
 }
 module.exports={"simple1":simple1,"tibetan1":tibetan1}
