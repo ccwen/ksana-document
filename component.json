@@ -17,7 +17,8 @@
     "sha1.js","users.js","customfunc.js","configs.js",
     "projects.js","indexer.js",
     "kdb.js","kdbfs.js", "kdbw.js","kse.js","kde.js","boolsearch.js",
-    "search.js","plist.js","excerpt.js","link.js","tibetan/wylie.js","languages.js"
+    "search.js","plist.js","excerpt.js","link.js","tibetan/wylie.js","languages.js",
+    "diff.js"
   ],
   "remotes": []
 }

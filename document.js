@@ -76,6 +76,31 @@ var addRevision=function(start,len,str) {
 	this.doc.markDirty();
 	return valid;
 };
+
+var diff2revision=function(diff) {
+	var out=[],offset=0;
+	diff.map(function(d){
+		if (0==d[0]) {
+			offset+=d[1].length;
+			return;
+		}
+		if (d[0]<0) { //delete
+			out.push({start:offset,len:d[1].length,payload:{text:""}});
+			offset+=d[1].length;
+		} else { //insert
+			out.push({start:offset,len:0,payload:{text:d[1]}});
+			offset-=d[1].length;
+		}
+	})
+	return out;
+}
+
+
+var addRevisionsFromDiff=function(diff,opts) { //Google Diff format
+	var revisions=diff2revision(diff);
+	this.addRevisions(revisions,opts);
+}
+
 var addMarkups=function(newmarkups,opts) {
 	if (!newmarkups) return;
 	if (!newmarkups.length) return;
@@ -431,6 +456,7 @@ var newPage = function(opts) {
 	PG.addMarkups        = addMarkups;
 	PG.addRevision       = addRevision;
 	PG.addRevisions      = addRevisions;
+	PG.addRevisionsFromDiff=addRevisionsFromDiff;
 	PG.hasAncestor       = hasAncestor;
 	PG.upgradeMarkups    = upgradeMarkups;
 	PG.downgradeMarkups  = downgradeMarkups;
