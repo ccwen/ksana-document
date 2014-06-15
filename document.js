@@ -78,20 +78,25 @@ var addRevision=function(start,len,str) {
 };
 
 var diff2revision=function(diff) {
-	var out=[],offset=0;
-	diff.map(function(d){
+	var out=[],offset=0,i=0;
+	while (i<diff.length) {
+		var d=diff[i];
 		if (0==d[0]) {
 			offset+=d[1].length;
-			return;
-		}
-		if (d[0]<0) { //delete
-			out.push({start:offset,len:d[1].length,payload:{text:""}});
+		} else  if (d[0]<0) { //delete
+			if (i<diff.length-1 && diff[i+1][0]==1) { //combine to modify
+				out.push({start:offset,len:d[1].length,payload:{text:diff[i+1][1]}});
+				i++;
+			} else {
+				out.push({start:offset,len:d[1].length,payload:{text:""}});
+			}
 			offset+=d[1].length;
 		} else { //insert
 			out.push({start:offset,len:0,payload:{text:d[1]}});
-			offset-=d[1].length;
+			//offset-=d[1].length;
 		}
-	})
+		i++;
+	}
 	return out;
 }
 
@@ -136,13 +141,39 @@ var downgradeMarkups=function(markups) {
 	}
 	return downgraded;
 };
+var upgradeXMLTags=function(tags,revs) {
+	var migratedtags=[];
+	tags.map(function(t){
+		var s=t[0], l=t[1].length, delta=0, deleted=false;
+		revs.map(function(rev){
+			if (rev.start<=s) { //this will affect the offset
+				delta+= (rev.payload.text.length-rev.len);
+			}
+			if (rev.start<=s && rev.start+rev.len>=s+l) {
+				deleted=true;
+			}
+		});
+		var m2=[t[0]+delta,t[1]];
+		migratedtags.push(m2);
+	});
+	return migratedtags;
+}
 var upgradeMarkups=function(markups,revs) {
 	var migratedmarkups=[];
 	markups.map(function(m){
-		revs.map(function(revs){
-			m=migrateMarkup(m,revs);
+		var s=m.start, l=m.len, delta=0, deleted=false;
+		revs.map(function(rev){
+			if (rev.start<s) { //this will affect the offset
+				delta+= (rev.payload.text.length-rev.len);
+			}
+			if (rev.start<=s && rev.start+rev.len>=s+l) {
+				deleted=true;
+			}
 		});
-		migratedmarkups.push(m);
+		var m2=cloneMarkup(m);
+		m2.start+=delta;
+		if (deleted) m2.len=0;
+		migratedmarkups.push(m2);
 	});
 	return migratedmarkups;
 };
@@ -226,6 +257,13 @@ var clearMarkups=function(start,len,author) {
 	clear.apply(this,[this.__markups__(),start,len,author]);
 	this.doc.markDirty();
 };
+var getOrigin=function() {
+	var pg=this;
+	while (pg && pg.parentId) {
+		pg=this.doc.getPage(pg.parentId);
+	}
+	return pg;
+}
 var isLeafPage=function() {
 	return (this.__mutant__().length===0);
 };
@@ -459,6 +497,7 @@ var newPage = function(opts) {
 	PG.addRevisionsFromDiff=addRevisionsFromDiff;
 	PG.hasAncestor       = hasAncestor;
 	PG.upgradeMarkups    = upgradeMarkups;
+	PG.upgradeXMLTags    = upgradeXMLTags;
 	PG.downgradeMarkups  = downgradeMarkups;
 	PG.upgradeMarkupsTo  = upgradeMarkupsTo;
 	PG.downgradeMarkupsTo=downgradeMarkupsTo;
@@ -474,6 +513,7 @@ var newPage = function(opts) {
 	PG.mergeMarkup       = mergeMarkup;
 	PG.strikeout         = strikeout;
 	PG.preview           = preview;
+	PG.getOrigin       = getOrigin;
 	Object.freeze(PG);
 	return PG;
 };
@@ -646,6 +686,12 @@ var createDocument = function(docjson,markupjson) {
 		} else return pages[parr];
 	};
 
+	var upgradeXMLTags=function() {
+		for (var i=1;i<this.pageCount;i++) {
+			this.tags[i-1]=this.getPage(i).upgradeXMLTags(this.tags[i-1], this.getPage(i).__revisions__());
+		}
+	}
+
 	var rootPage=createPage();
 
 	DOC.getPage=function(id) {return pages[id];};
@@ -672,6 +718,7 @@ var createDocument = function(docjson,markupjson) {
 	DOC.migrate=migrate; 
 	DOC.downgrade=migrate; //downgrade to parent
 	DOC.migrateMarkup=migrateMarkup; //for testing
+	DOC.upgradeXMLTags=upgradeXMLTags;
 	DOC.getLeafPages=getLeafPages;
 	DOC.findPage=findPage;
 	DOC.pageByName=pageByName;

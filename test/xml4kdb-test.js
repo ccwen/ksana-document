@@ -11,25 +11,14 @@ var createDocumentFromXml=function(fn) {
 }
 QUnit.test('import xml',function(){
 	var d=createDocumentFromXml("xml4kdb-test.xml");
-	equal(d.pageCount,3);
+	equal(d.pageCount,5);
 });
-var showdiff=function(D) {
-	var offset=0;
-	D.map(function(d){
-		if (!d[0]) {
-			offset+=d[1].length;
-			return;
-		}
-		if (d[0]==-1) offset+=d[1].length;
-		console.log(offset,d[0],d[1]);
-	})
-}
 
 QUnit.test('diff',function(){
 	var d=createDocumentFromXml("xml4kdb-test.xml");
-	var d2=createDocumentFromXml("xml4kdb-test2.xml");
-	d.getPage(1).addMarkup(13,1,{type:"memo"});
-	d.getPage(2).addMarkup(13,1,{type:"memo"});
+	var d2=createDocumentFromXml("xml4kdb-test2.xml");  //updated xml
+	d.getPage(2).addMarkup(13,1,{type:"memo"}); //行
+	d.getPage(3).addMarkup(14,1,{type:"memo"}); //行
 
 	var diff=new Diff();
 	var pc=d.pageCount;
@@ -39,7 +28,37 @@ QUnit.test('diff',function(){
 		d.evolvePage(d.getPage(i));
 	};
 
-	equal(d.getPage(3).getMarkup(0).start,16);
-	equal(d.getPage(4).getMarkup(0).start,15);
+	equal(d.getPage(6).getMarkup(0).start,16);
+	equal(d.getPage(7).getMarkup(0).start,15);
 
-})
+});
+
+
+QUnit.test('export',function(){
+	var d=createDocumentFromXml("xml4kdb-test.xml");
+	var pc=d.pageCount;
+	d.getPage(2).addRevision(11,0,"abc");
+
+	d.getPage(3).addRevision(1,2,"第");
+	d.getPage(3).addRevision(5,1,"");
+	d.getPage(3).addRevision(13,0,"xyz");
+	d.getPage(3).addRevision(15,0,"。");
+
+	d.getPage(4).addRevision(3,0,"k");
+	d.getPage(4).addRevision(5,0,"z");
+	
+	d.upgradeXMLTags();
+	d.evolvePage(d.getPage(2));
+	d.evolvePage(d.getPage(3));
+	d.evolvePage(d.getPage(4));
+
+   
+	var xml=X.exportXML(d);
+
+	var buf=fs.readFileSync("xml4kdb-test2.xml","utf8");
+
+	//add some changes with revision
+	equal(xml,buf)
+	//migrate xml tags
+	//export
+});
