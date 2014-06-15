@@ -524,6 +524,7 @@ var createDocument = function(docjson,markupjson) {
 	var meta={doctype:"dg1.0",filename:""};
 	var dirty=0;
 	var tags={};
+	var sep="_.id";
 
 	var addPage=function(name) {
 		if (!names[name]) {
@@ -602,6 +603,11 @@ var createDocument = function(docjson,markupjson) {
 		var revisions=opts.revisions||pg.__revisions__();
 		var markups=opts.markups||pg.__markups__();
 		nextgen.__selfEvolve__( revisions ,markups );
+
+		var o=pg.getOrigin();
+		if (o.id && this.tags[o.id-1] && this.tags[o.id-1].length) {
+			this.tags[o.id-1]=pg.upgradeXMLTags(this.tags[o.id-1], pg.__revisions__());	
+		}
 
 		return nextgen;
 	};
@@ -686,11 +692,6 @@ var createDocument = function(docjson,markupjson) {
 		} else return pages[parr];
 	};
 
-	var upgradeXMLTags=function() {
-		for (var i=1;i<this.pageCount;i++) {
-			this.tags[i-1]=this.getPage(i).upgradeXMLTags(this.tags[i-1], this.getPage(i).__revisions__());
-		}
-	}
 
 	var rootPage=createPage();
 
@@ -698,6 +699,7 @@ var createDocument = function(docjson,markupjson) {
 	DOC.markDirty=function() {dirty++;};
 	DOC.markClean=function() {dirty=0;};
 	DOC.setTags=function(T)  {tags=T;};
+	DOC.setSep=function(s)  {sep=s;};
 	/*
 		external markups must be saved with version number.
 	*/
@@ -709,6 +711,7 @@ var createDocument = function(docjson,markupjson) {
 	Object.defineProperty(DOC,'pageCount',{get:function(){return pages.length;}});
 	Object.defineProperty(DOC,'dirty',{get:function() {return dirty>0; }});
 	Object.defineProperty(DOC,'tags',{get:function() {return tags;}});
+	Object.defineProperty(DOC,'sep',{get:function() {return sep;}});
 
 
 	DOC.createPage=createPage;
@@ -718,7 +721,6 @@ var createDocument = function(docjson,markupjson) {
 	DOC.migrate=migrate; 
 	DOC.downgrade=migrate; //downgrade to parent
 	DOC.migrateMarkup=migrateMarkup; //for testing
-	DOC.upgradeXMLTags=upgradeXMLTags;
 	DOC.getLeafPages=getLeafPages;
 	DOC.findPage=findPage;
 	DOC.pageByName=pageByName;

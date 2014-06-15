@@ -47,7 +47,6 @@ QUnit.test('export',function(){
 	d.getPage(4).addRevision(3,0,"k");
 	d.getPage(4).addRevision(5,0,"z");
 	
-	d.upgradeXMLTags();
 	d.evolvePage(d.getPage(2));
 	d.evolvePage(d.getPage(3));
 	d.evolvePage(d.getPage(4));

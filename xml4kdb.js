@@ -37,10 +37,13 @@ var splitUnit=function(buf,sep) {
 	units.push([name,buf.substring(last)]);
 	return units;
 };
-var unitsep=/<_ id="([^"]*?)"\/>/g  ;
+var defaultsep="_.id";
+
 var parseXML=function(buf, opts){
 	opts=opts||{};
-	var units=splitUnit(buf,opts.sep || unitsep);
+	var sep=opts.sep||defaultsep;
+	var unitsep=new RegExp('<'+sep.replace("."," ")+'="([^"]*?)"/>' , 'g')  ;
+	var units=splitUnit(buf, unitsep);
 	var texts=[], tags=[] , names=[];
 	units.map(function(U,i){
 		var out=parseUnit(U[1]);
@@ -48,7 +51,7 @@ var parseXML=function(buf, opts){
 		texts.push(out.inscription);
 		tags.push(out.tags);
 	});
-	return {names:names,texts:texts,tags:tags};
+	return {names:names,texts:texts,tags:tags,sep:sep};
 };
 var D=require("ksana-document").document;
 
@@ -59,19 +62,24 @@ var importJson=function(json) {
 		d.createPage({n:json.names[i],t:json.texts[i]});
 	}
 	d.setTags(json.tags);
+	d.setSep(json.sep);
 	return d;
 }
+/*
+    doc.tags hold raw xml tags, offset will be adjusted by evolvePage.
+    should not add or delete page, otherwise the export XML is not valid.
+*/
 var exportXML=function(doc){
 	var out=[],tags=null;
 	for (var i=1;i<doc.pageCount;i++) {
 		var pg=doc.getPage(i);
 		if (!pg.isLeafPage()) continue;
-		var origin=pg.getOrigin();
-		var tags=doc.tags[origin.id-1];
+		var origin=pg.getOrigin();         //doc.tags doesn't keep multiversion
+		var tags=doc.tags[origin.id-1];  //get the xml tags
 		var tagnow=0,text="";
 		var t=pg.inscription;
 		if (i>1) {
-			text='<_ id="'+pg.name+'"/>';
+			text='<'+doc.sep.replace("."," ")+'="'+pg.name+'"/>';
 		}
 		for (var j=0;j<t.length;j++) {
 			if (tagnow<tags.length) {
