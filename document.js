@@ -142,20 +142,21 @@ var downgradeMarkups=function(markups) {
 	return downgraded;
 };
 var upgradeXMLTags=function(tags,revs) {
-	var migratedtags=[];
-	tags.map(function(t){
-		var s=t[0], l=t[1].length, delta=0, deleted=false;
-		revs.map(function(rev){
-			if (rev.start<=s) { //this will affect the offset
-				delta+= (rev.payload.text.length-rev.len);
-			}
+	var migratedtags=[],i=0, delta=0;
+	for (var j=0;j<tags.length;j++) {
+		var t=tags[j];
+		var s=t[0], l=t[1].length, deleted=false;
+		while (i<revs.length && revs[i].start<=s) {
+			var rev=revs[i];
 			if (rev.start<=s && rev.start+rev.len>=s+l) {
 				deleted=true;
 			}
-		});
+			delta+= (rev.payload.text.length-rev.len);
+			i++;
+		}
 		var m2=[t[0]+delta,t[1]];
 		migratedtags.push(m2);
-	});
+	};
 	return migratedtags;
 }
 var upgradeMarkups=function(markups,revs) {
