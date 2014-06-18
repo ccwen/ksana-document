@@ -17,6 +17,7 @@ if (typeof process!="undefined") {
 	API.projects=require('./projects');
 	API.kdb=require('./kdb');  // file format
 	API.kdbw=require('./kdbw');  // create ydb
+	API.xml4kdb=require('./xml4kdb');  
 	API.setPath=function(path) {
 		console.log("API set path ",path)
 		API.kde.setPath(path);

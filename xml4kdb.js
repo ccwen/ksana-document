@@ -32,7 +32,7 @@ var splitUnit=function(buf,sep) {
 	buf.replace(sep,function(m,m1,offset){
 		units.push([name,buf.substring(last,offset)]);
 		name=m1;
-		last=offset+m.length; 
+		last=offset;//+m.length;   //keep the separator
 	});
 	units.push([name,buf.substring(last)]);
 	return units;
@@ -42,7 +42,7 @@ var defaultsep="_.id";
 var parseXML=function(buf, opts){
 	opts=opts||{};
 	var sep=opts.sep||defaultsep;
-	var unitsep=new RegExp('<'+sep.replace("."," ")+'="([^"]*?)"/>' , 'g')  ;
+	var unitsep=new RegExp('<'+sep.replace("."," ")+'="([^"]*?)"' , 'g')  ;
 	var units=splitUnit(buf, unitsep);
 	var texts=[], tags=[] , names=[];
 	units.map(function(U,i){
