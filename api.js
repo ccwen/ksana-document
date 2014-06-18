@@ -74,13 +74,13 @@ var getUserSettings=function(user) {
   return {};
 }
 var buildIndex=function(projname) {
-  nodeRequire('ksana-document').indexer.start(projname);
+  nodeRequire('ksana-document').indexer_kd.start(projname);
 }
 var buildStatus=function(session) {
-  return nodeRequire("ksana-document").indexer.status(session);
+  return nodeRequire("ksana-document").indexer_kd.status(session);
 }
 var stopIndex=function(session) {
-  return nodeRequire("ksana-document").indexer.stop(session);
+  return nodeRequire("ksana-document").indexer_kd.stop(session);
 } 
 var getProjectFolders=function(p) {
   return nodeRequire("ksana-document").projects.folders(p.filename);

@@ -12,6 +12,7 @@
 }
 if (typeof process!="undefined") {
 	API.persistent=require('./persistent');
+	API.indexer_kd=require('./indexer_kd');
 	API.indexer=require('./indexer');
 	API.projects=require('./projects');
 	API.kdb=require('./kdb');  // file format

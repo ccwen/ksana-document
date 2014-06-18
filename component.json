@@ -15,7 +15,7 @@
     "api.js","xml.js","template_accelon.js",
     "persistent.js","tokenizers.js","markup.js","typeset.js",
     "sha1.js","users.js","customfunc.js","configs.js",
-    "projects.js","indexer.js",
+    "projects.js","indexer.js","indexer_kd.js",
     "kdb.js","kdbfs.js", "kdbw.js","kse.js","kde.js","boolsearch.js",
     "search.js","plist.js","excerpt.js","link.js","tibetan/wylie.js","languages.js",
     "diff.js"
