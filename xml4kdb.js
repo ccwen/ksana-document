@@ -78,9 +78,6 @@ var exportXML=function(doc){
 		var tags=doc.tags[origin.id-1];  //get the xml tags
 		var tagnow=0,text="";
 		var t=pg.inscription;
-		if (i>1) {
-			text='<'+doc.sep.replace("."," ")+'="'+pg.name+'"/>';
-		}
 		for (var j=0;j<t.length;j++) {
 			if (tagnow<tags.length) {
 				if (tags[tagnow][0]==j) {
