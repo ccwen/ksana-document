@@ -1,3 +1,5 @@
+if (typeof nodeRequire=='undefined')nodeRequire=require;
+
 var tags=[];
 var tagstack=[];
 var parseXMLTag=function(s) {
@@ -53,7 +55,7 @@ var parseXML=function(buf, opts){
 	});
 	return {names:names,texts:texts,tags:tags,sep:sep};
 };
-var D=require("ksana-document").document;
+var D=nodeRequire("ksana-document").document;
 
 var importJson=function(json) {
 	d=D.createDocument();
