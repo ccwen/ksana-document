@@ -75,7 +75,7 @@ var Kfs=function(path,opts) {
 	}
 	var writeString= function(value,pos,encoding) {
 		encoding=encoding||'ucs2';
-		
+		if (value=="") throw "cannot write null string";
 		if (encoding==='utf8')dbuf.write(DT.utf8,pos,1,'utf8');
 		else if (encoding==='ucs2')dbuf.write(DT.ucs2,pos,1,'utf8');
 		else throw 'unsupported encoding '+encoding;
@@ -91,9 +91,10 @@ var Kfs=function(path,opts) {
 		if (encoding==='utf8') dbuf.write(DT.utf8arr,pos,1,'utf8');
 		else if (encoding==='ucs2')dbuf.write(DT.ucs2arr,pos,1,'utf8');
 		else throw 'unsupported encoding '+encoding;
-			
+		
 		var v=value.join('\0');
 		var len=Buffer.byteLength(v, encoding);
+		if (0===len) throw "empty string array";
 		dbuf.write(v,pos+1,len,encoding);
 		if (pos+len+1>cur) cur=pos+len+1;
 		return len+1;
@@ -129,7 +130,7 @@ var Kfs=function(path,opts) {
 		if (unitsize===1) var func=dbuf.writeUInt8;
 		else if (unitsize===4)var func=dbuf.writeInt32BE;
 		else throw 'unsupported integer size';
-		
+		if (!value.length) throw "empty fixed array";
 		for (var i = 0; i < value.length ; i++) {
 			func.apply(dbuf,[value[i],i*unitsize+pos])
 		}

@@ -14,16 +14,14 @@ kdb.writeFile(fn,function(total,written) {
 	console.log('total',total,'written',written);
 	if (total==written) {
 		console.log(true)
-	//	start();
 		testread();
 
 	}
 });
 
 var testread=function() {
-	debugger;
 	kdb=new Kdb("wrong.kdb");
 	kdb.get(["pageNames"],true,function(data){
-		console.log(data)
+		console.log("DATA",data)
 	})
 }
