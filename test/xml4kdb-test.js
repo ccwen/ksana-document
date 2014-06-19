@@ -50,7 +50,6 @@ QUnit.test('export',function(){
 	d.evolvePage(d.getPage(2));
 	d.evolvePage(d.getPage(3));
 	d.evolvePage(d.getPage(4));
-
    
 	var xml=X.exportXML(d);
 

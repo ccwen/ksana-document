@@ -135,7 +135,7 @@ var downgradeMarkups=function(markups) {
 	for (var i in markups) {
 		var m=markups[i];
 		for (var j=0;j<this.revert.length;j++) {
-			m=migrateMarkup(m,revert[j]);
+			m=migrateMarkup(m,this.revert[j]);
 		}
 		downgraded.push(m);
 	}
@@ -164,7 +164,7 @@ var upgradeMarkups=function(markups,revs) {
 	markups.map(function(m){
 		var s=m.start, l=m.len, delta=0, deleted=false;
 		revs.map(function(rev){
-			if (rev.start<s) { //this will affect the offset
+			if (rev.start<=s) { //this will affect the offset
 				delta+= (rev.payload.text.length-rev.len);
 			}
 			if (rev.start<=s && rev.start+rev.len>=s+l) {

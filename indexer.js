@@ -16,7 +16,6 @@ var fs=nodeRequire("fs");
 console.log("xml4kdb",xml4kdb);
 var parseBody=function(body,sep) {
 	var res=xml4kdb.parseXML(body, {sep:sep});
-	console.log(res.texts)
 }
 var putFile=function(fn) {
 	var texts=fs.readFileSync(fn,session.config.inputEncoding);
@@ -25,9 +24,9 @@ var putFile=function(fn) {
 	var cb=session.config.callbacks;
 	var started=false,stopped=false;
 
+	if (cb.onFile) cb.onFile.apply(session,[fn,status]);
 	var start=texts.indexOf(bodystart);
 	var end=texts.indexOf(bodyend);
-	console.log("indexing ",fn,texts.length,start,end);
 	//assert.equal(end>start,true);
 
 	// split source xml into 3 parts, before <body> , inside <body></body> , and after </body>
