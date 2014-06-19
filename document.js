@@ -325,10 +325,12 @@ var toJSONString=function(opts) {
 	if (this.parentId) obj.p=this.parentId;
 	if (this.revert) obj.r=compressRevert(this.revert);
 	var meta=this.__meta__();
+	/*
 	if (meta.daugtherStart) {
 		obj.ds=meta.daugtherStart;
 		obj.dc=meta.daugtherCount;
 	}
+	*/
 	return JSON.stringify(obj);
 };
 var filterMarkup=function(cb) {
@@ -346,6 +348,7 @@ var findMarkup=function(query) { //same like jquery
 	});
 	return output;
 };
+/*
 var fission=function(breakpoints,opts){
 	var meta=this.__meta__();
 	var movetags=function(newpage,start,end) {
@@ -358,7 +361,7 @@ var fission=function(breakpoints,opts){
 	};
 	meta.daugtherStart=this.doc.version;
 	meta.daugtherCount=breakpoints.length+1;
-	/* create page ,add transclude from*/
+	// create page ,add transclude from
 	var start=0, t="";
 	for (var i=0;i<=breakpoints.length;i++) {
 		var end=breakpoints[i]||this.inscription.length;
@@ -373,6 +376,7 @@ var fission=function(breakpoints,opts){
 	//when convert to json, remove the inscription in origin text
 	//and retrived from fission mutant
 };
+*/
 var toggleMarkup=function(start,len,payload) {
 	var M=this.__markups__();
 	for (var i=0;i<M.length;i++){
@@ -449,6 +453,7 @@ var newPage = function(opts) {
 		get : function() {
 			if (meta.id===0) return ""; //root page
 			if (hasInscription) return inscription;
+			/*
 			if (meta.daugtherStart) {
 				inscription="";
 				for (var i=0;i<meta.daugtherCount;i++) {//combine from daugther
@@ -456,9 +461,10 @@ var newPage = function(opts) {
 					inscription+=pg.inscription;
 				}
 			} else {
-				var m=this.getMutant(0); //revert from Mutant
-				inscription=checkLength(applyChanges(m.inscription,m.revert));				
-			}
+			*/
+				var mu=this.getMutant(0); //revert from Mutant
+				inscription=checkLength(applyChanges(mu.inscription,mu.revert));				
+			//}
 			hasInscription=true;
 			return inscription;
 	}});
@@ -476,7 +482,7 @@ var newPage = function(opts) {
 
 	Object.defineProperty(PG,'revert',{get:function(){return meta.revert;}});
 	PG.__setRevert__   = function(r) { meta.revert=decompressRevert(r);};
-	PG.__setDaugther__ = function(s,c) { meta.daugtherStart=s;meta.daugtherCount=c;};
+	//PG.__setDaugther__ = function(s,c) { meta.daugtherStart=s;meta.daugtherCount=c;};
 	PG.getRevision     = function(i) { return cloneMarkup(revisions[i]);};
 	PG.getMutant       = function(i) { return mutant[i]; };
 	PG.__mutant__      = function()  { return mutant;};
@@ -486,8 +492,8 @@ var newPage = function(opts) {
 	PG.setName           = function(n){ meta.name=n; return this;};
 	Object.defineProperty(PG,'name',{get:function(){return meta.name;}});
 	PG.__meta__        = function() {return meta;};
-	Object.defineProperty(PG,'daugtherStart',{get:function(){return meta.daugtherStart;}});
-	Object.defineProperty(PG,'daugtherCount',{get:function(){return meta.daugtherCount;}});
+	//Object.defineProperty(PG,'daugtherStart',{get:function(){return meta.daugtherStart;}});
+	//Object.defineProperty(PG,'daugtherCount',{get:function(){return meta.daugtherCount;}});
 	PG.clearRevisions    = clearRevisions;
 	PG.clearMarkups      = clearMarkups;
 	PG.addMarkup         = addMarkup;
@@ -510,7 +516,7 @@ var newPage = function(opts) {
 	PG.toJSONString      = toJSONString;
 	PG.findMarkup				 = findMarkup;
 	PG.filterMarkup			 = filterMarkup;
-	PG.fission           = fission;
+//	PG.fission           = fission;
 	PG.mergeMarkup       = mergeMarkup;
 	PG.strikeout         = strikeout;
 	PG.preview           = preview;
@@ -527,20 +533,7 @@ var createDocument = function(docjson,markupjson) {
 	var tags={};
 	var sep="_.id";
 
-	var addPage=function(name) {
-		if (!names[name]) {
-			names[name]=pages.length-1;
-		} else {
-			throw "repeat name "+name;
-			return;
-			/*
-			if (typeof names[name]=='number') {
-				names[name]=[names[name]];
-			}
-			names[name].push(pages.length-1);
-			*/
-		}
-	};
+
 	var createFromJSON=function(json) {
 			rootPage.clearRevisions();
 			var t=json.text||json.t ,page;
@@ -551,13 +544,19 @@ var createDocument = function(docjson,markupjson) {
 				page=createPage();
 			}
 			var name=json.n||json.name||"";
-			addPage(name);
+			if (!names[name]) {
+				names[name]=pages.length-1;
+			} else if (!json.p) {
+				throw "repeat name "+name;
+			}
 			page.setName(name);
 			if (json.p) page.__setParentId__(json.p);
 			if (json.r) page.__setRevert__(json.r);
+			/*
 			if (json.ds) {
 				page.__setDaugther__(json.ds,json.dc);
 			}
+			*/
 			page.addMarkups(json.markups,true);
 			page.addRevisions(json.revisions,true);
 			return page;
@@ -683,21 +682,33 @@ var createDocument = function(docjson,markupjson) {
 		return out.join('\n');
 	};
 
-
+	//get a page , if version is not specified, return lastest
+	//version ==0 first version, version==1 second ..
 	var pageByName=function(name,version) {
 		var parr=names[name];
-		version=version||this.version;//return lastest if not specified
-		if (parr instanceof Array) {
-			var last=parr[0];
-			for (var i=0;i<parr.length;i++ ) {
-				if (parr[i]>version) break;
-				last=parr[i];
-			}
-			return pages[last];
-		} else return pages[parr];
+		if (!parr) {
+			return null; //pagename not found
+		}
+		if (typeof version=="undefined") {
+			version=-1; //lastest
+		}
+		var pg=pages[parr];
+		if (version==0) return pg; //the first version
+		while (pg.__mutant__().length) {
+			var mu=pg.__mutant__();
+			pg=mu[mu.length-1];
+			version--; 
+			if  (version==0) break;
+		}
+		return pg;
 	};
 
-	var map=function(callback) {
+	var map=function(context,callback) {
+		var cb=callback,ctx=context;
+		if (typeof context=="function") {
+			cb=context;
+			ctx=this;
+		}
 		for (var i=1;i<this.pageCount;i++) {
 			var pg=pages[i];
 			if (pg.parentId!=0)  continue; //not a root page, 
@@ -705,7 +716,7 @@ var createDocument = function(docjson,markupjson) {
 				var mu=pg.__mutant__();
 				pg=mu[mu.length-1];
 			}
-			callback(pg);
+			cb.apply(ctx,[pg]);
 		}
 	}
 	var pageNames=function() {

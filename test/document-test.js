@@ -289,7 +289,8 @@ QUnit.test('load from json',function(){
 	//lastest version
 	equal(doc2.pageByName("ch1").inscription,"道可道非恆道也名可名非恆名也。")
 	//previous version
-	equal(doc2.pageByName("ch1",1).inscription,origin+"。")
+	equal(doc2.pageByName("ch1",0).inscription,origin+"。")
+	equal(doc2.pageByName("ch1",1).inscription,"道可道非常道也名可名非常名。")
 
 })
 /*
@@ -307,6 +308,8 @@ QUnit.test('reunit',function(){
 	//compare with test1.xml
 })
 */
+
+/*
 var fs=require('fs');
 var F=require('../xml');
 QUnit.test('fission',function(){
@@ -337,4 +340,4 @@ QUnit.test('fission',function(){
 	equal(doc2.getPage(1).inscription,doc.getPage(1).inscription);
 });
 
-
+*/

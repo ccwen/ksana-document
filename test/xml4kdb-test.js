@@ -64,7 +64,7 @@ QUnit.test('export',function(){
 });
 
 //enum by page name, return lastest version
-QUnit.test('page map',function(){
+QUnit.test('page enumeration',function(){
 	var doc=D.createDocument();
 	var p1=doc.createPage({n:"p1",t:"content of page 1"});
 	var p2=doc.createPage({n:"p2",t:"content of page 2"});
@@ -97,3 +97,8 @@ QUnit.test('page map',function(){
 	deepEqual(doc.pageNames(),names);
 
 });
+
+/*
+put document into kdb
+
+*/
