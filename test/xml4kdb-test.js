@@ -8,16 +8,16 @@ var createDocumentFromXml=function(fn) {
 	var buf=fs.readFileSync(fn,"utf8").replace(/\r\n/g,'\n');
 	var res=X.parseXML(buf);
 	var d=X.importJson(res);
-	return d;
+	return {doc:d,tags:res.tags};
 }
 QUnit.test('import xml',function(){
-	var d=createDocumentFromXml("xml4kdb-test.xml");
+	var d=createDocumentFromXml("xml4kdb-test.xml").doc;
 	equal(d.pageCount,5);
 });
 
 QUnit.test('diff',function(){
-	var d=createDocumentFromXml("xml4kdb-test.xml");
-	var d2=createDocumentFromXml("xml4kdb-test2.xml");  //updated xml
+	var d=createDocumentFromXml("xml4kdb-test.xml").doc;
+	var d2=createDocumentFromXml("xml4kdb-test2.xml").doc;  //updated xml
 	d.getPage(2).addMarkup(13,1,{type:"memo"}); //行
 	d.getPage(3).addMarkup(14,1,{type:"memo"}); //行
 
@@ -36,7 +36,9 @@ QUnit.test('diff',function(){
 
 
 QUnit.test('export',function(){
-	var d=createDocumentFromXml("xml4kdb-test.xml");
+	var dd=createDocumentFromXml("xml4kdb-test.xml");
+	var d=dd.doc;
+	var rawxmltags=dd.tags;
 	var pc=d.pageCount;
 	d.getPage(2).addRevision(11,0,"abc");
 
@@ -46,14 +48,18 @@ QUnit.test('export',function(){
 	d.getPage(3).addRevision(15,0,"。");
 
 	d.getPage(4).addRevision(3,0,"k");
-	d.getPage(4).addRevision(5,0,"z");
 	
 	d.evolvePage(d.getPage(2));
 	d.evolvePage(d.getPage(3));
 	d.evolvePage(d.getPage(4));
 
-   
-	var xml=X.exportXML(d);
+	d.getPage(7).addRevision(6,0,"z");
+	d.evolvePage(d.getPage(7));
+
+	//d.tags is not stored in kdb
+      //export need raw tags from xml
+
+	var xml=X.exportXML(d,rawxmltags);
 
 	var buf=fs.readFileSync("xml4kdb-test2.xml","utf8").replace(/\r\n/g,"\n");
 

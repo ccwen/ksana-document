@@ -141,24 +141,6 @@ var downgradeMarkups=function(markups) {
 	}
 	return downgraded;
 };
-var upgradeXMLTags=function(tags,revs) {
-	var migratedtags=[],i=0, delta=0;
-	for (var j=0;j<tags.length;j++) {
-		var t=tags[j];
-		var s=t[0], l=t[1].length, deleted=false;
-		while (i<revs.length && revs[i].start<=s) {
-			var rev=revs[i];
-			if (rev.start<=s && rev.start+rev.len>=s+l) {
-				deleted=true;
-			}
-			delta+= (rev.payload.text.length-rev.len);
-			i++;
-		}
-		var m2=[t[0]+delta,t[1]];
-		migratedtags.push(m2);
-	};
-	return migratedtags;
-}
 var upgradeMarkups=function(markups,revs) {
 	var migratedmarkups=[];
 	markups.map(function(m){
@@ -178,7 +160,6 @@ var upgradeMarkups=function(markups,revs) {
 	});
 	return migratedmarkups;
 };
-
 var upgradeMarkupsTo=function(M,targetPage) {
 	var pg=targetPage, lineage=[], doc=this.doc;
 	while (true) {
@@ -208,6 +189,17 @@ var downgradeMarkupsTo=function(M,targetPage) {
 	}
 	return M;
 };
+var offsprings=function() {
+	var out=[];
+	var page=this;
+	while (page.__mutant__().length) {
+		var mu=page.__mutant__();
+		if (!mu.length)break;
+		page=mu[mu.length-1];
+		out.push(page);
+	}
+	return out;
+}
 
 var hasAncestor=function(ancestor) {
 	var ancestorId=ancestor.id;
@@ -268,6 +260,7 @@ var getOrigin=function() {
 var isLeafPage=function() {
 	return (this.__mutant__().length===0);
 };
+//convert revert and revision back and forth
 var revertRevision=function(revs,parentinscription) {
 	var revert=[], offset=0;
 	revs.sort(function(m1,m2){return m1.start-m2.start;});
@@ -504,7 +497,6 @@ var newPage = function(opts) {
 	PG.addRevisionsFromDiff=addRevisionsFromDiff;
 	PG.hasAncestor       = hasAncestor;
 	PG.upgradeMarkups    = upgradeMarkups;
-	PG.upgradeXMLTags    = upgradeXMLTags;
 	PG.downgradeMarkups  = downgradeMarkups;
 	PG.upgradeMarkupsTo  = upgradeMarkupsTo;
 	PG.downgradeMarkupsTo=downgradeMarkupsTo;
@@ -521,6 +513,8 @@ var newPage = function(opts) {
 	PG.strikeout         = strikeout;
 	PG.preview           = preview;
 	PG.getOrigin       = getOrigin;
+	PG.revertRevision = revertRevision;
+	PG.offsprings       = offsprings;
 	Object.freeze(PG);
 	return PG;
 };
@@ -607,11 +601,6 @@ var createDocument = function(docjson,markupjson) {
 		var revisions=opts.revisions||pg.__revisions__();
 		var markups=opts.markups||pg.__markups__();
 		nextgen.__selfEvolve__( revisions ,markups );
-
-		var o=pg.getOrigin();
-		if (o.id && this.tags[o.id-1] && this.tags[o.id-1].length) {
-			this.tags[o.id-1]=pg.upgradeXMLTags(this.tags[o.id-1], pg.__revisions__());	
-		}
 
 		return nextgen;
 	};
@@ -716,7 +705,7 @@ var createDocument = function(docjson,markupjson) {
 				var mu=pg.__mutant__();
 				pg=mu[mu.length-1];
 			}
-			cb.apply(ctx,[pg]);
+			cb.apply(ctx,[pg,i-1]);
 		}
 	}
 	var pageNames=function() {
@@ -746,7 +735,7 @@ var createDocument = function(docjson,markupjson) {
 	Object.defineProperty(DOC,'version',{get:function(){return pages.length;}});
 	Object.defineProperty(DOC,'pageCount',{get:function(){return pages.length;}});
 	Object.defineProperty(DOC,'dirty',{get:function() {return dirty>0; }});
-	Object.defineProperty(DOC,'tags',{get:function() {return tags;}});
+	Object.defineProperty(DOC,'ags',{get:function() {return tags;}});
 	Object.defineProperty(DOC,'sep',{get:function() {return sep;}});
 
 	

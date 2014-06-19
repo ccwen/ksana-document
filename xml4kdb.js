@@ -63,7 +63,7 @@ var importJson=function(json) {
 		var markups=json.tags[i];
 		d.createPage({n:json.names[i],t:json.texts[i]});
 	}
-	d.setTags(json.tags);
+	//d.setRawXMLTags(json.tags);
 	d.setSep(json.sep);
 	return d;
 }
@@ -71,13 +71,53 @@ var importJson=function(json) {
     doc.tags hold raw xml tags, offset will be adjusted by evolvePage.
     should not add or delete page, otherwise the export XML is not valid.
 */
-var exportXML=function(doc){
+/*
+		var o=pg.getOrigin();
+		if (o.id && this.tags[o.id-1] && this.tags[o.id-1].length) {
+			this.tags[o.id-1]=pg.upgradeXMLTags(this.tags[o.id-1], pg.__revisions__());	
+		}
+*/
+var upgradeXMLTags=function(tags,revs) {
+	var migratedtags=[],i=0, delta=0;
+	for (var j=0;j<tags.length;j++) {
+		var t=tags[j];
+		var s=t[0], l=t[1].length, deleted=false;
+		while (i<revs.length && revs[i].start<=s) {
+			var rev=revs[i];
+			if (rev.start<=s && rev.start+rev.len>=s+l) {
+				deleted=true;
+			}
+			delta+= (rev.payload.text.length-rev.len);
+			i++;
+		}
+		var m2=[t[0]+delta,t[1]];
+		migratedtags.push(m2);
+	};
+	return migratedtags;
+}
+
+var migrateRawTags=function(doc,tags) {
+	var out=[];
+	for (var i=0;i<tags.length;i++) {
+		var T=tags[i];
+
+		var pg=doc.getPage(i+1);
+		var offsprings=pg.offsprings();
+		for (var j=0;j<offsprings.length;j++) {
+			var o=offsprings[j];
+			var rev=pg.revertRevision(o.revert,pg.inscription);
+			T=upgradeXMLTags(T,rev);
+			pg=o;
+		}		
+		out.push(T);
+	}
+	return out;
+}
+var exportXML=function(doc,originalrawtags){
 	var out=[],tags=null;
-	for (var i=1;i<doc.pageCount;i++) {
-		var pg=doc.getPage(i);
-		if (!pg.isLeafPage()) continue;
-		var origin=pg.getOrigin();         //doc.tags doesn't keep multiversion
-		var tags=doc.tags[origin.id-1];  //get the xml tags
+	rawtags=migrateRawTags(doc,originalrawtags);
+	doc.map(function(pg,i){
+		var tags=rawtags[i];  //get the xml tags
 		var tagnow=0,text="";
 		var t=pg.inscription;
 		for (var j=0;j<t.length;j++) {
@@ -91,7 +131,8 @@ var exportXML=function(doc){
 		}
 		if (tagnow<tags.length && j==tags[tagnow][0]) text+="<"+tags[tagnow][1]+">";
 		out.push(text);
-	}
+	})
+
 	return out.join("");
 };
 module.exports={parseXML:parseXML, importJson:importJson, exportXML:exportXML}
