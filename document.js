@@ -531,10 +531,14 @@ var createDocument = function(docjson,markupjson) {
 		if (!names[name]) {
 			names[name]=pages.length-1;
 		} else {
+			throw "repeat name "+name;
+			return;
+			/*
 			if (typeof names[name]=='number') {
 				names[name]=[names[name]];
 			}
 			names[name].push(pages.length-1);
+			*/
 		}
 	};
 	var createFromJSON=function(json) {
@@ -693,6 +697,26 @@ var createDocument = function(docjson,markupjson) {
 		} else return pages[parr];
 	};
 
+	var map=function(callback) {
+		for (var i=1;i<this.pageCount;i++) {
+			var pg=pages[i];
+			if (pg.parentId!=0)  continue; //not a root page, 
+			while (pg.__mutant__().length) {
+				var mu=pg.__mutant__();
+				pg=mu[mu.length-1];
+			}
+			callback(pg);
+		}
+	}
+	var pageNames=function() {
+		out=[];
+		for (var i=1;i<this.pageCount;i++) {
+			var pg=pages[i];
+			if (pg.parentId!=0)  continue; //not a root page, 
+			out.push(pg.name);
+		}
+		return out;
+	}
 
 	var rootPage=createPage();
 
@@ -714,7 +738,7 @@ var createDocument = function(docjson,markupjson) {
 	Object.defineProperty(DOC,'tags',{get:function() {return tags;}});
 	Object.defineProperty(DOC,'sep',{get:function() {return sep;}});
 
-
+	
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
 	DOC.evolvePage=evolvePage;
@@ -726,6 +750,10 @@ var createDocument = function(docjson,markupjson) {
 	DOC.findPage=findPage;
 	DOC.pageByName=pageByName;
 	DOC.toJSONString=toJSONString;
+
+	DOC.map=map;
+	DOC.pageNames=pageNames;
+
 	if (docjson) DOC.createPages(docjson,markupjson);
 	dirty=0;
 	

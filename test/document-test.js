@@ -337,8 +337,4 @@ QUnit.test('fission',function(){
 	equal(doc2.getPage(1).inscription,doc.getPage(1).inscription);
 });
 
-QUnit.test('coevolve page',function(){
-	/*
-	*/
-	equal(true,true)
-});
+

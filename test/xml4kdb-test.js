@@ -1,10 +1,11 @@
 var X=require('../xml4kdb');
+var D=require('../document');
 console.log('xml4kdb test suite');
 var fs=require('fs');
 var Diff=require("../diff");
 
 var createDocumentFromXml=function(fn) {
-	var buf=fs.readFileSync(fn,"utf8");
+	var buf=fs.readFileSync(fn,"utf8").replace(/\r\n/g,'\n');
 	var res=X.parseXML(buf);
 	var d=X.importJson(res);
 	return d;
@@ -50,13 +51,49 @@ QUnit.test('export',function(){
 	d.evolvePage(d.getPage(2));
 	d.evolvePage(d.getPage(3));
 	d.evolvePage(d.getPage(4));
+
    
 	var xml=X.exportXML(d);
 
-	var buf=fs.readFileSync("xml4kdb-test2.xml","utf8");
+	var buf=fs.readFileSync("xml4kdb-test2.xml","utf8").replace(/\r\n/g,"\n");
 
 	//add some changes with revision
 	equal(xml,buf)
 	//migrate xml tags
 	//export
+});
+
+//enum by page name, return lastest version
+QUnit.test('page map',function(){
+	var doc=D.createDocument();
+	var p1=doc.createPage({n:"p1",t:"content of page 1"});
+	var p2=doc.createPage({n:"p2",t:"content of page 2"});
+
+	p1.addRevision(0,0,"new ");
+	p2.addRevision(0,0,"new ");
+
+	doc.evolvePage(p1);
+	doc.evolvePage(p2);
+
+	
+	equal(doc.getPage(3).inscription,"new content of page 1");
+	equal(doc.getPage(4).inscription,"new content of page 2");
+	
+	doc.getPage(3).addRevision(3,0,"est");
+	doc.evolvePage(doc.getPage(3));
+
+	var p3=doc.createPage({n:"p3",t:"content of page 3"});
+
+	var pagenames=[];
+	var inscriptions=[];
+	doc.map(function(page){
+		pagenames.push(page.name);
+		inscriptions.push(page.inscription);
+	});
+	var names=["p1","p2","p3"];
+	deepEqual(pagenames,names);
+	deepEqual(inscriptions,["newest content of page 1","new content of page 2","content of page 3"]);
+
+	deepEqual(doc.pageNames(),names);
+
 });
