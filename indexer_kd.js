@@ -153,7 +153,6 @@ var finalize=function(cb) {
 	//output=api("optimize")(session.json,session.ydbmeta.config);
 
 	var kdbw =nodeRequire("ksana-document").kdbw(kdbfn);
-	console.log(JSON.stringify(session.json,""," "));
 	kdbw.save(session.json,null,{autodelete:true});
 	
 	kdbw.writeFile(kdbfn,function(total,written) {
