@@ -13,7 +13,6 @@ var fs=nodeRequire("fs");
 
 //var assert=require("assert");
 
-console.log("xml4kdb",xml4kdb);
 var parseBody=function(body,sep) {
 	var res=xml4kdb.parseXML(body, {sep:sep});
 }

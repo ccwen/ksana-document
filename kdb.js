@@ -293,14 +293,7 @@ var Create=function(path,opts) {
 			cb.call(this);
 		}
 	}
-	var getall=function() {
-		var output={};
-		var keys=getkeys();
-		for (var i in keys) {
-			output[keys[i]]= get([keys[i]],true);
-		}
-		return output;
-	}
+
 	var exists=function(path,cb) {
 		if (path.length==0) return true;
 		var key=path.pop();
@@ -337,8 +330,8 @@ var Create=function(path,opts) {
 		reset.apply(this,[function(){
 
 			var o=CACHE;
-			if (path.length==0 &&recursive) {
-				getall.apply(that,[cb]);
+			if (path.length==0) {
+				cb(Object.keys(CACHE));
 				return;
 			} 
 			var lazy=!recursive || (i<path.length-1) ;
