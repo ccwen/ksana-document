@@ -291,7 +291,7 @@ QUnit.test('load from json',function(){
 	//previous version
 	equal(doc2.pageByName("ch1",0).inscription,origin+"。")
 	equal(doc2.pageByName("ch1",1).inscription,"道可道非常道也名可名非常名。")
-
+	equal(doc.pageByName("ch1").version,2);
 })
 /*
 var F=require('../xml');

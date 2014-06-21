@@ -194,11 +194,18 @@ var offsprings=function() {
 	var page=this;
 	while (page.__mutant__().length) {
 		var mu=page.__mutant__();
-		if (!mu.length)break;
 		page=mu[mu.length-1];
 		out.push(page);
 	}
 	return out;
+}
+var version=function() {  //return version number of this page
+	var v=0, page=this, doc=this.doc;
+	while (page.parentId) {
+		v++;
+		page=doc.getPage(page.parentId);
+	}
+	return v;
 }
 
 var hasAncestor=function(ancestor) {
@@ -485,6 +492,7 @@ var newPage = function(opts) {
 	PG.setName           = function(n){ meta.name=n; return this;};
 	Object.defineProperty(PG,'name',{get:function(){return meta.name;}});
 	PG.__meta__        = function() {return meta;};
+	Object.defineProperty(PG,'version',{get:version});
 	//Object.defineProperty(PG,'daugtherStart',{get:function(){return meta.daugtherStart;}});
 	//Object.defineProperty(PG,'daugtherCount',{get:function(){return meta.daugtherCount;}});
 	PG.clearRevisions    = clearRevisions;
