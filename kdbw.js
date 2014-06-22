@@ -130,7 +130,10 @@ var Kfs=function(path,opts) {
 		if (unitsize===1) var func=dbuf.writeUInt8;
 		else if (unitsize===4)var func=dbuf.writeInt32BE;
 		else throw 'unsupported integer size';
-		if (!value.length) throw "empty fixed array";
+		if (!value.length) {
+			debugger;
+			throw "empty fixed array";
+		}
 		for (var i = 0; i < value.length ; i++) {
 			func.apply(dbuf,[value[i],i*unitsize+pos])
 		}

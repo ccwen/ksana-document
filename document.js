@@ -104,6 +104,7 @@ var diff2revision=function(diff) {
 var addRevisionsFromDiff=function(diff,opts) { //Google Diff format
 	var revisions=diff2revision(diff);
 	this.addRevisions(revisions,opts);
+	return revisions.length;
 }
 
 var addMarkups=function(newmarkups,opts) {
@@ -120,10 +121,11 @@ var addMarkups=function(newmarkups,opts) {
 };
 var addRevisions=function(newrevisions,opts) {
 	if (!(newrevisions instanceof Array)) return;
+	if (!newrevisions.length) return;
 	if (opts &&opts.clear) this.clearRevisions();
 	var revisions=this.__revisions__();
 	var maxlength=this.inscription.length;
-	for (var i in newrevisions) {
+	for (var i=0;i<newrevisions.length;i++) {
 		var m=newrevisions[i];
 		var newrevision=createMarkup(maxlength, m.start, m.len, m.payload );
 		revisions.push(newrevision);	

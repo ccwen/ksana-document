@@ -65,7 +65,9 @@ var createLocalEngine=function(kdb,cb) {
 			cb(null);	
 		}
 	};	
-
+	engine.fileOffset=fileOffset;
+	engine.folderOffset=folderOffset;
+	engine.pageOffset=pageOffset;
 	_gets.apply(engine,[[["fileNames"],["fileOffsets"],["files"],["meta"]], true,function(res){
 		engine.dbname=res[0].name;
 		engine.customfunc=customfunc.getAPI(res[0].cofig);
@@ -242,7 +244,8 @@ var openLocal=function(kdbid,cb)  {
 		return engine;
 	}
 
-	var kdbfn=kdbid+'.kdb';
+	var kdbfn=kdbid;
+	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
 
 	var tries=["./"+kdbfn  //TODO , allow any depth
 	           ,apppath+"/"+kdbfn,

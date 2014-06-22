@@ -46,14 +46,13 @@ var parseXML=function(buf, opts){
 	var sep=opts.sep||defaultsep;
 	var unitsep=new RegExp('<'+sep.replace("."," ")+'="([^"]*?)"' , 'g')  ;
 	var units=splitUnit(buf, unitsep);
-	var texts=[], tags=[] , names=[];
+	var texts=[], tags=[];
 	units.map(function(U,i){
 		var out=parseUnit(U[1]);
-		names.push(U[0]);
-		texts.push(out.inscription);
+		texts.push({n:U[0],t:out.inscription});
 		tags.push(out.tags);
 	});
-	return {names:names,texts:texts,tags:tags,sep:sep};
+	return {texts:texts,tags:tags,sep:sep};
 };
 var D=nodeRequire("ksana-document").document;
 
@@ -61,7 +60,7 @@ var importJson=function(json) {
 	d=D.createDocument();
 	for (var i=0;i<json.texts.length;i++) {
 		var markups=json.tags[i];
-		d.createPage({n:json.names[i],t:json.texts[i]});
+		d.createPage(json.texts[i]);
 	}
 	//d.setRawXMLTags(json.tags);
 	d.setSep(json.sep);
