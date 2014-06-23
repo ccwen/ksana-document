@@ -296,18 +296,26 @@ var Create=function(opts) {
 	}
 	
 	var allnumber_fast=function(arr) {
+		if (arr.length<5) return allnumber(arr);
 		if (typeof arr[0]=='number'
 		    && Math.round(arr[0])==arr[0] && arr[0]>=0)
 			return true;
 		return false;
 	}
 	var allstring_fast=function(arr) {
+		if (arr.length<5) return allstring(arr);
 		if (typeof arr[0]=='string') return true;
 		return false;
 	}	
 	var allnumber=function(arr) {
 		for (var i=0;i<arr.length;i++) {
 			if (typeof arr[i]!=='number') return false;
+		}
+		return true;
+	}
+	var allstring=function(arr) {
+		for (var i=0;i<arr.length;i++) {
+			if (typeof arr[i]!=='string') return false;
 		}
 		return true;
 	}

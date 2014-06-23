@@ -304,17 +304,15 @@ var compressRevert=function(R) {
 	var out=[];
 	for (var i in R) {
 		if (R[i].payload.text==="") {
-			out.push({s:R[i].start,l:R[i].len});
-		} else out.push({s:R[i].start,l:R[i].len,y:R[i].payload});
+			out.push([R[i].start,R[i].len]);
+		} else out.push([R[i].start,R[i].len,R[i].payload.text]);
 	}
 	return out;
 };
 var decompressRevert=function(R) {
 	var out=[];
 	for (var i in R) {
-		var payload=R[i].y;
-		if (!payload) payload={text:""};
-		out.push({start:R[i].s,len:R[i].l, payload:payload});
+		out.push({start:R[i].s,len:R[i].l, payload:{text:R[i][2]||""}});
 	}
 	return out;
 };
