@@ -311,8 +311,12 @@ var compressRevert=function(R) {
 };
 var decompressRevert=function(R) {
 	var out=[];
-	for (var i in R) {
-		out.push({start:R[i].s,len:R[i].l, payload:{text:R[i][2]||""}});
+	for (var i=0;i<R.length;i++) {
+		if (R[i].length) { //array format
+			out.push({start:R[i][0],len:R[i][1], payload:{text:R[i][2]||""}})
+		} else {
+			out.push({start:R[i].s,len:R[i].l, payload:{text:R[i].t||""}});	
+		}
 	}
 	return out;
 };
@@ -333,6 +337,9 @@ var toJSONString=function(opts) {
 	*/
 	return JSON.stringify(obj);
 };
+var compressedRevert=function() {
+	return compressRevert(this.revert);
+}
 var filterMarkup=function(cb) {
 	return this.__markups__().filter(function(m){
 		return cb(m);
@@ -410,7 +417,9 @@ var preview=function(opts) {
 	return this.doc.evolvePage(this,{preview:true,revisions:revisions,markups:[]});
 }
 
-
+/*
+  change to prototype
+*/
 var newPage = function(opts) {
 	var PG={};
 	var inscription="";
@@ -418,7 +427,6 @@ var newPage = function(opts) {
 	var markups=[];
 	var revisions=[];
 	var mutant=[];
-
 
 	opts=opts||{};
 	opts.id=opts.id || 0; //root id==0
@@ -523,6 +531,7 @@ var newPage = function(opts) {
 	PG.getOrigin       = getOrigin;
 	PG.revertRevision = revertRevision;
 	PG.offsprings       = offsprings;
+	PG.compressedRevert=compressedRevert;
 	Object.freeze(PG);
 	return PG;
 };
@@ -563,7 +572,16 @@ var createDocument = function(docjson,markupjson) {
 			page.addRevisions(json.revisions,true);
 			return page;
 	};
-
+	var endCreatePages=function(opts) {
+		//build mutant array
+		if (opts&&opts.clear) pages.map(function(P){
+			var mu=P.__mutant__();
+			mu=[];
+		});
+		pages.map(function(P,idx,pages){
+			if (P.parentId) pages[P.parentId].__mutant__().push(P);
+		});		
+	}
 	var createPages=function(json,markups) {
 		var count=0,i;
 		for (i=0;i<json.length;i++) {
@@ -571,11 +589,7 @@ var createDocument = function(docjson,markupjson) {
 			createPage(json[i]);
 		}
 
-		//build mutant array
-		pages.map(function(P,idx,pages){
-			if (P.parentId) pages[P.parentId].__mutant__().push(P);
-		});
-
+		endCreatePages({clear:true});
 		if (markups) for (i=0;i<markups.length;i++){
 			var m=markups[i];
 			var pageid=m.i;
@@ -664,7 +678,10 @@ var createDocument = function(docjson,markupjson) {
 		arr.map(function(p,i){ if (p) leafpages.push(i); });
 		return {leafPages:leafpages, isLeafPages:arr};
 	};
-	
+	/*
+		convert revert to a string.
+		starting with ascii 1
+	*/
 	var toJSONString=function() {
 		var out=["["+JSON.stringify(meta)], s=",";
 		var isLeafPages=this.getLeafPages().isLeafPages;
@@ -761,6 +778,7 @@ var createDocument = function(docjson,markupjson) {
 
 	DOC.map=map;
 	DOC.pageNames=pageNames;
+	DOC.endCreatePages=endCreatePages;
 
 	if (docjson) DOC.createPages(docjson,markupjson);
 	dirty=0;

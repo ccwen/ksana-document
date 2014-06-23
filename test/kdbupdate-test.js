@@ -1,8 +1,11 @@
+var Kde=require("../kde");
 
 QUnit.asyncTest('import xml',function(){
     var indexer=require("ksana-document").indexer;
+    //stop();
+    var that=this;
     var finalized=function() {
-        start();
+        start.call(that);
     }
     var config={
 	name:"xml4kdb-test"
@@ -24,12 +27,14 @@ var copyfile=function(src,target){
     fs.writeFileSync(target, fs.readFileSync(src));
 }
 
-QUnit.test('import xml for update',function(){
+QUnit.asyncTest('import xml for update',function(){
     var indexer=require("ksana-document").indexer;
     copyfile("xml4kdb-test2.xml","xml4kdb-test.xml");
+    var that=this;
+    //stop();
     var finalized=function() {
         copyfile("xml4kdb-test.bak","xml4kdb-test.xml");
-        //start();
+        start.call(that);
     }
     var config={
     name:"xml4kdb-test"
@@ -37,7 +42,19 @@ QUnit.test('import xml for update',function(){
         ,pageSeparator:"_.id"
         ,files:["xml4kdb-test.xml"]
         ,finalized:finalized.bind(this)
+        ,nobackup:true
     }
     var session=indexer.start(config);
     equal(true,true)
 });
+
+QUnit.asyncTest("test kdb",function(){
+    var that=this;
+    Kde.openLocal("xml4kdb-test",function(db){
+        db.getDocument("xml4kdb-test.xml",function(doc){    
+            start();
+            equal.apply(that,[doc.getPage(2).inscription,"\n第一頁第一行\n第一頁第二行\n"]);
+        })
+    });
+     equal(true,true)
+})

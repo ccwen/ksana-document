@@ -62,7 +62,7 @@ var shortFilename=function(fn) {
 }
 var putDocument=function(parsed,cb) {
 	var indexpages=function(doc) {
-		var fileInfo={pageNames:[],pageOffset:[],parentId:[]};
+		var fileInfo={pageNames:[],pageOffset:[],parentId:[],reverts:[]};
 		var fileContent=[];
 		var shortfn=shortFilename(status.filename);
 		session.json.files.push(fileInfo);
@@ -72,18 +72,25 @@ var putDocument=function(parsed,cb) {
 
 		for (var i=1;i<doc.pageCount;i++) {
 			var pg=doc.getPage(i);
-			fileContent.push(pg.inscription);
+			if (pg.isLeafPage()) {
+				fileContent.push(pg.inscription);
+				putPage(pg.inscription);
+			} else {
+				fileContent.push("");
+			}
 			fileInfo.pageNames.push(pg.name);
 			fileInfo.pageOffset.push(session.vpos);
 			fileInfo.parentId.push(pg.parentId);
-			if (pg.isLeafPage()) putPage(pg.inscription);
+			var revertstr="";
+			if (pg.parentId) revertstr=JSON.stringify(pg.compressedRevert());
+			fileInfo.reverts.push( revertstr );
 		}
 		cb();//finish
 	}
 	var dnew=D.createDocument(parsed.texts);
 
 	if (session.kdb) {
-		Kse.getDocument(session.kdb,status.filename,function(d){
+		session.kdb.getDocument(status.filename,function(d){
 			if (d) {
 				upgradeDocument(d,dnew);
 				indexpages(d);
@@ -221,14 +228,13 @@ var createMeta=function() {
 	return meta;
 }
 
-var finalize=function(cb) {
-	var opt=session.options;
-	
+var finalize=function(cb) {	
+	if (session.kdb) Kde.closeLocal(session.kdbfn);
 
 	session.json.fileOffsets.push(session.vpos); //serve as terminator
 	session.json.meta=createMeta();
 	
-	backup(session.kdbfn);
+	if (!session.config.nobackup) backup(session.kdbfn);
 	status.message='writing '+session.kdbfn;
 	//output=api("optimize")(session.json,session.ydbmeta.config);
 

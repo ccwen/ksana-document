@@ -4,7 +4,7 @@
    all data from server will be cache at client side to save network roundtrip.
 */
 if (typeof nodeRequire=='undefined')nodeRequire=require;
-
+var D=require("./document");
 var pool={},localPool={};
 var customfunc=require("./customfunc");
 var link=require("./link");
@@ -39,6 +39,34 @@ var _gets=function(keys,recursive,cb) { //get many data with one call
 
 	taskqueue.shift()({__empty:true}); //run the task
 }
+
+var toDoc=function(pagenames,texts,parents,reverts) {
+	var d=D.createDocument() ,revert=null;
+	for (var i=0;i<texts.length;i++) {
+		if (reverts[i]) revert=JSON.parse(reverts[i]);
+		else revert=null;
+		d.createPage({n:pagenames[i],t:texts[i],p:parents[i],r:revert});
+	}
+	d.endCreatePages();
+	return d;
+}
+var getDocument=function(filename,cb){
+	var engine=this;
+	var filenames=engine.get("fileNames");
+	var files=engine.get("files");
+	var i=filenames.indexOf(filename);
+	if (i==-1) {
+		cb(null);
+	} else {
+		var pagenames=files[i].pageNames;
+		var parentId=files[i].parentId;
+		var reverts=files[i].reverts;
+		engine.get(["fileContents",i],true,function(data){
+			cb(toDoc(pagenames,data,parentId,reverts));
+		})
+	}
+}
+
 var createLocalEngine=function(kdb,cb) {
 	var engine={lastAccess:new Date(), kdb:kdb};
 
@@ -68,6 +96,7 @@ var createLocalEngine=function(kdb,cb) {
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
+	engine.getDocument=getDocument;
 	_gets.apply(engine,[[["fileNames"],["fileOffsets"],["files"],["meta"]], true,function(res){
 		engine.dbname=res[0].name;
 		engine.customfunc=customfunc.getAPI(res[0].cofig);
@@ -175,7 +204,6 @@ var folderOffset=function(folder) {
 	return {start:start,end:end};
 }
 
-
 var createEngine=function(kdbid,context,cb) {
 	if (typeof context=="function"){
 		cb=context;
@@ -189,6 +217,7 @@ var createEngine=function(kdbid,context,cb) {
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
+	engine.getDocument=getDocument;
 	if (typeof context=="object") engine.context=context;
 
 	engine.findLinkBy=link.findLinkBy;
@@ -210,9 +239,16 @@ var createEngine=function(kdbid,context,cb) {
 	return engine;
 }
  
-var close=function(kdbid) {
+var closeLocal=function(kdbid) {
 	var engine=localPool[kdbid];
-	if (engine) delete localPool[kdbid];
+	if (engine) {
+		engine.kdb.free();
+		delete localPool[kdbid];
+	}
+}
+var close=function(kdbid) {
+	var engine=pool[kdbid];
+	if (engine) delete pool[kdbid];
 }
 var open=function(kdbid,context,cb) {
 	if (typeof context=="function") {
@@ -224,21 +260,21 @@ var open=function(kdbid,context,cb) {
 		return null;
 	};
 
-	var engine=localPool[kdbid];
+	var engine=pool[kdbid];
 	if (engine) {
 		if (cb) cb.apply(engine.context,[engine]);
 		return engine;
 	}
 	engine=createEngine(kdbid,context,cb);
 
-	localPool[kdbid]=engine;
+	pool[kdbid]=engine;
 	return engine;
 }
 
 var openLocal=function(kdbid,cb)  {
 	var fs=nodeRequire('fs');
 	var Kdb=nodeRequire('ksana-document').kdb;
-	var engine=pool[kdbid];
+	var engine=localPool[kdbid];
 	if (engine) {
 		if (cb) cb(engine);
 		return engine;
@@ -267,7 +303,7 @@ var openLocal=function(kdbid,cb)  {
 			kdb=new Kdb(tries[i]);
 			if (kdb) {
 				createLocalEngine(kdb,function(engine){
-					pool[kdbid]=engine;
+					localPool[kdbid]=engine;
 					cb(engine);
 				});
 				return engine;
@@ -282,4 +318,4 @@ var setPath=function(path) {
 	console.log("set path",path)
 }
 
-module.exports={openLocal:openLocal, open:open, close:close, setPath:setPath};
+module.exports={openLocal:openLocal, open:open, close:close, setPath:setPath, closeLocal:closeLocal};

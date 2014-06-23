@@ -6,9 +6,10 @@ var json={
 
   "pageNames": [""]
 }
+var emptyarr={pageNames:[ "","",""]};
 
 var kdb=Kdbw();
-kdb.save(json);
+kdb.save(emptyarr);
 var fn="wrong.kdb";
 kdb.writeFile(fn,function(total,written) {
 	console.log('total',total,'written',written);

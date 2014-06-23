@@ -247,7 +247,7 @@ var Open=function(path,opts) {
 
 	var free=function() {
 		//console.log('closing ',handle);
-		fs.close(this.handle);
+		fs.closeSync(this.handle);
 	}
 	var setupapi=function() {
 		this.readSignature=readSignature;

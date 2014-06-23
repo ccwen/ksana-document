@@ -400,7 +400,7 @@ var Create=function(opts) {
 
 		var writeCb=function(total,written,cb,next) {
 			return function(err) {
-				if (err) throw "write error";
+				if (err) throw "write error"+err;
 				cb(total,written);
 				batch++;
 				next();
