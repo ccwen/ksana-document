@@ -110,7 +110,7 @@ var parseBody=function(body,sep,cb) {
 
 
 var putFile=function(fn,cb) {
-	var texts=fs.readFileSync(fn,session.config.inputEncoding);
+	var texts=fs.readFileSync(fn,session.config.inputEncoding).replace(/\r\n/g,"\n");
 	var bodyend=session.config.bodyend;
 	var bodystart=session.config.bodstart;
 	var callbacks=session.config.callbacks||{};
