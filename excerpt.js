@@ -53,10 +53,31 @@ var hitInRange=function(Q,startvoff,endvoff) {
 
 	return res;
 }
-
+//if arr[i] is true, replace it with files[array_index]
+var getFileInfo=function(engine,arr,cb) {
+	var taskqueue=[],out=[];
+	for (var i=0;i<arr.length;i++) {
+		taskqueue.push(
+			(function(idx){
+				return (
+					function(data){
+						if (typeof data=='object' && data.__empty) {
+							 //not pushing the first call
+						} else out.push(data);
+						engine.get(["files",idx],true,taskqueue.shift());
+					}
+				);
+		})(arr[i]));
+	}
+	//last call 
+	taskqueue.push(function(data){
+		out.push(data);
+		cb(out);
+	});
+	taskqueue.shift()({__empty:true});
+}
 var resultlist=function(engine,Q,opts,cb) {
 	var output=[];
-	var files=engine.get("files");
 	var fileOffsets=engine.get("fileOffsets");
 	var max=opts.max || 20, count=0;
 
@@ -65,37 +86,47 @@ var resultlist=function(engine,Q,opts,cb) {
 		if (fileOffsets[i]>first) break;
 		start=i;
 	}
-	var output=[];
-	for (var i=start;i<Q.byFile.length;i++) {
-		if (Q.byFile[i].length) {
-			end=i;
-			var pagewithhit=plist.groupbyposting2(Q.byFile[i],  files[i].pageOffset);
-			pagewithhit.shift();
-			for (var j=0;max>count && j<pagewithhit.length;j++) {
-				if (!pagewithhit[j].length) continue;
-				//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
-				var name=files[i].pageNames[j];
-				output.push(  {file:i, page:j,  pagename:name});
-				count++;
-			}
-			if (count>=max) break;
+	var fileWithHits=[];
+	for (var i=0;i<Q.byFile.length;i++) {
+		if(Q.byFile[i].length>0) {
+			fileWithHits.push(i);
+			if (fileWithHits.length>=max) break;
 		}
 	}
-	var pagekeys=output.map(function(p){
-		return ["fileContents",p.file,p.page];
-	});
 
-	engine.get(pagekeys,function(pages){
-		if (pages) for (var i=0;i<pages.length;i++) {
-			var startvpos=files[output[i].file].pageOffset[output[i].page];
-			var endvpos=files[output[i].file].pageOffset[output[i].page+1];
-			var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q};
-			var hl=highlight(Q,o);
-			output[i].text=hl.text;
-			output[i].hits=hl.hits;
-			output[i].start=startvpos;
+	getFileInfo(engine,fileWithHits,function(files) {
+		var output=[],n=0;
+		for (var i=start;i<Q.byFile.length;i++) {
+			if (Q.byFile[i].length) {
+				var pagewithhit=plist.groupbyposting2(Q.byFile[i],  files[n].pageOffset);
+				for (var j=0; j<pagewithhit.length;j++) {
+					if (!pagewithhit[j].length) continue;
+					//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
+					var name=files[n].pageNames[j];
+					output.push(  {file:i, page:j,  pagename:name});
+				}
+				n++;
+				if (n>=files.length) break;
+			}
 		}
-		cb(output);
+
+		var pagekeys=output.map(function(p){
+			return ["fileContents",p.file,p.page];
+		});
+		//prepare the text
+		engine.get(pagekeys,function(pages){
+			if (pages) for (var i=0;i<pages.length;i++) {
+				var k=fileWithHits.indexOf(output[i].file);
+				var startvpos=files[k].pageOffset[output[i].page-1];
+				var endvpos=files[k].pageOffset[output[i].page];
+				var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q};
+				var hl=highlight(Q,o);
+				output[i].text=hl.text;
+				output[i].hits=hl.hits;
+				output[i].start=startvpos;
+			}
+			cb(output);
+		});
 	});
 }
 var injectTag=function(Q,opts){
@@ -121,7 +152,7 @@ var injectTag=function(Q,opts){
 			i++;
 			continue;
 		}
-		if (j<hits.length && voff==hits[j][0]) {
+		if (i<tokens.length && j<hits.length && voff==hits[j][0]) {
 			var nphrase=hits[j][1] % 10, width=hits[j][2];
 			var tag=hits[j][3] || tag;
 			if (width) {
@@ -138,7 +169,7 @@ var injectTag=function(Q,opts){
 			}
 			j++;
 		} else {
-			if (inrange) output+=tokens[i];
+			if (inrange && i<tokens.length) output+=tokens[i];
 			i++;
 			voff++;
 		}
@@ -161,37 +192,30 @@ var highlight=function(Q,opts) {
 	return {text:injectTag(Q,opt),hits:opt.hits};
 }
 
-var getPageByName=function(engine,pagename,cb) {
-	var files=engine.get("files");
+var getPage=function(engine,fileid,pageid,cb) {
 	var fileOffsets=engine.get("fileOffsets");
-	var file=-1,page=-1;
-	for (var i=0;i<files.length;i++) {
-		page=files[i].pageNames.indexOf(pagename);
-		if (page>-1) {
-			file=i;
-			break;
-		}
-	}
-	if (file==-1) return cb("");
-	var pagekeys=["fileContents",file,page];
+	var pagekeys=["fileContents",fileid,pageid];
+
 	engine.get(pagekeys,function(text){
 		cb.apply(engine.context,[{text:text,file:file,page:page}]);
 	});
 }
-var highlightPage=function(Q,pagename,opts,cb) {
+
+var highlightPage=function(Q,fileid,pageid,opts,cb) {
 	if (typeof opts=="function") {
 		cb=opts;
 	}
-
 	if (!Q || !Q.engine) return cb(null);
-	var files=Q.engine.get("files");
-	getPageByName(Q.engine,pagename,function(page){
-		var startvpos=files[page.file].pageOffset[page.page];
-		var endvpos=files[page.file].pageOffset[page.page+1];
 
-		var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,full:true};
-		opt.hits=hitInRange(Q,startvpos,endvpos);
-		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),hits:opt.hits}]);
+	getPage(Q.engine,fileid,pageid,function(page){
+		engine.get(["files",fileid,"pageOffset"],true,function(pageOffset){
+			var startvpos=pageOffset[page.page];
+			var endvpos=pageOffset[page.page+1];
+
+			var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,full:true};
+			opt.hits=hitInRange(Q,startvpos,endvpos);
+			cb.apply(Q.engine.context,[{text:injectTag(Q,opt),hits:opt.hits}]);
+		});
 	});
 }
-module.exports={resultlist:resultlist, hitInRange:hitInRange, highlightPage:highlightPage,getPageByName:getPageByName};
+module.exports={resultlist:resultlist, hitInRange:hitInRange, highlightPage:highlightPage,getPage:getPage};

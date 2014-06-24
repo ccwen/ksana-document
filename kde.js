@@ -55,17 +55,19 @@ var toDoc=function(pagenames,texts,parents,reverts) {
 var getDocument=function(filename,cb){
 	var engine=this;
 	var filenames=engine.get("fileNames");
-	var files=engine.get("files");
+	
 	var i=filenames.indexOf(filename);
 	if (i==-1) {
 		cb(null);
 	} else {
-		var pagenames=files[i].pageNames;
-		var parentId=files[i].parentId;
-		var reverts=files[i].reverts;
-		engine.get(["fileContents",i],true,function(data){
-			cb(toDoc(pagenames,data,parentId,reverts));
-		})
+		var files=engine.get(["files",i],function(file){
+			var pagenames=file.pageNames;
+			var parentId=file.parentId;
+			var reverts=file.reverts;
+			engine.get(["fileContents",i],true,function(data){
+				cb(toDoc(pagenames,data,parentId,reverts));
+			});			
+		});
 	}
 }
 
@@ -100,9 +102,9 @@ var createLocalEngine=function(kdb,cb) {
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
 	engine.getDocument=getDocument;
-	_gets.apply(engine,[[["fileNames"],["fileOffsets"],["files"],["meta"]], true,function(res){
+	_gets.apply(engine,[  [["meta"],["fileNames"],["fileOffsets"]], true,function(res){
 		engine.dbname=res[0].name;
-		engine.customfunc=customfunc.getAPI(res[0].cofig);
+		engine.customfunc=customfunc.getAPI(res[0].config);
 		engine.ready=true;
 		if (cb) cb(engine);
 	}]);
@@ -225,14 +227,15 @@ var createEngine=function(kdbid,context,cb) {
 	if (typeof context=="object") engine.context=context;
 
 	//engine.findLinkBy=link.findLinkBy;
-	$kse("get",{key:[["fileNames"],["fileOffsets"],["files"],["meta"]], recursive:true,db:kdbid}).done(function(res){
-		engine.cache["fileNames"]=res[0];
-		engine.cache["fileOffsets"]=res[1];
-		engine.cache["files"]=res[2];
+	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"]], recursive:true,db:kdbid}).done(function(res){
+		engine.dbname=res[0].name;
 
-		engine.dbname=res[3].name;
-		engine.customfunc=customfunc.getAPI(res[3].config);
-		engine.cache["meta"]=res[3]; //put into cache manually
+		engine.cache["fileNames"]=res[1];
+		engine.cache["fileOffsets"]=res[2];
+//		engine.cache["files"]=res[2];
+
+		engine.customfunc=customfunc.getAPI(res[0].config);
+		engine.cache["meta"]=res[0]; //put into cache manually
 
 		engine.ready=true;
 		//console.log("remote kde connection ["+kdbid+"] established.");

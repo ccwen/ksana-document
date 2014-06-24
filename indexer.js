@@ -1,6 +1,6 @@
 if (typeof nodeRequire=='undefined')nodeRequire=require;
 var indexing=false; //only allow one indexing task
-var status={progress:0,done:false}; //progress ==1 completed
+var status={pageCount:0,progress:0,done:false}; //progress ==1 completed
 var session={};
 var api=null;
 var xml4kdb=null;
@@ -87,7 +87,7 @@ var putDocument=function(parsed,cb) {
 		}
 		if (!hasParentId) delete fileInfo["parentId"];
 		if (!hasRevert) delete fileInfo["reverts"];
-
+		fileInfo.pageOffset.push(session.vpos); //ending terminator
 		cb();//finish
 	}
 	var dnew=D.createDocument(parsed.texts);
@@ -97,12 +97,15 @@ var putDocument=function(parsed,cb) {
 			if (d) {
 				upgradeDocument(d,dnew);
 				indexpages(d);
+				status.pageCount+=d.pageCount;
 			} else { //no such page in old kdb
 				indexpages(dnew);
+				status.pageCount+=dnew.pageCount;
 			}
 		});
 	} else {
 		indexpages(dnew);
+		status.pageCount+=dnew.pageCount;
 	}
 }
 
@@ -204,7 +207,7 @@ var indexstep=function() {
 	}
 }
 
-var status=function() {
+var getstatus=function() {
   return status;
 }
 var stop=function() {
@@ -264,4 +267,4 @@ var finalize=function(cb) {
 		if (total==written) cb();
 	});
 }
-module.exports={start:start,stop:stop,status:status};
+module.exports={start:start,stop:stop,status:getstatus};
