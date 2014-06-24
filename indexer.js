@@ -69,7 +69,7 @@ var putDocument=function(parsed,cb) {
 		session.json.fileContents.push(fileContent);
 		session.json.fileNames.push(shortfn);
 		session.json.fileOffsets.push(session.vpos);
-
+		var hasParentId=false, hasRevert=false;
 		for (var i=1;i<doc.pageCount;i++) {
 			var pg=doc.getPage(i);
 			if (pg.isLeafPage()) {
@@ -81,10 +81,15 @@ var putDocument=function(parsed,cb) {
 			fileInfo.pageNames.push(pg.name);
 			fileInfo.pageOffset.push(session.vpos);
 			fileInfo.parentId.push(pg.parentId);
+			if (pg.parentId) hasParentId=true;
 			var revertstr="";
 			if (pg.parentId) revertstr=JSON.stringify(pg.compressedRevert());
+			if (revertstr) hasRevert=true;
 			fileInfo.reverts.push( revertstr );
 		}
+		if (!hasParentId) delete fileInfo["parentId"];
+		if (!hasRevert) delete fileInfo["reverts"];
+
 		cb();//finish
 	}
 	var dnew=D.createDocument(parsed.texts);
@@ -192,7 +197,7 @@ var indexstep=function() {
 			status.done=true;
 			indexing=false;
 			if (session.config.finalized) {
-				session.config.finalized(status);
+				session.config.finalized(session,status);
 			}
 		});	
 	}
@@ -227,7 +232,9 @@ var createMeta=function() {
 	meta.vsize=session.vpos;
 	return meta;
 }
-
+var guessSize=function() {
+	return session.vpos * 5;
+}
 var finalize=function(cb) {	
 	if (session.kdb) Kde.closeLocal(session.kdbfn);
 
@@ -237,9 +244,14 @@ var finalize=function(cb) {
 	if (!session.config.nobackup) backup(session.kdbfn);
 	status.message='writing '+session.kdbfn;
 	//output=api("optimize")(session.json,session.ydbmeta.config);
+	var opts={size:session.config.estimatesize};
+	if (!opts.size) {
+		opts.size=guessSize();
+		console.log("guest size",opts.size);
+	}
 
-	var kdbw =nodeRequire("ksana-document").kdbw(session.kdbfn);
-//	console.log(JSON.stringify(session.json,""," "));
+	var kdbw =nodeRequire("ksana-document").kdbw(session.kdbfn,opts);
+	//console.log(JSON.stringify(session.json,""," "));
 	kdbw.save(session.json,null,{autodelete:true});
 	
 	kdbw.writeFile(session.kdbfn,function(total,written) {

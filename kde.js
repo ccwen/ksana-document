@@ -43,7 +43,7 @@ var _gets=function(keys,recursive,cb) { //get many data with one call
 var toDoc=function(pagenames,texts,parents,reverts) {
 	var d=D.createDocument() ,revert=null;
 	for (var i=0;i<texts.length;i++) {
-		if (reverts[i]) revert=JSON.parse(reverts[i]);
+		if (reverts[i].trim()) revert=JSON.parse(reverts[i]);
 		else revert=null;
 		d.createPage({n:pagenames[i],t:texts[i],p:parents[i],r:revert});
 	}

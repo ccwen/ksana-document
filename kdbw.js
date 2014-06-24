@@ -22,7 +22,7 @@ var DT={
 	//ydb start with object signature,
 	//type a ydb in command prompt shows nothing
 }
-
+var key_writing="";//for debugging
 var pack_int = function (ar, savedelta) { // pack ar into
   if (!ar || ar.length === 0) return []; // empty array
   var r = [],
@@ -94,7 +94,7 @@ var Kfs=function(path,opts) {
 		
 		var v=value.join('\0');
 		var len=Buffer.byteLength(v, encoding);
-		if (0===len) throw "empty string array";
+		if (0===len) throw "empty string array " + key_writing;
 		dbuf.write(v,pos+1,len,encoding);
 		if (pos+len+1>cur) cur=pos+len+1;
 		return len+1;
@@ -156,9 +156,9 @@ var Kfs=function(path,opts) {
 	return this;
 }
 
-var Create=function(opts) {
+var Create=function(path,opts) {
 	opts=opts||{};
-	var kfs=new Kfs(opts);
+	var kfs=new Kfs(path,opts);
 	var cur=0;
 
 	var handle={};
@@ -181,6 +181,7 @@ var Create=function(opts) {
 	
 	var saveVInt = function(arr,key) {
 		var start=cur;
+		key_writing=key;
 		cur+=kfs.writeSignature(DT.vint,cur);
 		writeVInt(arr);
 		var written = cur-start;
@@ -189,6 +190,7 @@ var Create=function(opts) {
 	}
 	var savePInt = function(arr,key) {
 		var start=cur;
+		key_writing=key;
 		cur+=kfs.writeSignature(DT.pint,cur);
 		writePInt(arr);
 		var written = cur-start;
@@ -217,6 +219,7 @@ var Create=function(opts) {
 	}	
 	var saveString = function(value,key,encoding) {
 		encoding=encoding||stringencoding;
+		key_writing=key;
 		var written=kfs.writeString(value,cur,encoding);
 		cur+=written;
 		pushitem(key,written);
@@ -224,6 +227,7 @@ var Create=function(opts) {
 	}
 	var saveStringArray = function(arr,key,encoding) {
 		encoding=encoding||stringencoding;
+		key_writing=key;
 		var written=kfs.writeStringArray(arr,cur,encoding);
 		cur+=written;
 		pushitem(key,written);
@@ -231,6 +235,7 @@ var Create=function(opts) {
 	}
 	
 	var saveBlob = function(value,key) {
+		key_writing=key;
 		var written=kfs.writeBlob(value,cur);
 		cur+=written;
 		pushitem(key,written);

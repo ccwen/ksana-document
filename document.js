@@ -443,7 +443,7 @@ var newPage = function(opts) {
 	//these are the only 2 function changing inscription,use by Doc only
 	var checkLength=function(ins) {
 		if (ins.length>doc.maxInscriptionLength) {
-			console.error("exceed size",ins.length);
+			console.error("exceed size",ins.length, ins.substring(0,100));
 			ins=ins.substring(0,doc.maxInscriptionLength);
 		}
 		return ins;

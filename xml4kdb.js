@@ -40,7 +40,7 @@ var splitUnit=function(buf,sep) {
 	return units;
 };
 var defaultsep="_.id";
-
+var emptypagename="_";
 var parseXML=function(buf, opts){
 	opts=opts||{};
 	var sep=opts.sep||defaultsep;
@@ -49,7 +49,7 @@ var parseXML=function(buf, opts){
 	var texts=[], tags=[];
 	units.map(function(U,i){
 		var out=parseUnit(U[1]);
-		texts.push({n:U[0],t:out.inscription});
+		texts.push({n:U[0]||emptypagename,t:out.inscription});
 		tags.push(out.tags);
 	});
 	return {texts:texts,tags:tags,sep:sep};
