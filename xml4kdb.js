@@ -44,7 +44,7 @@ var emptypagename="_";
 var parseXML=function(buf, opts){
 	opts=opts||{};
 	var sep=opts.sep||defaultsep;
-	var unitsep=new RegExp('<'+sep.replace("."," ")+'="([^"]*?)"' , 'g')  ;
+	var unitsep=new RegExp('<'+sep.replace("."," .*? ")+'="([^"]*?)"' , 'g')  ;
 	var units=splitUnit(buf, unitsep);
 	var texts=[], tags=[];
 	units.map(function(U,i){

@@ -4,10 +4,7 @@
    all data from server will be cache at client side to save network roundtrip.
 */
 if (typeof nodeRequire=='undefined')nodeRequire=require;
-var D=require("./document");
 var pool={},localPool={};
-var customfunc=require("./customfunc");
-var link=require("./link");
 var apppath="";
 var _gets=function(keys,recursive,cb) { //get many data with one call
 	if (!keys) return ;
@@ -41,6 +38,11 @@ var _gets=function(keys,recursive,cb) { //get many data with one call
 }
 
 var toDoc=function(pagenames,texts,parents,reverts) {
+	if (typeof Require!="undefined") {
+		var D=Require("ksana-document").document;
+	} else {
+		var D=nodeRequire("./document");	
+	}
 	var d=D.createDocument() ,revert=null;
 	for (var i=0;i<texts.length;i++) {
 		if (reverts[i].trim()) revert=JSON.parse(reverts[i]);
@@ -70,6 +72,7 @@ var getDocument=function(filename,cb){
 var createLocalEngine=function(kdb,cb) {
 	var engine={lastAccess:new Date(), kdb:kdb};
 
+	var customfunc=nodeRequire("ksana-document").customfunc;
 
 	engine.queryCache={};
 	engine.postingCache={}; //cache for merged posting
@@ -208,7 +211,8 @@ var createEngine=function(kdbid,context,cb) {
 	if (typeof context=="function"){
 		cb=context;
 	}
-
+	//var link=Require("./link");
+	var customfunc=Require("ksana-document").customfunc;
 	var $kse=Require("ksanaforge-kse").$yase; 
 	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
@@ -220,7 +224,7 @@ var createEngine=function(kdbid,context,cb) {
 	engine.getDocument=getDocument;
 	if (typeof context=="object") engine.context=context;
 
-	engine.findLinkBy=link.findLinkBy;
+	//engine.findLinkBy=link.findLinkBy;
 	$kse("get",{key:[["fileNames"],["fileOffsets"],["files"],["meta"]], recursive:true,db:kdbid}).done(function(res){
 		engine.cache["fileNames"]=res[0];
 		engine.cache["fileOffsets"]=res[1];
@@ -299,7 +303,7 @@ var openLocal=function(kdbid,cb)  {
 	for (var i=0;i<tries.length;i++) {
 		
 		if (fs.existsSync(tries[i])) {
-			console.log("kdb path: "+require('path').resolve(tries[i]));
+			console.log("kdb path: "+nodeRequire('path').resolve(tries[i]));
 			kdb=new Kdb(tries[i]);
 			if (kdb) {
 				createLocalEngine(kdb,function(engine){

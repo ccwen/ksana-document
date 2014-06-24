@@ -8,11 +8,6 @@ var isSkip=null;
 var normalize=null;
 var tokenize=null;
 
-var Kde=nodeRequire("./kde");
-var D=require("./document");
-var Diff=nodeRequire("./diff");
-var Kse=nodeRequire("./kse");
-var fs=nodeRequire("fs");
 var putPosting=function(tk) {
 	var	postingid=session.json.tokens[tk];
 	var out=session.json;
@@ -40,6 +35,7 @@ var putPage=function(inscription) {
 	session.indexedTextLength+= inscription.length;
 }
 var upgradeDocument=function(d,dnew) {
+	var Diff=nodeRequire("./diff");	
 	dnew.map(function(pg){
 		var oldpage=d.pageByName(pg.name);
 		var ninscription=dnew.inscription;
@@ -61,6 +57,8 @@ var shortFilename=function(fn) {
 	return arr.join('/');
 }
 var putDocument=function(parsed,cb) {
+	var D=nodeRequire("./document");
+
 	var indexpages=function(doc) {
 		var fileInfo={pageNames:[],pageOffset:[],parentId:[],reverts:[]};
 		var fileContent=[];
@@ -115,6 +113,7 @@ var parseBody=function(body,sep,cb) {
 
 
 var putFile=function(fn,cb) {
+	var fs=nodeRequire("fs");
 	var texts=fs.readFileSync(fn,session.config.inputEncoding).replace(/\r\n/g,"\n");
 	var bodyend=session.config.bodyend;
 	var bodystart=session.config.bodystart;
@@ -153,6 +152,8 @@ var initSession=function(config) {
 	return session;
 }
 var initIndexer=function(mkdbconfig) {
+	var Kde=nodeRequire("./kde");
+
 	session=initSession(mkdbconfig);
 	api=nodeRequire("ksana-document").customfunc.getAPI(mkdbconfig.config);
 	xml4kdb=nodeRequire("ksana-document").xml4kdb;
@@ -218,6 +219,7 @@ var backupFilename=function(ydbfn) {
 }
 
 var backup=function(ydbfn) {
+	var fs=nodeRequire("fs");
 	var fs=nodeRequire('fs');
 	if (fs.existsSync(ydbfn)) {
 		var bkfn=ydbfn+'k';
@@ -236,6 +238,8 @@ var guessSize=function() {
 	return session.vpos * 5;
 }
 var finalize=function(cb) {	
+	var Kde=nodeRequire("./kde");
+
 	if (session.kdb) Kde.closeLocal(session.kdbfn);
 
 	session.json.fileOffsets.push(session.vpos); //serve as terminator

@@ -17,18 +17,22 @@ var movefile=function(sourcefn,targetfolder) {
 	});
 	return targetfn;
 }
-var fs=require("fs");
 var mkdbjs="mkdb.js";
 var build=function(path){
+  var fs=require("fs");
+
   if (!fs.existsSync(mkdbjs)) {
       throw "no "+mkdbjs  ;
   }
+  var starttime=new Date();
+  console.log("START",starttime);
   if (!path) path=".";
   var fn=require("path").resolve(path,mkdbjs);
   var mkdbconfig=require(fn);
   var glob = require("glob");
   var indexer=require("ksana-document").indexer;
   var timer=null;
+
   glob(mkdbconfig.glob, function (err, files) {
     if (err) {
       throw err;
@@ -45,6 +49,8 @@ var build=function(path){
     var status=indexer.status();
     outback((Math.floor(status.progress*1000)/10)+'%'+status.message);
     if (status.done) {
+    	var endtime=new Date();
+    	console.log("END",endtime, "elapse",(endtime-starttime) /1000,"seconds") ;
       //status.outputfn=movefile(status.outputfn,"..");
       clearInterval(timer);
     }
