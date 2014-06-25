@@ -246,9 +246,9 @@ var plnotfollow2 = function (pl1, pl2, mindis, maxdis) {
 }
 /* this is incorrect */
 var plfollow = function (pl1, pl2, distance) {
-  var r = [];
+  var r = [],i=0;
 
-  for (var i = 0; i < pl1.length; i++) {
+  while (i<pl1.length){
     var k = indexOfSorted(pl2, pl1[i] + distance);
     var t = (pl2[k] === (pl1[i] + distance)) ? k : -1;
     if (t > -1) {

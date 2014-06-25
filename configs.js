@@ -4,10 +4,6 @@ var normalize1=function(token) {
 	return token.replace(/[ \.,]/g,'').trim();
 }
 var isSkip1=function(token) {
-	if (!token) {
-		debugger;
-		return;
-	}
 	var t=token.trim();
 	return (t=="" || t=="　" || t=="※" || t=="\n");
 }

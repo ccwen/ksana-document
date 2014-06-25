@@ -141,11 +141,11 @@ var putFile=function(fn,cb) {
 }
 var initSession=function(config) {
 	var json={
-		files:[]
+		postings:[[0]] //first one is always empty, because tokenid cannot be 0		
+		,files:[]
 		,fileContents:[]
 		,fileNames:[]
 		,fileOffsets:[]
-		,postings:[[0]] //first one is always empty, because tokenid cannot be 0
 		,tokens:{}
 		,postingCount:0
 	};
@@ -154,6 +154,7 @@ var initSession=function(config) {
 		           ,indexedTextLength:0,config:config,files:config.files};
 	return session;
 }
+
 var initIndexer=function(mkdbconfig) {
 	var Kde=nodeRequire("./kde");
 
@@ -240,6 +241,18 @@ var createMeta=function() {
 var guessSize=function() {
 	return session.vpos * 5;
 }
+var optimize4kdb=function(json) {
+	var keys=[],tokenId=[];
+	for (var key in json.tokens) {
+		tokenId.push(json.tokens[key]);
+		keys.push(key);
+	}
+	json.tokens=keys;
+	json.tokenId=tokenId;
+	tokenId.unsorted=true;
+	return json;
+}
+
 var finalize=function(cb) {	
 	var Kde=nodeRequire("./kde");
 
@@ -259,7 +272,9 @@ var finalize=function(cb) {
 
 	var kdbw =nodeRequire("ksana-document").kdbw(session.kdbfn,opts);
 	//console.log(JSON.stringify(session.json,""," "));
-	kdbw.save(session.json,null,{autodelete:true});
+
+	var json=optimize4kdb(session.json);
+	kdbw.save(json,null,{autodelete:true});
 	
 	kdbw.writeFile(session.kdbfn,function(total,written) {
 		status.progress=written/total;

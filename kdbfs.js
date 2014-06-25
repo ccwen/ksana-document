@@ -10,6 +10,11 @@ if (typeof chrome!=='undefined' && chrome.fileSystem) {
 }
 
 var signature_size=1;
+var verbose=1, readLog=function(){};
+var _readLog=function(readtype,bytes) {
+	console.log(readtype,bytes,"bytes");
+}
+if (verbose) readLog=_readLog;
 
 var unpack_int = function (ar, count , reset) {
    count=count||ar.length;
@@ -89,6 +94,7 @@ var Open=function(path,opts) {
 		var buffer=new Buffer(blocksize);
 		var that=this;
 		fs.read(this.handle,buffer,0,blocksize,pos,function(err,len,buffer){
+			_readLog("string",len);
 			if (html5fs) {
 				if (encoding=='utf8') {
 					var str=decodeutf8(String.fromCharCode.apply(null, new Uint8Array(buffer)))
@@ -108,6 +114,7 @@ var Open=function(path,opts) {
 		encoding=encoding||'utf8';
 		var buffer=new Buffer(blocksize);
 		fs.read(this.handle,buffer,0,blocksize,pos,function(err,len,buffer){
+		  _readLog("stringArray",buffer.length);
 		  if (html5fs) {
 				if (encoding=='utf8') {
 					var str=decodeutf8(String.fromCharCode.apply(null, new Uint8Array(buffer)))
@@ -124,6 +131,7 @@ var Open=function(path,opts) {
 		var buffer=new Buffer(4);
 		var that=this;
 		fs.read(this.handle,buffer,0,4,pos,function(err,len,buffer){
+			readLog("ui32",len);
 			if (html5fs){
 				//v=(new Uint32Array(buffer))[0];
 				v=new DataView(buffer).getUint32(0, false)
@@ -138,6 +146,7 @@ var Open=function(path,opts) {
 		var buffer=new Buffer(4);
 		var that=this;
 		fs.read(this.handle,buffer,0,4,pos,function(err,len,buffer){
+			readLog("i32",len);
 			if (html5fs){
 				v=new DataView(binaryArrayBuffer).getInt32(0, false)
 				cb(v);
@@ -150,6 +159,7 @@ var Open=function(path,opts) {
 		var that=this;
 
 		fs.read(this.handle,buffer,0,1,pos,function(err,len,buffer){
+			readLog("ui8",len);
 			if (html5fs)cb( (new Uint8Array(buffer))[0]) ;
 			else  			cb.apply(that,[buffer.readUInt8(0)]);	
 			
@@ -159,6 +169,7 @@ var Open=function(path,opts) {
 		var that=this;
 		var buf=new Buffer(blocksize);
 		fs.read(this.handle,buf,0,blocksize,pos,function(err,len,buffer){
+			readLog("buf",len);
 			/*
 			var buff=[];
 			for (var i=0;i<len;i++) {
@@ -201,6 +212,7 @@ var Open=function(path,opts) {
 		} else throw 'unsupported integer size';
 
 		fs.read(this.handle,null,0,unitsize*count,pos,function(err,len,buffer){
+			readLog("fix array",len);
 			var out=[];
 			if (unitsize==1) {
 				out=new Uint8Array(buffer);
@@ -237,6 +249,7 @@ var Open=function(path,opts) {
 		//console.log('itemcount',itemcount,'buffer',buffer);
 
 		fs.read(this.handle,items,0,unitsize*count,pos,function(err,len,buffer){
+			readLog("fix array",len);
 			var out=[];
 			for (var i = 0; i < items.length / unitsize; i++) {
 				out.push( func.apply(items,[i*unitsize]));

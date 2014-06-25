@@ -220,15 +220,24 @@ var newQuery =function(engine,query,opts) {
 	return Q;
 }
 var loadPostings=function(engine,terms,cb) {
-	var tokenkeys=terms.map(function(t){return ["tokens",t.key] });
+	//
+	var tokens=engine.get("tokens");
+	var tokenId=engine.get("tokenId");
 
-	engine.get(tokenkeys,true,function(postingid){
-		var postingkeys=postingid.map(function(t){return ["postings",t]});
-		
-		engine.get(postingkeys,function(postings){
-			postings.map(function(p,i) { terms[i].posting=p });
-			if (cb) cb();
-		})
+	var tokenIds=terms.map(function(t){ return tokens.indexOf(t.key) });
+	var postingid=[];
+	for (var i=0;i<tokenIds.length;i++) {
+		if (tokenIds[i]>-1) {
+			postingid.push( tokenId[ tokenIds[i]]);
+		} else {
+			postingid.push(0); //no such token
+		}
+	}
+	var postingkeys=postingid.map(function(t){return ["postings",t]});
+
+	engine.get(postingkeys,function(postings){
+		postings.map(function(p,i) { terms[i].posting=p });
+		if (cb) cb();
 	});
 }
 var groupBy=function(Q,posting) {

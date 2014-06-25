@@ -102,7 +102,7 @@ var createLocalEngine=function(kdb,cb) {
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
 	engine.getDocument=getDocument;
-	_gets.apply(engine,[  [["meta"],["fileNames"],["fileOffsets"]], true,function(res){
+	_gets.apply(engine,[  [["meta"],["fileNames"],["fileOffsets"],["tokens"],["tokenId"]], true,function(res){
 		engine.dbname=res[0].name;
 		engine.customfunc=customfunc.getAPI(res[0].config);
 		engine.ready=true;
@@ -227,11 +227,14 @@ var createEngine=function(kdbid,context,cb) {
 	if (typeof context=="object") engine.context=context;
 
 	//engine.findLinkBy=link.findLinkBy;
-	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"]], recursive:true,db:kdbid}).done(function(res){
+	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"],["tokens"],["tokenId"]], recursive:true,db:kdbid}).done(function(res){
 		engine.dbname=res[0].name;
 
 		engine.cache["fileNames"]=res[1];
 		engine.cache["fileOffsets"]=res[2];
+		engine.cache["tokens"]=res[3];
+		engine.cache["tokenId"]=res[4];
+
 //		engine.cache["files"]=res[2];
 
 		engine.customfunc=customfunc.getAPI(res[0].config);
