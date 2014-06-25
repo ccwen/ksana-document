@@ -10,7 +10,7 @@ if (typeof chrome!=='undefined' && chrome.fileSystem) {
 }
 
 var signature_size=1;
-var verbose=1, readLog=function(){};
+var verbose=0, readLog=function(){};
 var _readLog=function(readtype,bytes) {
 	console.log(readtype,bytes,"bytes");
 }
@@ -94,7 +94,7 @@ var Open=function(path,opts) {
 		var buffer=new Buffer(blocksize);
 		var that=this;
 		fs.read(this.handle,buffer,0,blocksize,pos,function(err,len,buffer){
-			_readLog("string",len);
+			readLog("string",len);
 			if (html5fs) {
 				if (encoding=='utf8') {
 					var str=decodeutf8(String.fromCharCode.apply(null, new Uint8Array(buffer)))
@@ -114,7 +114,7 @@ var Open=function(path,opts) {
 		encoding=encoding||'utf8';
 		var buffer=new Buffer(blocksize);
 		fs.read(this.handle,buffer,0,blocksize,pos,function(err,len,buffer){
-		  _readLog("stringArray",buffer.length);
+		  readLog("stringArray",buffer.length);
 		  if (html5fs) {
 				if (encoding=='utf8') {
 					var str=decodeutf8(String.fromCharCode.apply(null, new Uint8Array(buffer)))

@@ -334,11 +334,12 @@ var Create=function(path,opts) {
 				cb(Object.keys(CACHE));
 				return;
 			} 
-			var lazy=!recursive || (i<path.length-1) ;
-			var pathnow="",taskqueue=[],opts={lazy:lazy},r=null;
+			
+			var pathnow="",taskqueue=[],opts={},r=null;
 			var lastkey="";
 			for (var i=0;i<path.length;i++) {
 				var task=(function(key,k){
+
 					return (function(data){
 						if (!(typeof data=='object' && data.__empty)) {
 							if (typeof o[lastkey]=='string' && o[lastkey][0]=="\0") o[lastkey]={};
@@ -360,6 +361,7 @@ var Create=function(path,opts) {
 							if (typeof r=='string' && r[0]=="\0") { //offset of data to be loaded
 								var p=r.substring(1).split("\0").map(function(item){return parseInt(item,16)});
 								var cur=p[0],sz=p[1];
+								opts.lazy=!recursive || (k<path.length-1) ;
 								opts.blocksize=sz;opts.cur=cur,opts.keys=[];
 								load.apply(that,[opts, taskqueue.shift()]);
 								lastkey=key;
