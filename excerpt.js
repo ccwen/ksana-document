@@ -157,10 +157,9 @@ var injectTag=function(Q,opts){
 			var tag=hits[j][3] || tag;
 			if (width) {
 				output+= '<'+tag+' n="'+nphrase+'">';
-				while (width) {
+				while (width && i<tokens.length) {
 					output+=tokens[i];
 					if (!Q.isSkip(tokens[i])) {voff++;width--;}
-					if (i>=tokens.length) break;
 					i++;
 				}
 				output+='</'+tag+'>';
