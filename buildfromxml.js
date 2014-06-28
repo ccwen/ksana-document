@@ -37,7 +37,7 @@ var build=function(path){
     if (err) {
       throw err;
     }
-    mkdbconfig.files=files;
+    mkdbconfig.files=files.sort();
     var session=indexer.start(mkdbconfig);
     if (!session) {
       console.log("No file to index");

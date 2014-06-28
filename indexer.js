@@ -88,7 +88,7 @@ var putDocument=function(parsed,cb) {
 		if (!hasParentId) delete fileInfo["parentId"];
 		if (!hasRevert) delete fileInfo["reverts"];
 		fileInfo.pageOffset.push(session.vpos); //ending terminator
-		cb();//finish
+		cb(parsed);//finish
 	}
 	var dnew=D.createDocument(parsed.texts);
 
@@ -134,8 +134,16 @@ var putFile=function(fn,cb) {
 
 	if (callbacks.beforebodystart) callbacks.beforebodystart.apply(session,[texts.substring(0,start),status]);
 	var body=texts.substring(start,end+bodyendlen);
-	parseBody(body,session.config.pageSeparator,function(){
-		if (callbacks.afterbodyend) callbacks.afterbodyend.apply(session,[texts.substring(end+bodyend.length),status]);
+	parseBody(body,session.config.pageSeparator,function(parsed){
+		if (callbacks.afterbodyend) {
+			status.parsed=parsed;
+			status.bodytext=body;
+			status.starttext=texts.substring(0,start);
+			callbacks.afterbodyend.apply(session,[texts.substring(end+bodyend.length),status]);
+			status.parsed=null;
+			status.bodytext=null;
+			status.starttext=null;
+		}
 		cb(); //parse body finished
 	});	
 }
