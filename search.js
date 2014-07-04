@@ -222,13 +222,13 @@ var newQuery =function(engine,query,opts) {
 var loadPostings=function(engine,terms,cb) {
 	//
 	var tokens=engine.get("tokens");
-	var tokenId=engine.get("tokenId");
-
-	var tokenIds=terms.map(function(t){ return tokens.indexOf(t.key) });
+	//var tokenId=engine.get("tokenId");
+	var tokenIds=terms.map(function(t){return tokens[t.key]});
+	//var tokenIds=terms.map(function(t){ return tokens.indexOf(t.key) });
 	var postingid=[];
 	for (var i=0;i<tokenIds.length;i++) {
 		if (tokenIds[i]>-1) {
-			postingid.push( tokenId[ tokenIds[i]]);
+			postingid.push(  tokenIds[i]);
 		} else {
 			postingid.push(0); //no such token
 		}

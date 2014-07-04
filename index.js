@@ -19,6 +19,7 @@ if (typeof process!="undefined") {
 	API.kdbw=require('./kdbw');  // create ydb
 	API.xml4kdb=require('./xml4kdb');  
 	API.build=require("./buildfromxml");
+	API.tei=require("./tei");
 	API.setPath=function(path) {
 		console.log("API set path ",path)
 		API.kde.setPath(path);
