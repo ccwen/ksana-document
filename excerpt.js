@@ -80,6 +80,7 @@ var resultlist=function(engine,Q,opts,cb) {
 	var output=[];
 	var fileOffsets=engine.get("fileOffsets");
 	var max=opts.max || 20, count=0;
+	if (max==-1) max=Q.byFile.length;
 
 	var first=opts.range.start , start=0 , end;
 	for (var i=0;i<fileOffsets.length;i++) {
@@ -99,6 +100,7 @@ var resultlist=function(engine,Q,opts,cb) {
 		for (var i=start;i<Q.byFile.length;i++) {
 			if (Q.byFile[i].length) {
 				var pagewithhit=plist.groupbyposting2(Q.byFile[i],  files[n].pageOffset);
+				pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
 				for (var j=0; j<pagewithhit.length;j++) {
 					if (!pagewithhit[j].length) continue;
 					//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
@@ -117,8 +119,8 @@ var resultlist=function(engine,Q,opts,cb) {
 		engine.get(pagekeys,function(pages){
 			if (pages) for (var i=0;i<pages.length;i++) {
 				var k=fileWithHits.indexOf(output[i].file);
-				var startvpos=files[k].pageOffset[output[i].page-1];
-				var endvpos=files[k].pageOffset[output[i].page];
+				var startvpos=files[k].pageOffset[output[i].page];
+				var endvpos=files[k].pageOffset[output[i].page+1];
 				var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q};
 				var hl=highlight(Q,o);
 				output[i].text=hl.text;
@@ -143,7 +145,7 @@ var injectTag=function(Q,opts){
 				(j>0 && j<=hits.length &&  hits[j-1][0]+surround*2>=voff));	
 
 		if (previnrange!=inrange) {
-			output+="...";
+			output+=opts.abridge||"...";
 		}
 		previnrange=inrange;
 

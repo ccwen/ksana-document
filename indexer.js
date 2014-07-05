@@ -68,6 +68,7 @@ var putDocument=function(parsed,cb) {
 		session.json.fileNames.push(shortfn);
 		session.json.fileOffsets.push(session.vpos);
 		var hasParentId=false, hasRevert=false;
+		fileInfo.pageOffset.push(session.vpos);
 		for (var i=1;i<doc.pageCount;i++) {
 			var pg=doc.getPage(i);
 			if (pg.isLeafPage()) {
@@ -87,7 +88,6 @@ var putDocument=function(parsed,cb) {
 		}
 		if (!hasParentId) delete fileInfo["parentId"];
 		if (!hasRevert) delete fileInfo["reverts"];
-		fileInfo.pageOffset.push(session.vpos); //ending terminator
 		cb(parsed);//finish
 	}
 	var dnew=D.createDocument(parsed.texts);
@@ -249,17 +249,18 @@ var createMeta=function() {
 	return meta;
 }
 var guessSize=function() {
-	return session.vpos * 5;
+	var size=session.vpos * 5;
+	if (size<1024*1024) size=1024*1024;
+	return  size;
 }
 var optimize4kdb=function(json) {
-	var keys=[],tokenId=[];
+	var keys=[];
 	for (var key in json.tokens) {
-		tokenId.push(json.tokens[key]);
-		keys.push(key);
+		keys.push([key,json.tokens[key]]);
 	}
-	json.tokens=keys;
-	json.tokenId=tokenId;
-	tokenId.unsorted=true;
+	keys.sort(function(a,b){return a[1]-b[1]});//sort by token id
+	var newtokens=keys.map(function(k){return k[0]});
+	json.tokens=newtokens;
 	return json;
 }
 
@@ -275,15 +276,13 @@ var finalize=function(cb) {
 	status.message='writing '+session.kdbfn;
 	//output=api("optimize")(session.json,session.ydbmeta.config);
 	var opts={size:session.config.estimatesize};
-	if (!opts.size) {
-		opts.size=guessSize();
-		console.log("guest size",opts.size);
-	}
+	if (!opts.size) opts.size=guessSize();
 
 	var kdbw =nodeRequire("ksana-document").kdbw(session.kdbfn,opts);
 	//console.log(JSON.stringify(session.json,""," "));
 
 	var json=optimize4kdb(session.json);
+	console.log("saving kdb",session.kdbfn);
 	kdbw.save(json,null,{autodelete:true});
 	
 	kdbw.writeFile(session.kdbfn,function(total,written) {

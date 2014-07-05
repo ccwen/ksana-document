@@ -102,7 +102,7 @@ var createLocalEngine=function(kdb,cb) {
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
 	engine.getDocument=getDocument;
-	_gets.apply(engine,[  [["meta"],["fileNames"],["fileOffsets"],["tokens"],["tokenId"]], true,function(res){
+	_gets.apply(engine,[  [["meta"],["fileNames"],["fileOffsets"],["tokens"]], true,function(res){
 		engine.dbname=res[0].name;
 		engine.customfunc=customfunc.getAPI(res[0].config);
 		engine.ready=true;
@@ -172,36 +172,36 @@ var getRemote=function(key,recursive,cb) {
 		}
 	}
 }
-var pageOffset=function(fn,pagename) {
+var pageOffset=function(fn,pagename,cb) {
 	var engine=this;
 	var filenames=engine.get("fileNames");
 	var files=engine.get("files");
 	var i=filenames.indexOf(fn);
 	if (i==-1) return null;
 
-	var j=files[i].pageNames.indexOf(pagename);
-	if (j==-1) return null;
-
-	return {start: files[i].pageOffset[j] , end:files[i].pageOffset[j+1]};
+	engine.get(["files",i],function(fileinfo){
+		var j=fileinfo.pageNames.indexOf(pagename);
+		if (j){
+			cb.apply(engine.context,[{start: filesinfo.pageOffset[j] , end:fileinfo.pageOffset[j+1]}]);	
+		} else cb.apply(engine.context,[null]);
+	})
 }
 var fileOffset=function(fn) {
 	var engine=this;
-
-	var files=engine.get("fileNames");
+	var filenames=engine.get("fileNames");
 	var offsets=engine.get("fileOffsets");
-	var i=files.indexOf(fn);
+	var i=filenames.indexOf(fn);
 	if (i==-1) return null;
-
 	return {start: offsets[i], end:offsets[i+1]};
 }
 
 var folderOffset=function(folder) {
 	var engine=this;
 	var start=0,end=0;
-	var files=engine.get("fileNames");
+	var filenames=engine.get("fileNames");
 	var offsets=engine.get("fileOffsets");
-	for (var i=0;i<files.length;i++) {
-		if (files[i].substring(0,folder.length)==folder) {
+	for (var i=0;i<filenames.length;i++) {
+		if (filenames[i].substring(0,folder.length)==folder) {
 			if (!start) start=offsets[i];
 			end=offsets[i];
 		} else if (start) break;
@@ -227,14 +227,13 @@ var createEngine=function(kdbid,context,cb) {
 	if (typeof context=="object") engine.context=context;
 
 	//engine.findLinkBy=link.findLinkBy;
-	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"],["tokens"],["tokenId"]], recursive:true,db:kdbid}).done(function(res){
+	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"],["tokens"]], recursive:true,db:kdbid}).done(function(res){
 		engine.dbname=res[0].name;
 
 		engine.cache["fileNames"]=res[1];
 		engine.cache["fileOffsets"]=res[2];
 		engine.cache["tokens"]=res[3];
-		engine.cache["tokenId"]=res[4];
-
+//		engine.cache["tokenId"]=res[4];
 //		engine.cache["files"]=res[2];
 
 		engine.customfunc=customfunc.getAPI(res[0].config);
