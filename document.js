@@ -558,7 +558,7 @@ var createDocument = function(docjson,markupjson) {
 			if (!names[name]) {
 				names[name]=pages.length-1;
 			} else if (!json.p) {
-				throw "repeat name "+name;
+				console.warn("repeat name "+name);
 			}
 			page.setName(name);
 			if (json.p) page.__setParentId__(json.p);

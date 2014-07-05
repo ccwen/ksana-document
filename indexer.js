@@ -139,7 +139,9 @@ var putFile=function(fn,cb) {
 			status.parsed=parsed;
 			status.bodytext=body;
 			status.starttext=texts.substring(0,start);
-			callbacks.afterbodyend.apply(session,[texts.substring(end+bodyend.length),status]);
+			var ending="";
+			if (bodyend) ending=texts.substring(end+bodyend.length);
+			if (ending) callbacks.afterbodyend.apply(session,[ending,status]);
 			status.parsed=null;
 			status.bodytext=null;
 			status.starttext=null;
