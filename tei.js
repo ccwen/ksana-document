@@ -1,4 +1,3 @@
-var sax=require("sax");
 
 var anchors=[];
 var parser=null,filename="";
@@ -115,7 +114,7 @@ var handlersResult=function() {
 }
 
 var parseP5=function(xml,parsed,fn,_config) {
-	parser=sax.parser(true);
+	parser=require("sax").parser(true);
 	filename=fn;
 	context={ paths:[] , parents:[], handlers:{}, close_handlers:{}, text:"" ,now:null};
 	parser.onopentag=onopentag;
