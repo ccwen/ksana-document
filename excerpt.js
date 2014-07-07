@@ -53,7 +53,7 @@ var hitInRange=function(Q,startvoff,endvoff) {
 
 	return res;
 }
-//if arr[i] is true, replace it with files[array_index]
+
 var getFileInfo=function(engine,arr,cb) {
 	var taskqueue=[],out=[];
 	for (var i=0;i<arr.length;i++) {
@@ -76,39 +76,64 @@ var getFileInfo=function(engine,arr,cb) {
 	});
 	taskqueue.shift()({__empty:true});
 }
-var resultlist=function(engine,Q,opts,cb) {
-	var output=[];
-	var fileOffsets=engine.get("fileOffsets");
-	var max=opts.max || 20, count=0;
-	if (max==-1) max=Q.byFile.length;
 
-	var first=opts.range.start , start=0 , end;
-	for (var i=0;i<fileOffsets.length;i++) {
-		if (fileOffsets[i]>first) break;
-		start=i;
-	}
-	var fileWithHits=[];
-	for (var i=0;i<Q.byFile.length;i++) {
-		if(Q.byFile[i].length>0) {
-			fileWithHits.push(i);
-			if (fileWithHits.length>=max) break;
+/*
+given a vpos range start, file, convert to filestart, fileend
+   filestart : starting file
+   start   : vpos start
+   showfile: how many files to display
+   showpage: how many pages to display
+
+output:
+   array of fileid with hits
+*/
+var getFileWithHits=function(engine,Q,range) {
+	var fileOffsets=engine.get("fileOffsets");
+	var out=[],filecount=1;
+	if (range.start) {
+		var first=range.start , start=0 , end;
+		for (var i=0;i<fileOffsets.length;i++) {
+			if (fileOffsets[i]>first) break;
+			start=i;
+		}		
+	} else {
+		start=range.filestart || 0;
+		if (range.maxfile) {
+			filecount=range.maxfile;
+		} else if (range.showpage) {
+			throw "not implement yet"
 		}
 	}
 
+	var fileWithHits=[];
+	for (var i=start;i<Q.byFile.length;i++) {
+		if(Q.byFile[i].length>0) {
+			fileWithHits.push(i);
+			range.nextFileStart=i;
+			if (fileWithHits.length>=filecount) {
+				break;
+			}
+		}
+	}
+	if (i>=Q.byFile.length) { //no more file
+		Q.excerptStop=true;
+	}
+	return fileWithHits;
+}
+var resultlist=function(engine,Q,opts,cb) {
+	var output=[];
+	var fileWithHits=getFileWithHits(engine,Q,opts.range);
+
 	getFileInfo(engine,fileWithHits,function(files) {
-		var output=[],n=0;
-		for (var i=start;i<Q.byFile.length;i++) {
-			if (Q.byFile[i].length) {
-				var pagewithhit=plist.groupbyposting2(Q.byFile[i],  files[n].pageOffset);
-				pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
-				for (var j=0; j<pagewithhit.length;j++) {
-					if (!pagewithhit[j].length) continue;
-					//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
-					var name=files[n].pageNames[j];
-					output.push(  {file:i, page:j,  pagename:name});
-				}
-				n++;
-				if (n>=files.length) break;
+		var output=[];
+		for (var i=0;i<files.length;i++) {
+			var pagewithhit=plist.groupbyposting2(Q.byFile[ fileWithHits[i] ],  files[i].pageOffset);
+			pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
+			for (var j=0; j<pagewithhit.length;j++) {
+				if (!pagewithhit[j].length) continue;
+				//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
+				var name=files[i].pageNames[j];
+				output.push(  {file: fileWithHits[i] , page:j,  pagename:name});
 			}
 		}
 

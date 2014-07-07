@@ -273,6 +273,7 @@ var groupByFolder=function(engine,filehits) {
 	return out;
 }
 
+
 var main=function(engine,q,opts,cb){
 	if (typeof opts=="function") cb=opts;
 	opts=opts||{};
@@ -298,13 +299,19 @@ var main=function(engine,q,opts,cb){
 			Q.rawresult=Q.phrases[0].posting;
 		} else {
 			Q.rawresult=Q.phrases[0].posting;
-				//multiple terms
+			//multiple terms
 		}
 		var fileOffsets=Q.engine.get("fileOffsets");
 		if (!Q.byFile && Q.rawresult) {
 			Q.byFile=plist.groupbyposting2(Q.rawresult, fileOffsets);
 			Q.byFile.shift();Q.byFile.pop();
-			Q.byFolder=groupByFolder(engine,Q.byFile);			
+			Q.byFolder=groupByFolder(engine,Q.byFile);
+
+			Q.fileWithHitCount=0;
+			Q.byFile.map(function(f){if (f.length) Q.fileWithHitCount++});
+			
+			Q.folderWithHitCount=0;
+			Q.byFolder.map(function(f){if (f.length) Q.folderWithHitCount++});
 		}
 		if (opts.range) {
 			excerpt.resultlist(engine,Q,opts,function(data) {
