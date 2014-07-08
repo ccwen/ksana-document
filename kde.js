@@ -45,9 +45,10 @@ var toDoc=function(pagenames,texts,parents,reverts) {
 	}
 	var d=D.createDocument() ,revert=null;
 	for (var i=0;i<texts.length;i++) {
-		if (reverts[i].trim()) revert=JSON.parse(reverts[i]);
+		if (reverts && reverts[i].trim()) revert=JSON.parse(reverts[i]);
 		else revert=null;
-		d.createPage({n:pagenames[i],t:texts[i],p:parents[i],r:revert});
+		if (parents) p=parents[i]; else p=null;
+		d.createPage({n:pagenames[i],t:texts[i],p:p,r:revert});
 	}
 	d.endCreatePages();
 	return d;
@@ -60,7 +61,7 @@ var getDocument=function(filename,cb){
 	if (i==-1) {
 		cb(null);
 	} else {
-		var files=engine.get(["files",i],function(file){
+		var files=engine.get(["files",i],true,function(file){
 			var pagenames=file.pageNames;
 			var parentId=file.parentId;
 			var reverts=file.reverts;

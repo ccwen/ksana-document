@@ -582,6 +582,13 @@ var createDocument = function(docjson,markupjson) {
 			if (P.parentId) pages[P.parentId].__mutant__().push(P);
 		});		
 	}
+	var addMarkups=function(markups) {
+		if (markups) for (i=0;i<markups.length;i++){
+			var m=markups[i];
+			var pageid=m.i;
+			pages[pageid].addMarkup(m.start,m.len,m.payload);
+		}		
+	}
 	var createPages=function(json,markups) {
 		var count=0,i;
 		for (i=0;i<json.length;i++) {
@@ -590,11 +597,7 @@ var createDocument = function(docjson,markupjson) {
 		}
 
 		endCreatePages({clear:true});
-		if (markups) for (i=0;i<markups.length;i++){
-			var m=markups[i];
-			var pageid=m.i;
-			pages[pageid].addMarkup(m.start,m.len,m.payload);
-		}
+		addMarkups(markups);
 		return this;
 	};
 	var createPage=function(input) {
@@ -766,6 +769,7 @@ var createDocument = function(docjson,markupjson) {
 	
 	DOC.createPage=createPage;
 	DOC.createPages=createPages;
+	DOC.addMarkups=addMarkups;
 	DOC.evolvePage=evolvePage;
 	DOC.findMRCA=findMRCA;
 	DOC.migrate=migrate; 

@@ -15,16 +15,18 @@ var open=function(fn,mfn) {
 }
 */
 var loadLocal=function(fn,mfn) {
-if (!fs.existsSync(fn)) throw "persistent.js::open file not found ";
-	var content=fs.readFileSync(fn,'utf8');
-	var kd=null,kdm=null;
-	try {
-		kd=JSON.parse(content);
-	} catch (e) {
-		kd=[{"create":new Date()}];
+//if (!fs.existsSync(fn)) throw "persistent.js::open file not found ";
+	if (fs.existsSync(fn)){
+		var content=fs.readFileSync(fn,'utf8');
+		var kd=null,kdm=null;
+		try {
+			kd=JSON.parse(content);
+		} catch (e) {
+			kd=[{"create":new Date()}];
+		}		
 	}
 		
-	if (!mfn) mfn=fn+"m";
+	if (!mfn) mfn=fn.substr(0,fn.lastIndexOf("."))+".kdm";
 	if (fs.existsSync(mfn)) {
 		kdm=JSON.parse(fs.readFileSync(mfn,'utf8'));	
 	}
