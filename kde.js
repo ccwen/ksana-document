@@ -176,16 +176,15 @@ var getRemote=function(key,recursive,cb) {
 var pageOffset=function(fn,pagename,cb) {
 	var engine=this;
 	var filenames=engine.get("fileNames");
-	var files=engine.get("files");
 	var i=filenames.indexOf(fn);
 	if (i==-1) return null;
 
 	engine.get(["files",i],function(fileinfo){
 		var j=fileinfo.pageNames.indexOf(pagename);
 		if (j){
-			cb.apply(engine.context,[{start: filesinfo.pageOffset[j] , end:fileinfo.pageOffset[j+1]}]);	
+			cb.apply(engine.context,[{start: fileinfo.pageOffset[j] , end:fileinfo.pageOffset[j+1]}]);	
 		} else cb.apply(engine.context,[null]);
-	})
+	});
 }
 var fileOffset=function(fn) {
 	var engine=this;
