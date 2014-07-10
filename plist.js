@@ -259,7 +259,10 @@ var plfollow = function (pl1, pl2, distance) {
       var k2=indexOfSorted (pl1,pl2[k]-distance);
       if (k2>i) {
         t = (pl2[k] === (pl1[k2] + distance)) ? k : -1;
-        if (t>-1) r.push(pl1[k2]);
+        if (t>-1) {
+           r.push(pl1[k2]);
+           k2++;
+        }
         i=k2;
       } else break;
     }

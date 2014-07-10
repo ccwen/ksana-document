@@ -122,6 +122,10 @@ var getFileWithHits=function(engine,Q,range) {
 }
 var resultlist=function(engine,Q,opts,cb) {
 	var output=[];
+	if (!Q.rawresult || !Q.rawresult.length) {
+		cb(output);
+		return;
+	} 
 	var fileWithHits=getFileWithHits(engine,Q,opts.range);
 
 	getFileInfo(engine,fileWithHits,function(files) {
