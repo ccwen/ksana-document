@@ -178,9 +178,9 @@ var injectTag=function(Q,opts){
 
 	var tokens=Q.tokenize(opts.text).tokens;
 	var voff=opts.voff;
-	var i=0,previnrange=!!opts.full ,inrange=!!opts.full;
+	var i=0,previnrange=!!opts.fulltext ,inrange=!!opts.fulltext;
 	while (i<tokens.length) {
-		inrange=opts.full || (j<hits.length && voff+surround>=hits[j][0] ||
+		inrange=opts.fulltext || (j<hits.length && voff+surround>=hits[j][0] ||
 				(j>0 && j<=hits.length &&  hits[j-1][0]+surround*2>=voff));	
 
 		if (previnrange!=inrange) {
@@ -207,7 +207,7 @@ var injectTag=function(Q,opts){
 			} else {
 				output+= '<'+tag+' n="'+nphrase+'"/>';
 			}
-			j++;
+			while (j<hits.length && voff>hits[j][0]) j++;
 		} else {
 			if (inrange && i<tokens.length) output+=tokens[i];
 			i++;
@@ -215,9 +215,12 @@ var injectTag=function(Q,opts){
 		}
 		
 	}
+	var remain=10;
 	while (i<tokens.length) {
 		if (inrange) output+= tokens[i];
 		i++;
+		remain--;
+		if (remain<=0) break;
 	}
 	O.push(output);
 	output="";
@@ -225,9 +228,11 @@ var injectTag=function(Q,opts){
 	return O.join("");
 }
 var highlight=function(Q,opts) {
+	if (!opts.text) return {text:"",hits:[]};
 	var opt={text:opts.text,
-		hits:null,tag:'hl',abridged:opts.abridged,voff:opts.startvpos
+		hits:null,tag:'hl',abridge:opts.abridge,voff:opts.startvpos
 	};
+
 	opt.hits=hitInRange(opts.Q,opts.startvpos,opts.endvpos);
 	return {text:injectTag(Q,opt),hits:opt.hits};
 }
@@ -237,7 +242,7 @@ var getPage=function(engine,fileid,pageid,cb) {
 	var pagekeys=["fileContents",fileid,pageid];
 
 	engine.get(pagekeys,function(text){
-		cb.apply(engine.context,[{text:text,file:file,page:page}]);
+		cb.apply(engine.context,[{text:text,file:fileid,page:pageid}]);
 	});
 }
 
@@ -248,11 +253,11 @@ var highlightPage=function(Q,fileid,pageid,opts,cb) {
 	if (!Q || !Q.engine) return cb(null);
 
 	getPage(Q.engine,fileid,pageid,function(page){
-		engine.get(["files",fileid,"pageOffset"],true,function(pageOffset){
+		Q.engine.get(["files",fileid,"pageOffset"],true,function(pageOffset){
 			var startvpos=pageOffset[page.page];
 			var endvpos=pageOffset[page.page+1];
 
-			var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,full:true};
+			var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
 			opt.hits=hitInRange(Q,startvpos,endvpos);
 			cb.apply(Q.engine.context,[{text:injectTag(Q,opt),hits:opt.hits}]);
 		});

@@ -286,8 +286,43 @@ var groupByFolder=function(engine,filehits) {
 	out.push(hits);
 	return out;
 }
+var phrase_intersect=function(engine,Q) {
+	var intersected=null;
+	var fileOffsets=Q.engine.get("fileOffsets");
+	var empty=[],emptycount=0,hashit=0;
+	for (var i=0;i<Q.phrases.length;i++) {
+		var byfile=plist.groupbyposting2(Q.phrases[i].posting,fileOffsets);
+		byfile.shift();byfile.pop();
+		if (intersected==null) {
+			intersected=byfile;
+		} else {
+			for (var j=0;j<byfile.length;j++) {
+				if (!(byfile[j].length && intersected[j].length)) {
+					intersected[j]=empty; //reuse empty array
+					emptycount++;
+				} else hashit++;
+			}
+		}
+	}
 
-
+	Q.byFile=intersected;
+	Q.byFolder=groupByFolder(engine,Q.byFile);
+	var out=[];
+	//calculate new rawposting
+	for (var i=0;i<Q.byFile.length;i++) {
+		if (Q.byFile[i].length) out=out.concat(Q.byFile[i]);
+	}
+	Q.rawresult=out;
+	countFolderFile(Q);
+	console.log(emptycount,hashit);
+}
+var countFolderFile=function(Q) {
+	Q.fileWithHitCount=0;
+	Q.byFile.map(function(f){if (f.length) Q.fileWithHitCount++});
+			
+	Q.folderWithHitCount=0;
+	Q.byFolder.map(function(f){if (f.length) Q.folderWithHitCount++});
+}
 var main=function(engine,q,opts,cb){
 	if (typeof opts=="function") cb=opts;
 	opts=opts||{};
@@ -312,8 +347,7 @@ var main=function(engine,q,opts,cb){
 		if (Q.phrases.length==1) {
 			Q.rawresult=Q.phrases[0].posting;
 		} else {
-			Q.rawresult=Q.phrases[0].posting;
-			//multiple terms
+			phrase_intersect(engine,Q);
 		}
 		var fileOffsets=Q.engine.get("fileOffsets");
 		if (!Q.byFile && Q.rawresult) {
@@ -321,11 +355,7 @@ var main=function(engine,q,opts,cb){
 			Q.byFile.shift();Q.byFile.pop();
 			Q.byFolder=groupByFolder(engine,Q.byFile);
 
-			Q.fileWithHitCount=0;
-			Q.byFile.map(function(f){if (f.length) Q.fileWithHitCount++});
-			
-			Q.folderWithHitCount=0;
-			Q.byFolder.map(function(f){if (f.length) Q.folderWithHitCount++});
+			countFolderFile(Q);
 		}
 		if (opts.range) {
 			excerpt.resultlist(engine,Q,opts,function(data) {
