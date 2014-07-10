@@ -32,13 +32,15 @@ var parseTerm = function(engine,raw,opts) {
 var expandTerm=function(engine,regex) {
 	var r=new RegExp(regex);
 	var tokens=engine.get("tokens");
+	var postingslen=engine.get("postingslen");
 	var out=[];
 	for (var i=0;i<tokens.length;i++) {
 		var m=tokens[i].match(r);
 		if (m) {
-			out.push(m[0]);
+			out.push([m[0],postingslen[i]]);
 		}
 	}
+	out.sort(function(a,b){return b[1]-a[1]});
 	return out;
 }
 var isWildcard=function(raw) {

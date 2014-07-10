@@ -253,6 +253,14 @@ var guessSize=function() {
 	if (size<1024*1024) size=1024*1024;
 	return  size;
 }
+var buildpostingslen=function(tokens,postings) {
+	var out=[];
+	for (var i=0;i<tokens.length;i++) {
+		out.push(postings[i].length);
+	}
+	out.unsorted=true;//instruct indexer for saving pack int instead of delta
+	return out;
+}
 var optimize4kdb=function(json) {
 	var keys=[];
 	for (var key in json.tokens) {
@@ -261,6 +269,7 @@ var optimize4kdb=function(json) {
 	keys.sort(function(a,b){return a[1]-b[1]});//sort by token id
 	var newtokens=keys.map(function(k){return k[0]});
 	json.tokens=newtokens;
+	json.postingslen=buildpostingslen(json.tokens,json.postings);
 	return json;
 }
 
