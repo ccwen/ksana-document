@@ -127,7 +127,10 @@ var resultlist=function(engine,Q,opts,cb) {
 		return;
 	} 
 	var fileWithHits=getFileWithHits(engine,Q,opts.range);
-
+	if (!fileWithHits.length) {
+		cb(output);
+		return;
+	}
 	getFileInfo(engine,fileWithHits,function(files) {
 		var output=[];
 		for (var i=0;i<files.length;i++) {
@@ -146,6 +149,7 @@ var resultlist=function(engine,Q,opts,cb) {
 		});
 		//prepare the text
 		engine.get(pagekeys,function(pages){
+			var seq=0;
 			if (pages) for (var i=0;i<pages.length;i++) {
 				var k=fileWithHits.indexOf(output[i].file);
 				var startvpos=files[k].pageOffset[output[i].page];
@@ -154,7 +158,13 @@ var resultlist=function(engine,Q,opts,cb) {
 				var hl=highlight(Q,o);
 				output[i].text=hl.text;
 				output[i].hits=hl.hits;
+				output[i].seq=seq;
+				seq+=hl.hits.length;
 				output[i].start=startvpos;
+				if (opts.range.maxhit && seq>opts.range.maxhit) {
+					output.length=i;
+					break;
+				}
 			}
 			cb(output);
 		});
