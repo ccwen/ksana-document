@@ -15,3 +15,9 @@ QUnit.test('tibetan tokenizer',function(){
   
 });
 
+QUnit.test('wildcard',function(){
+   var s="*ས";
+   var res=tkr(s);
+   equal(res.tokens[0],"*ས");
+
+})

@@ -6,26 +6,40 @@ var parseTerm = function(engine,raw,opts) {
 	var res={raw:raw,variants:[],term:'',op:''};
 	var term=raw, op=0;
 	var firstchar=term[0];
+	var termregex="";
 	if (firstchar=='-') {
 		term=term.substring(1);
+		firstchar=term[0];
 		res.exclude=true; //exclude
 	}
 	term=term.trim();
 	var lastchar=term[term.length-1];
 	term=engine.customfunc.normalize(term);
 	
-	if (lastchar=='%') {
-		throw "not implement yet"
-		res.variants=getTermVariants.apply(this,[term.substring(0,term.length-1)]).variants;
-		res.op='prefix'
-	} else if (lastchar=='^') {
-		//term=term.substring(0,term.length-1);
-		res.op='exact';
-	} else if (lastchar==',') {
-		//term=term.substring(0,term.length-1);
+	if (term.indexOf("%")>-1) {
+		var termregex="^"+term.replace(/%+/g,".*")+"$";
+		if (firstchar=="%") 	termregex=".*"+termregex.substr(1);
+		if (lastchar=="%") 	termregex=termregex.substr(0,termregex.length-1)+".*";
 	}
+
+	if (termregex) {
+		res.variants=expandTerm(engine,termregex);
+	}
+
 	res.key=term;
 	return res;
+}
+var expandTerm=function(engine,regex) {
+	var r=new RegExp(regex);
+	var tokens=engine.get("tokens");
+	var out=[];
+	for (var i=0;i<tokens.length;i++) {
+		var m=tokens[i].match(r);
+		if (m) {
+			out.push(m[0]);
+		}
+	}
+	return out;
 }
 var isWildcard=function(raw) {
 	return !!raw.match(/[\*\?]/);

@@ -73,12 +73,9 @@ var getDocument=function(filename,cb){
 }
 
 var createLocalEngine=function(kdb,cb) {
-	var engine={lastAccess:new Date(), kdb:kdb};
+	var engine={lastAccess:new Date(), kdb:kdb, queryCache:{}, postingCache:{}};
 
 	var customfunc=nodeRequire("ksana-document").customfunc;
-
-	engine.queryCache={};
-	engine.postingCache={}; //cache for merged posting
 
 	engine.get=function(key,recursive,cb) {
 		if (typeof recursive=="function") {
