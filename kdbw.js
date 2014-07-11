@@ -350,10 +350,10 @@ var Create=function(path,opts) {
 			close();
 		} else if (type==='Array') {
 			if (allnumber_fast(J)) {
-				if (J.unsorted) { //number array is not sorted
-					saveInts(J,key,saveVInt);	
+				if (J.sorted) { //number array is sorted
+					saveInts(J,key,savePInt);	//posting delta format
 				} else {
-					saveInts(J,key,savePInt);	//default Posting format
+					saveInts(J,key,saveVInt);	
 				}
 			} else if (allstring_fast(J)) {
 				saveStringArray(J,key);

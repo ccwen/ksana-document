@@ -258,7 +258,6 @@ var buildpostingslen=function(tokens,postings) {
 	for (var i=0;i<tokens.length;i++) {
 		out.push(postings[i].length);
 	}
-	out.unsorted=true;//instruct indexer for saving pack int instead of delta
 	return out;
 }
 var optimize4kdb=function(json) {
@@ -269,6 +268,7 @@ var optimize4kdb=function(json) {
 	keys.sort(function(a,b){return a[1]-b[1]});//sort by token id
 	var newtokens=keys.map(function(k){return k[0]});
 	json.tokens=newtokens;
+	for (var i=0;i<json.postings.length;i++) json.postings[i].sorted=true; //use delta format to save space
 	json.postingslen=buildpostingslen(json.tokens,json.postings);
 	return json;
 }
