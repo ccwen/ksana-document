@@ -89,9 +89,13 @@ var getProjectFiles=function(p) {
   return nodeRequire("ksana-document").projects.files(p.filename);
 }
 
-var search=function(opts) {
-  return require("./kse").search(opts);
-}
+var search=function(opts,cb) {
+  var Kde=nodeRequire("ksana-document").kde;
+  Kde.createLocalEngine(opts.dbid,function(engine){
+    nodeRequire("./kse").search(engine,opts.q,opts,cb);
+  });
+};
+search.async=true;
 var get=function(opts,cb) {
   require("./kde").openLocal(opts.db,function(engine){
       if (!engine) {

@@ -112,7 +112,7 @@ var createLocalEngine=function(kdb,cb) {
 }
 
 var getRemote=function(key,recursive,cb) {
-	var $kse=Require("ksanaforge-kse").$yase; 
+	var $kse=Require("ksanaforge-kse").$ksana; 
 	var engine=this;
 	if (!engine.ready) {
 		console.error("remote connection not established yet");
@@ -212,7 +212,7 @@ var createEngine=function(kdbid,context,cb) {
 	}
 	//var link=Require("./link");
 	var customfunc=Require("ksana-document").customfunc;
-	var $kse=Require("ksanaforge-kse").$yase; 
+	var $kse=Require("ksanaforge-kse").$ksana; 
 	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
 	engine.setContext=function(ctx) {this.context=ctx};
