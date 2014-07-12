@@ -69,6 +69,7 @@ var putDocument=function(parsed,cb) {
 		session.json.fileOffsets.push(session.vpos);
 		var hasParentId=false, hasRevert=false;
 		fileInfo.pageOffset.push(session.vpos);
+		session.pagecount+=doc.pageCount-1;
 		for (var i=1;i<doc.pageCount;i++) {
 			var pg=doc.getPage(i);
 			if (pg.isLeafPage()) {
@@ -161,7 +162,7 @@ var initSession=function(config) {
 	};
 	config.inputEncoding=config.inputEncoding||"utf8";
 	var session={vpos:1, json:json , kdb:null, filenow:0,done:false
-		           ,indexedTextLength:0,config:config,files:config.files};
+		           ,indexedTextLength:0,config:config,files:config.files,pagecount:0};
 	return session;
 }
 
@@ -237,8 +238,12 @@ var backup=function(ydbfn) {
 	var fs=nodeRequire('fs');
 	if (fs.existsSync(ydbfn)) {
 		var bkfn=ydbfn+'k';
-		if (fs.existsSync(bkfn)) fs.unlinkSync(bkfn);
-		fs.renameSync(ydbfn,bkfn);
+		try {
+			if (fs.existsSync(bkfn)) fs.unlinkSync(bkfn);
+			fs.renameSync(ydbfn,bkfn);
+		} catch (e) {
+			console.log(e);
+		}
 	}
 }
 var createMeta=function() {
@@ -246,6 +251,7 @@ var createMeta=function() {
 	meta.config=session.config.config;
 	meta.name=session.config.name;
 	meta.vsize=session.vpos;
+	meta.pagecount=session.pagecount;
 	return meta;
 }
 var guessSize=function() {

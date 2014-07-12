@@ -154,12 +154,20 @@ var resultlist=function(engine,Q,opts,cb) {
 				var k=fileWithHits.indexOf(output[i].file);
 				var startvpos=files[k].pageOffset[output[i].page];
 				var endvpos=files[k].pageOffset[output[i].page+1];
-				var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q};
-				var hl=highlight(Q,o);
+				var hl={};
+				
+				if (opts.nohighlight) {
+					hl.text=pages[i];
+					hl.hits=hitInRange(Q,startvpos,endvpos);
+				} else {
+					var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q};
+					hl=highlight(Q,o);
+				}
 				output[i].text=hl.text;
 				output[i].hits=hl.hits;
 				output[i].seq=seq;
 				seq+=hl.hits.length;
+
 				output[i].start=startvpos;
 				if (opts.range.maxhit && seq>opts.range.maxhit) {
 					output.length=i;
