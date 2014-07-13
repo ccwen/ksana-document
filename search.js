@@ -372,6 +372,4 @@ var main=function(engine,q,opts,cb){
 	});
 }
 
-module.exports={
-	main:main
-};
+module.exports=main;

@@ -1,5 +1,10 @@
 /*
   concordance without suffix array.
+
+  法 takes 25 seconds.
+
+  improvement:
+	less page scan.        
 */
 var search=require("./search");
 var Kde=require("./kde");
@@ -72,8 +77,7 @@ var finalize=function() {
 }
 var opts={nohighlight:true, range:{filestart:0, maxfile:100}};
 var worker=function() {
-
-	search.main(engine,config.q,opts,function(Q){
+	search(engine,config.q,opts,function(Q){
 		var excerpts=Q.excerpt.map(function(q){return q.text.replace(/\n/g,"")});
 		texts=texts.concat(excerpts);
 		opts.range.filestart=opts.range.nextFileStart;

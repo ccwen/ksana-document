@@ -14,7 +14,7 @@ var _search=function(engine,q,opts,cb) {
 		opts.q=q;
 		$kse.search(opts,cb);
 	} else {//nw or brower
-		return require("./search").main(engine,q,opts,cb);		
+		return require("./search")(engine,q,opts,cb);		
 	}
 }
 
@@ -30,6 +30,7 @@ var _highlightPage=function(engine,fileid,pageid,opts,cb){
 var api={
 	search:_search
 	,concordance:require("./concordance")
+	,regex:require("./regex")
 	,highlightPage:_highlightPage
 	,excerpt:require("./excerpt")
 }

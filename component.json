@@ -18,7 +18,7 @@
     "projects.js","indexer.js","indexer_kd.js",
     "kdb.js","kdbfs.js", "kdbw.js","kse.js","kde.js","boolsearch.js",
     "search.js","plist.js","excerpt.js","link.js","tibetan/wylie.js","languages.js",
-    "diff.js","xml4kdb.js","buildfromxml.js","tei.js","concordance.js"
+    "diff.js","xml4kdb.js","buildfromxml.js","tei.js","concordance.js","regex.js"
   ],
   "remotes": []
 }
