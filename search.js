@@ -162,6 +162,26 @@ var trimSpace=function(engine,query) {
 	while (isSkip(query[i]) && i<query.length) i++;
 	return query.substring(i);
 }
+var getPageWithHit=function(fileid,offsets) {
+	var Q=this,engine=Q.engine;
+	var pagewithhit=plist.groupbyposting2(Q.byFile[fileid ], offsets);
+	pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
+	var out=[];
+	pagewithhit.map(function(p,idx){if (p.length) out.push(idx)});
+	return out;
+}
+var pageWithHit=function(fileid,cb) {
+	var Q=this,engine=Q.engine;
+	if (typeof cb=="function") {
+		engine.get(["files",fileid,"pageOffset"],function(offsets){
+			cb(getPageWithHit.apply(this,[fileid,offsets]));
+		})
+	} else {
+		var offsets=engine.getSync(["files",fileid,"pageOffset"]);
+		return getPageWithHit.apply(this,[fileid,offsets]);
+	}
+}
+
 var newQuery =function(engine,query,opts) {
 	if (!query) return;
 	opts=opts||{};
@@ -231,6 +251,8 @@ var newQuery =function(engine,query,opts) {
 	Q.tokenize=function() {return engine.customfunc.tokenize.apply(engine,arguments);}
 	Q.isSkip=function() {return engine.customfunc.isSkip.apply(engine,arguments);}
 	Q.normalize=function() {return engine.customfunc.normalize.apply(engine,arguments);}
+	Q.pageWithHit=pageWithHit;
+
 	//Q.getRange=function() {return that.getRange.apply(that,arguments)};
 	//API.queryid='Q'+(Math.floor(Math.random()*10000000)).toString(16);
 	return Q;

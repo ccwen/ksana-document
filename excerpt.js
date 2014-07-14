@@ -271,4 +271,7 @@ var highlightPage=function(Q,fileid,pageid,opts,cb) {
 		});
 	});
 }
-module.exports={resultlist:resultlist, hitInRange:hitInRange, highlightPage:highlightPage,getPage:getPage};
+module.exports={resultlist:resultlist, 
+	hitInRange:hitInRange, 
+	highlightPage:highlightPage,
+	getPage:getPage};

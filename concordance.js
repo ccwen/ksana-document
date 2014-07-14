@@ -13,16 +13,11 @@ var status={progress:0}, forcestop=false;
 var texts=[],terms=[];
 var config=null,engine=null;
 var nest=0;
-var findNeighbors=function(texts,q,backward) {
-	nest++;
-	var p=q+"(..)";
-	if (backward) p="(..)"+q ;  //starts
 
-	var pat=new RegExp(p,"g");
-
-	var obj={},unigram="",more=[];
-	for (var i=0;i<texts.length;i++) {
-		texts[i].replace(pat,function(m,m1){
+var scanpage=function(obj,npage,pat,backward) {
+	var unigram="";
+	var page=texts[npage];
+	page.replace(pat,function(m,m1){
 			var c=m1.charCodeAt(0);
 			if (c>=0xD800 && c<0xDC00) unigram=m1;
 			else {
@@ -32,36 +27,50 @@ var findNeighbors=function(texts,q,backward) {
 			c=unigram.charCodeAt(0);
 			if (c<0x4e00 || c>0x9fff) return;
 
-			if (!obj[unigram]) obj[unigram]=0;
-			obj[unigram]++;
-		});
-	}
-	var out=[];
-	for (var i in obj) out.push([i,obj[i]]);
-	out.sort(function(a,b){return b[1]-a[1]});
-
-	var total=0;
-	for (var i=0;i<out.length;i++) total+=out[i][1];
-
+			if (!obj[unigram]) obj[unigram]=[];
+			var o=obj[unigram];
+			if (o[o.length-1]!=npage) o.push(npage);
+	});
+}
+var trimunfrequent=function(out,total,config) {
 	for (var i=0;i<out.length;i++) {
-		if ( (out[i][1] / total) < config.threshold || out[i][1] < config.threshold_count) {
+		var hit=out[i][1].length;
+		if ( (hit / total) < config.threshold || hit < config.threshold_count) {
 			out.length=i;
 			break;
 		}
 	}
-	if (terms.length<config.termlimit) {
-		for (var i=0;i<out.length;i++) {
-			if (out[i][1] / total > config.threshold2 && out[i][1]>config.threshold2_count && nest<config.nestlevel) {
-				var newq=q+out[i][0];
-				if (backward) newq= out[i][0]+q;
-				var r=findNeighbors(texts,newq,backward);
-				terms.push([newq,out[i][1]]);
-				if (terms.length>=config.termlimit) break;
-			}
-		}		
+}
+var findNeighbors=function(filter,q,backward) {
+	nest++;
+	console.log("findn",q,filter.length,backward)
+	var p=q+"(..)";
+	if (backward) p="(..)"+q ;  //starts
+
+	var pat=new RegExp(p,"g");
+	var obj={},out=[];
+	for (var i=0;i<filter.length;i++) {
+		var npage=i;
+		if (typeof filter[i]=="number") npage=filter[i];
+		scanpage(obj,npage,pat,backward);
+	}
+	for (var i in obj) out.push([i,obj[i]]);
+	out.sort(function(a,b){return b[1].length-a[1].length});
+
+	var total=0;
+	for (var i=0;i<out.length;i++) total+=out[i][1].length;
+
+	trimunfrequent(out,total,config);
+	
+	for (var i=0;i<out.length;i++) {
+		var term=q+out[i][0];
+		if (backward) term=out[i][0]+q;
+		terms.push([term,out[i][1].length]);
+		if (nest<5) {
+			findNeighbors(out[i][1],term,backward);	
+		}
 	}
 	nest--;
-	return out;
 }
 
 var finalize=function() {
@@ -75,18 +84,22 @@ var finalize=function() {
 
 	status.done=true;
 }
-var opts={nohighlight:true, range:{filestart:0, maxfile:100}};
+var opts={nohighlight:true};
+
 var worker=function() {
-	search(engine,config.q,opts,function(Q){
-		var excerpts=Q.excerpt.map(function(q){return q.text.replace(/\n/g,"")});
-		texts=texts.concat(excerpts);
-		opts.range.filestart=opts.range.nextFileStart;
-		status.progress=opts.range.nextFileStart/Q.byFile.length;
-		if (forcestop || Q.excerptStop) {
-			finalize();
-		}else process.nextTick(worker);
-	});
+	var Q=this;
+	var pages=Q.pageWithHit(this.now);
+	status.progress=this.now/Q.byFile.length;
+	for (var j=0;j<pages.length;j++) {
+		texts.push( engine.getSync(["fileContents",this.now,pages[j]]));	
+	}
+	this.now++
+	if (this.now<Q.byFile.length) {
+		setImmediate( worker.bind(this)) ;
+		if (forcestop || Q.excerptStop) 	finalize();
+	} else finalize();
 }
+
 var start=function(_config) {
 	config=_config;
 	config.threshold=config.threshold||0.005;
@@ -100,7 +113,10 @@ var start=function(_config) {
 
 	open(config.db,function(_engine){
 		engine=_engine;
-		process.nextTick(worker);
+		search(engine,config.q,opts,function(Q){
+			Q.now=0;
+			worker.call(Q);
+		});
 	});
 }
 var stop=function() {
