@@ -6,6 +6,14 @@
 if (typeof nodeRequire=='undefined')nodeRequire=require;
 var pool={},localPool={};
 var apppath="";
+
+var _getSync=function(keys,recursive) {
+	var out=[];
+	for (var i in keys) {
+		out.push(this.getSync(keys[i],recursive));	
+	}
+	return out;
+}
 var _gets=function(keys,recursive,cb) { //get many data with one call
 	if (!keys) return ;
 	if (typeof keys=='string') {
@@ -100,14 +108,23 @@ var createLocalEngine=function(kdb,cb) {
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
 	engine.getDocument=getDocument;
-	_gets.apply(engine,[  [["meta"],["fileNames"],["fileOffsets"],["tokens"],["postingslen"]], true,function(res){
+	//only local engine allow getSync
+	engine.getSync=engine.kdb.getSync;
+	var preload=[["meta"],["fileNames"],["fileOffsets"],["tokens"],["postingslen"]];
+
+	var setPreload=function(res) {
 		engine.dbname=res[0].name;
 		engine.customfunc=customfunc.getAPI(res[0].config);
 		engine.ready=true;
-		if (cb) cb(engine);
-	}]);
-
-
+	}
+	if (typeof cb=="function") {
+		_gets.apply(engine,[  preload, true,function(res){
+			setPreload(res)
+			cb(engine);
+		}]);
+	} else {
+		setPreload(_getSync.apply(engine,[preload,true]));
+	}
 	return engine;
 }
 
@@ -278,6 +295,7 @@ var open=function(kdbid,context,cb) {
 	return engine;
 }
 
+//omit cb for syncronize open
 var openLocal=function(kdbid,cb)  {
 	var fs=nodeRequire('fs');
 	var Kdb=nodeRequire('ksana-document').kdb;
@@ -309,15 +327,19 @@ var openLocal=function(kdbid,cb)  {
 			console.log("kdb path: "+nodeRequire('path').resolve(tries[i]));
 			kdb=new Kdb(tries[i]);
 			if (kdb) {
-				createLocalEngine(kdb,function(engine){
-					localPool[kdbid]=engine;
-					cb(engine);
-				});
+				if (typeof cb=="function") {
+					createLocalEngine(kdb,function(engine){
+						localPool[kdbid]=engine;
+						cb(engine);
+					});					
+				} else {
+					engine=localPool[kdbid]=createLocalEngine(kdb);
+				}
 				return engine;
 			}
 		}
 	}
-	cb(null);
+	if (cb) cb(null);
 	return null;
 }
 var setPath=function(path) {

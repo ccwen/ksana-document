@@ -352,7 +352,8 @@ var main=function(engine,q,opts,cb){
 			phrase_intersect(engine,Q);
 		}
 		var fileOffsets=Q.engine.get("fileOffsets");
-		if (!Q.byFile && Q.rawresult) {
+		if (opts.nogroup) console.log("nogroup");
+		if (!Q.byFile && Q.rawresult && !opts.nogroup) {
 			Q.byFile=plist.groupbyposting2(Q.rawresult, fileOffsets);
 			Q.byFile.shift();Q.byFile.pop();
 			Q.byFolder=groupByFolder(engine,Q.byFile);

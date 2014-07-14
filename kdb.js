@@ -282,7 +282,7 @@ var Create=function(path,opts) {
 		return this;
 	}
 	var CACHE=null;
-	var KEYS={};
+	var KEY={};
 	var reset=function(cb) {
 		if (!CACHE) {
 			load.apply(this,[{cur:0,lazy:true},function(data){
@@ -299,8 +299,8 @@ var Create=function(path,opts) {
 		var key=path.pop();
 		var that=this;
 		get.apply(this,[path,false,function(data){
-			if (!path.join('\0')) return (!!KEYS[key]);
-			var keys=KEYS[path.join('\0')];
+			if (!path.join('\0')) return (!!KEY[key]);
+			var keys=KEY[path.join('\0')];
 			path.push(key);//put it back
 			if (keys) cb.apply(that,[keys.indexOf(key)>-1]);
 			else cb.apply(that,[false]);
@@ -346,7 +346,7 @@ var Create=function(path,opts) {
 							o[lastkey]=data; 
 							o=o[lastkey];
 							r=data[key];
-							KEYS[pathnow]=opts.keys;
+							KEY[pathnow]=opts.keys;
 						} else {
 							data=o[key];
 							r=data;
@@ -383,7 +383,7 @@ var Create=function(path,opts) {
 				//last call to child load
 				taskqueue.push(function(data){
 					var key=path[path.length-1];
-					o[key]=data; KEYS[pathnow]=opts.keys;
+					o[key]=data; KEY[pathnow]=opts.keys;
 					cb.apply(that,[data]);
 				});
 				taskqueue.shift()({__empty:true});			
@@ -397,7 +397,7 @@ var Create=function(path,opts) {
 		var that=this;
 		get.apply(this,[path,false,function(){
 			if (path && path.length) {
-				cb.apply(that,[KEYS[path.join("\0")]]);
+				cb.apply(that,[KEY[path.join("\0")]]);
 			} else {
 				cb.apply(that,[Object.keys(CACHE)]); 
 				//top level, normally it is very small
@@ -409,14 +409,19 @@ var Create=function(path,opts) {
 		this.load=load;
 //		this.cur=0;
 		this.cache=function() {return CACHE};
+		this.key=function() {return KEY};
 		this.free=function() {
 			CACHE=null;
-			KEYS=null;
+			KEY=null;
 			this.fs.free();
 		}
+		this.setCache=function(c) {CACHE=c};
 		this.keys=getkeys;
 		this.get=get;   // get a field, load if needed
 		this.exists=exists;
+		this.DT=DT;
+		//install the sync version
+		require("./kdb_sync")(this);
 	}
 
 	var kfs=new Kfs(path,opts);

@@ -84,7 +84,7 @@ var worker=function() {
 		status.progress=opts.range.nextFileStart/Q.byFile.length;
 		if (forcestop || Q.excerptStop) {
 			finalize();
-		}else setTimeout(worker,0);
+		}else process.nextTick(worker);
 	});
 }
 var start=function(_config) {
@@ -100,7 +100,7 @@ var start=function(_config) {
 
 	open(config.db,function(_engine){
 		engine=_engine;
-		setTimeout(worker,0);
+		process.nextTick(worker);
 	});
 }
 var stop=function() {
