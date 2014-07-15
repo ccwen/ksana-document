@@ -43,7 +43,7 @@ var trimunfrequent=function(out,total,config) {
 }
 var findNeighbors=function(filter,q,backward) {
 	nest++;
-	console.log("findn",q,filter.length,backward)
+	//console.log("findn",q,filter.length,backward)
 	var p=q+"(..)";
 	if (backward) p="(..)"+q ;  //starts
 
@@ -61,16 +61,23 @@ var findNeighbors=function(filter,q,backward) {
 	for (var i=0;i<out.length;i++) total+=out[i][1].length;
 
 	trimunfrequent(out,total,config);
-	
-	for (var i=0;i<out.length;i++) {
+	var newterms=[];
+	if (nest<5) for (var i=0;i<out.length;i++) {
 		var term=q+out[i][0];
+		var termhit=out[i][1].length;
 		if (backward) term=out[i][0]+q;
-		terms.push([term,out[i][1].length]);
-		if (nest<5) {
-			findNeighbors(out[i][1],term,backward);	
+		newterms.push([term,termhit]);
+		var childterms=findNeighbors(out[i][1],term,backward);
+		if (childterms.length && childterms[0][1]*1.3>termhit )  {
+			terms.push([childterms[0][0],childterms[0][1]]);
+		//	return [];
+		} else {
+			//check duplicate terms
+			if (!terms.length || terms[terms.length-1][0]!=term) terms.push([term,termhit]);
 		}
 	}
 	nest--;
+	return newterms;
 }
 
 var finalize=function() {

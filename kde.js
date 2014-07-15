@@ -86,6 +86,7 @@ var createLocalEngine=function(kdb,cb) {
 	var customfunc=nodeRequire("ksana-document").customfunc;
 
 	engine.get=function(key,recursive,cb) {
+
 		if (typeof recursive=="function") {
 			cb=recursive;
 			recursive=false;
@@ -94,6 +95,11 @@ var createLocalEngine=function(kdb,cb) {
 			if (cb) cb(null);
 			return null;
 		}
+
+		if (typeof cb!="function") {
+			return engine.kdb.getSync(key,recursive);
+		}
+
 		if (typeof key=="string") {
 			return engine.kdb.get([key],recursive,cb);
 		} else if (typeof key[0] =="string") {

@@ -177,7 +177,8 @@ var Sync=function(kdb) {
 	var get=function(path,recursive) {
 		recursive=recursive||false;
 		if (!kdb.cache()) reset();
-		if (typeof path=="string") path=path[path];
+
+		if (typeof path=="string") path=[path];
 		var o=kdb.cache();
 		if (path.length==0 &&recursive) return getall();
 		var pathnow="";
