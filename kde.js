@@ -330,7 +330,7 @@ var openLocal=function(kdbid,cb)  {
 	for (var i=0;i<tries.length;i++) {
 		
 		if (fs.existsSync(tries[i])) {
-			console.log("kdb path: "+nodeRequire('path').resolve(tries[i]));
+			//console.log("kdb path: "+nodeRequire('path').resolve(tries[i]));
 			kdb=new Kdb(tries[i]);
 			if (kdb) {
 				if (typeof cb=="function") {
