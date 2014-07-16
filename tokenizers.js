@@ -4,11 +4,11 @@ var tibetan =function(s) {
 	var offset=0;
 	var tokens=[],offsets=[];
 	s=s.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-	arr=s.split('\n');
+	var arr=s.split('\n');
 
 	for (var i=0;i<arr.length;i++) {
 		var last=0;
-		str=arr[i];
+		var str=arr[i];
 		str.replace(/[།་ ]+/g,function(m,m1){
 			tokens.push(str.substring(last,m1)+m);
 			offsets.push(offset+last);

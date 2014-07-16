@@ -55,7 +55,8 @@ var toDoc=function(pagenames,texts,parents,reverts) {
 	for (var i=0;i<texts.length;i++) {
 		if (reverts && reverts[i].trim()) revert=JSON.parse(reverts[i]);
 		else revert=null;
-		if (parents) p=parents[i]; else p=null;
+		var p=null;
+		if (parents) p=parents[i];
 		d.createPage({n:pagenames[i],t:texts[i],p:p,r:revert});
 	}
 	d.endCreatePages();

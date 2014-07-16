@@ -113,7 +113,7 @@ var addMarkups=function(newmarkups,opts) {
 	if (opts &&opts.clear) this.clearMarkups();
 	var maxlength=this.inscription.length;
 	var markups=this.__markups__();
-	for (var i in newmarkups) {
+	for (var i=0;i<newmarkups.length;i++) {
 		var m=newmarkups[i];
 		var newmarkup=createMarkup(maxlength, m.start, m.len, m.payload);
 		markups.push(newmarkup);
@@ -583,7 +583,7 @@ var createDocument = function(docjson,markupjson) {
 		});		
 	}
 	var addMarkups=function(markups) {
-		if (markups) for (i=0;i<markups.length;i++){
+		if (markups) for (var i=0;i<markups.length;i++){
 			var m=markups[i];
 			var pageid=m.i;
 			pages[pageid].addMarkup(m.start,m.len,m.payload);
