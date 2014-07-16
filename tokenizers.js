@@ -90,7 +90,7 @@ var simple=function(s) {
 	var tokens=[], offsets=[] ;
 	var i=0; 
 	var lastspace=false;
-	addtoken=function() {
+	var addtoken=function() {
 		if (!token) return;
 		tokens.push(token);
 		offsets.push(i);
