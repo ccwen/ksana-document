@@ -158,7 +158,7 @@ var loadPhrase=function(phrase) {
 }
 var trimSpace=function(engine,query) {
 	var i=0;
-	isSkip=engine.customfunc.isSkip;
+	var isSkip=engine.customfunc.isSkip;
 	while (isSkip(query[i]) && i<query.length) i++;
 	return query.substring(i);
 }
@@ -232,7 +232,7 @@ var newQuery =function(engine,query,opts) {
 		phrase_terms[pc].key=phrases[pc];
 
 		//remove ending wildcard
-		var P=phrase_terms[pc];
+		var P=phrase_terms[pc] , T=null;
 		do {
 			T=terms[P.termid[P.termid.length-1]];
 			if (!T) break;
