@@ -37,6 +37,8 @@ var findNeighbors=function(filter,q,backward) {
 	if (verbose) console.log("findn",q,filter.length,backward)
 	var p=q+cjkbmp;
 	nest++;
+	if (backward) terms=starts;
+	else terms=ends;
 
 	if (backward) p=cjkbmp+q ;  //starts
 
@@ -54,16 +56,22 @@ var findNeighbors=function(filter,q,backward) {
 	for (var i=0;i<out.length;i++) total+=out[i][1].length;
 
 	trimunfrequent(out,total,config);
+	var newterms=[];
 	if (nest<5) for (var i=0;i<out.length;i++) {
 		var term=q+out[i][0];
 		var termhit=out[i][1].length;
 		if (backward) term=out[i][0]+q;
-		findNeighbors(out[i][1],term,backward);
+		var childterms=findNeighbors(out[i][1],term,backward);
 
-		if (backward) starts.push([out[i][0],termhit,q]);
-		else ends.push([out[i][0],termhit,q]);
+		terms.push([term,termhit,q]);
+
+		if (childterms.length==1 && childterms[0][1]/config.mid_threshold > termhit) {
+			terms[terms.length-1][3]=childterms[0][0];
+		}
+		newterms.push([term,termhit,q]);
 	}
 	nest--;
+	return newterms;
 }
 
 var finalize=function() {
@@ -100,6 +108,7 @@ var start=function(_config) {
 	config=_config;
 	config.threshold=config.threshold||0.005;
 	config.threshold_count=config.threshold_count||20;
+	config.mid_threshold=config.mid_threshold || 0.9 ; //if child has 80% hit, remove parent
 	config.termlimit=config.termlimit||500;
 	config.nestlevel=config.nestlevel||5;
 	var open=Kde.open;
