@@ -89,7 +89,7 @@ output:
 */
 var getFileWithHits=function(engine,Q,range) {
 	var fileOffsets=engine.get("fileOffsets");
-	var out=[],filecount=1;
+	var out=[],filecount=100;
 	if (range.start) {
 		var first=range.start , start=0 , end;
 		for (var i=0;i<fileOffsets.length;i++) {

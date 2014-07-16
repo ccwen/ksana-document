@@ -345,7 +345,7 @@ var countFolderFile=function(Q) {
 	Q.byFile.map(function(f){if (f.length) Q.fileWithHitCount++});
 			
 	Q.folderWithHitCount=0;
-	Q.byFolder.map(function(f){if (f.length) Q.folderWithHitCount++});
+	Q.byFolder.map(function(f){if (f) Q.folderWithHitCount++});
 }
 var main=function(engine,q,opts,cb){
 	if (typeof opts=="function") cb=opts;
