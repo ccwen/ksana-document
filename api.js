@@ -1,4 +1,4 @@
-if (typeof nodeRequire=='undefined')nodeRequire=require;
+if (typeof nodeRequire=='undefined')var nodeRequire=require;
 var appPath=""; //for servermode
 var getProjectPath=function(p) {
   var path=nodeRequire('path');

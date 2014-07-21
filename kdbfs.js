@@ -1,7 +1,7 @@
 /* OS dependent file operation */
-if (typeof nodeRequire=='undefined')nodeRequire=require;
-if (typeof chrome!=='undefined' && chrome.fileSystem) {
-	var fs=nodeRequire('./html5fs');
+if (typeof nodeRequire=='undefined')var nodeRequire=require;
+if (typeof process=="undefined") {
+	var fs=require('./html5fs');
 	var Buffer=function(){ return ""};
 	var html5fs=true;
 } else {
@@ -58,7 +58,7 @@ var Open=function(path,opts) {
   var decodeutf8 = function (utftext) {
         var string = "";
         var i = 0;
-        var c = c1 = c2 = 0;
+        var c=0,c1 = 0, c2 = 0;
  				for (var i=0;i<utftext.length;i++) {
  					if (utftext.charCodeAt(i)>127) break;
  				}
@@ -108,23 +108,49 @@ var Open=function(path,opts) {
 		});
 	}
 
+	//work around for chrome fromCharCode cannot accept huge array
+	//https://code.google.com/p/chromium/issues/detail?id=56588
+	var buf2stringarr=function(buf,enc) {
+		if (enc=="utf8") 	var arr=new Uint8Array(buf);
+		else var arr=new Uint16Array(buf);
+		var i=0,codes=[],out=[];
+		while (i<arr.length) {
+			if (arr[i]) {
+				codes.push(arr[i]);
+			} else {
+				var s=String.fromCharCode.apply(null,codes);
+				if (enc=="utf8") out.push(decodeutf8(s));
+				else out.push(s);
+				codes=[];				
+			}
+			i++;
+		}
+		
+		s=String.fromCharCode.apply(null,[codes]);
+		if (enc=="utf8") out.push(decodeutf8(s));
+		else out.push(s);
+
+		return out;
+	}
 	var readStringArray = function(pos,blocksize,encoding,cb) {
-		var that=this;
+		var that=this,out=null;
 		if (blocksize==0) return [];
 		encoding=encoding||'utf8';
 		var buffer=new Buffer(blocksize);
 		fs.read(this.handle,buffer,0,blocksize,pos,function(err,len,buffer){
-		  readLog("stringArray",buffer.length);
+		  
 		  if (html5fs) {
-				if (encoding=='utf8') {
-					var str=decodeutf8(String.fromCharCode.apply(null, new Uint8Array(buffer)))
-				} else { //ucs2 is 3 times faster
-					var str=String.fromCharCode.apply(null, new Uint16Array(buffer))	
-				}		  	
-		  	out=str.split('\0');
-		  }
-			else 	out=buffer.toString(encoding).split('\0');
-			cb.apply(that,[out]);
+	  		readLog("stringArray",buffer.byteLength);
+			if (encoding=='utf8') {
+				out=buf2stringarr(buffer,"utf8");
+			} else { //ucs2 is 3 times faster
+				out=buf2stringarr(buffer,"ucs2");
+			}
+		  } else {
+			readLog("stringArray",buffer.length);
+			out=buffer.toString(encoding).split('\0');
+		  } 	
+		  cb.apply(that,[out]);
 		});
 	}
 	var readUI32=function(pos,cb) {
@@ -134,7 +160,7 @@ var Open=function(path,opts) {
 			readLog("ui32",len);
 			if (html5fs){
 				//v=(new Uint32Array(buffer))[0];
-				v=new DataView(buffer).getUint32(0, false)
+				var v=new DataView(buffer).getUint32(0, false)
 				cb(v);
 			}
 			else cb.apply(that,[buffer.readInt32BE(0)]);	
@@ -148,10 +174,10 @@ var Open=function(path,opts) {
 		fs.read(this.handle,buffer,0,4,pos,function(err,len,buffer){
 			readLog("i32",len);
 			if (html5fs){
-				v=new DataView(binaryArrayBuffer).getInt32(0, false)
+				var v=new DataView(buffer).getInt32(0, false)
 				cb(v);
 			}
-			else  			cb.apply(that,[buffer.readInt32BE(0)]);	
+			else  	cb.apply(that,[buffer.readInt32BE(0)]);	
 		});
 	}
 	var readUI8=function(pos,cb) {
@@ -176,7 +202,7 @@ var Open=function(path,opts) {
 				buff[i]=buffer.charCodeAt(i);
 			}
 			*/
-			buff=new Uint8Array(buffer)
+			var buff=new Uint8Array(buffer)
 			cb.apply(that,[buff]);
 		});
 	}
@@ -263,6 +289,7 @@ var Open=function(path,opts) {
 		fs.closeSync(this.handle);
 	}
 	var setupapi=function() {
+		var that=this;
 		this.readSignature=readSignature;
 		this.readI32=readI32;
 		this.readUI32=readUI32;
@@ -273,19 +300,36 @@ var Open=function(path,opts) {
 		this.readString=readString;
 		this.readStringArray=readStringArray;
 		this.signature_size=signature_size;
-		this.free=free;		
-		var stat=fs.fstatSync(this.handle);
-		this.stat=stat;
-		this.size=stat.size;
+		this.free=free;
+		if (html5fs) {
+		    var fn=path.substr(path.lastIndexOf("/"));
+		    FS_.root.getFile(fn,{},function(entry){
+		      entry.getMetadata(function(metadata) { 
+		        that.size=metadata.size;
+		        });
+		    });
+		} else {
+			var stat=fs.fstatSync(this.handle);
+			this.stat=stat;
+			this.size=stat.size;			
+		}
 	}
 	
 	//handle=fs.openSync(path,'r');
 	//console.log('watching '+path);
-
-	this.handle=fs.openSync(path,'r');//,function(err,handle){
-	this.opened=true;
-	setupapi.call(this);
-
+	var that=this;
+	if (html5fs) {
+		fs.open(path,function(h){
+			that.handle=h;
+			that.html5fs=true;
+			setupapi.call(that);
+			that.opened=true;
+		})
+	} else {
+		this.handle=fs.openSync(path,'r');//,function(err,handle){
+		this.opened=true;
+		setupapi.call(this);		
+	}
 	//console.log('file size',path,this.size);	
 	return this;
 }

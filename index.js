@@ -9,13 +9,14 @@
 	,languages:require('./languages')
 	,kde:require("./kde") //database engine
 	,kse:require('./kse') // search engine
+	,kdb:require("./kdb")
 }
 if (typeof process!="undefined") {
 	API.persistent=require('./persistent');
 	API.indexer_kd=require('./indexer_kd');
 	API.indexer=require('./indexer');
 	API.projects=require('./projects');
-	API.kdb=require('./kdb');  // file format
+	//API.kdb=require('./kdb');  // file format
 	API.kdbw=require('./kdbw');  // create ydb
 	API.xml4kdb=require('./xml4kdb');  
 	API.build=require("./buildfromxml");

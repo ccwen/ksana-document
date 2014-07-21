@@ -3,7 +3,7 @@
    each ydb has one engine instance.
    all data from server will be cache at client side to save network roundtrip.
 */
-if (typeof nodeRequire=='undefined')nodeRequire=require;
+if (typeof nodeRequire=='undefined')var nodeRequire=require;
 var pool={},localPool={};
 var apppath="";
 
@@ -84,7 +84,11 @@ var getDocument=function(filename,cb){
 var createLocalEngine=function(kdb,cb) {
 	var engine={lastAccess:new Date(), kdb:kdb, queryCache:{}, postingCache:{}};
 
-	var customfunc=nodeRequire("ksana-document").customfunc;
+	if (kdb.fs.html5fs) {
+		var customfunc=Require("ksana-document").customfunc;
+	} else {
+		var customfunc=nodeRequire("ksana-document").customfunc;	
+	}	
 
 	engine.get=function(key,recursive,cb) {
 
@@ -98,7 +102,11 @@ var createLocalEngine=function(kdb,cb) {
 		}
 
 		if (typeof cb!="function") {
-			return engine.kdb.getSync(key,recursive);
+			if (kdb.fs.html5fs) {
+				return engine.kdb.get(key,recursive,cb);
+			} else {
+				return engine.kdb.getSync(key,recursive);
+			}
 		}
 
 		if (typeof key=="string") {
@@ -116,7 +124,7 @@ var createLocalEngine=function(kdb,cb) {
 	engine.pageOffset=pageOffset;
 	engine.getDocument=getDocument;
 	//only local engine allow getSync
-	engine.getSync=engine.kdb.getSync;
+	if (!kdb.fs.html5fs)	engine.getSync=engine.kdb.getSync;
 	var preload=[["meta"],["fileNames"],["fileOffsets"],["tokens"],["postingslen"]];
 
 	var setPreload=function(res) {
@@ -301,9 +309,7 @@ var open=function(kdbid,context,cb) {
 	pool[kdbid]=engine;
 	return engine;
 }
-
-//omit cb for syncronize open
-var openLocal=function(kdbid,cb)  {
+var openLocalNode=function(kdbid,cb) {
 	var fs=nodeRequire('fs');
 	var Kdb=nodeRequire('ksana-document').kdb;
 	var engine=localPool[kdbid];
@@ -348,6 +354,30 @@ var openLocal=function(kdbid,cb)  {
 	}
 	if (cb) cb(null);
 	return null;
+
+}
+
+var openLocalHtml5=function(kdbid,cb) {
+	var Kdb=Require('ksana-document').kdb;
+	var engine=localPool[kdbid];
+	if (engine) {
+		if (cb) cb(engine);
+		return engine;
+	}
+	var Kdb=Require('ksana-document').kdb;
+	var kdb=new Kdb(kdbid);
+	createLocalEngine(kdb,function(engine){
+		localPool[kdbid]=engine;
+		cb(engine);
+	});
+}
+//omit cb for syncronize open
+var openLocal=function(kdbid,cb)  {
+	if (kdbid.indexOf("filesystem:")>-1) {
+		openLocalHtml5(kdbid,cb);
+	} else {
+		openLocalNode(kdbid,cb);
+	}
 }
 var setPath=function(path) {
 	apppath=path;

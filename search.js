@@ -268,7 +268,6 @@ var loadPostings=function(engine,terms,cb) {
 		postingid.push( tokenIds[i]); // tokenId==0 , empty token
 	}
 	var postingkeys=postingid.map(function(t){return ["postings",t]});
-
 	engine.get(postingkeys,function(postings){
 		postings.map(function(p,i) { terms[i].posting=p });
 		if (cb) cb();
@@ -360,7 +359,9 @@ var main=function(engine,q,opts,cb){
 	};
 
 	engine.queryCache[q]=Q;
+	
 	loadPostings(engine,Q.terms,function(){
+	
 		if (!Q.phrases[0].posting) {
 			cb.apply(engine.context,[{rawresult:[]}]);
 			return;			
@@ -374,7 +375,7 @@ var main=function(engine,q,opts,cb){
 			phrase_intersect(engine,Q);
 		}
 		var fileOffsets=Q.engine.get("fileOffsets");
-		if (opts.nogroup) console.log("nogroup");
+		
 		if (!Q.byFile && Q.rawresult && !opts.nogroup) {
 			Q.byFile=plist.groupbyposting2(Q.rawresult, fileOffsets);
 			Q.byFile.shift();Q.byFile.pop();

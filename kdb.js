@@ -319,6 +319,7 @@ var Create=function(path,opts) {
 	}
 	var get=function(path,recursive,cb) {
 		if (typeof path=='undefined') path=[];
+		if (typeof path=="string") path=[path];
 		if (typeof recursive=='function') {
 			cb=recursive;
 			recursive=false;
@@ -330,6 +331,7 @@ var Create=function(path,opts) {
 		reset.apply(this,[function(){
 
 			var o=CACHE;
+
 			if (path.length==0) {
 				cb(Object.keys(CACHE));
 				return;
@@ -420,8 +422,9 @@ var Create=function(path,opts) {
 		this.get=get;   // get a field, load if needed
 		this.exists=exists;
 		this.DT=DT;
-		//install the sync version
-		require("./kdb_sync")(this);
+		
+		//install the sync version for node
+		if (typeof process!="undefined") require("./kdb_sync")(this);
 	}
 
 	var kfs=new Kfs(path,opts);

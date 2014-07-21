@@ -1,4 +1,4 @@
-if (typeof nodeRequire=='undefined')nodeRequire=require;
+if (typeof nodeRequire=='undefined')var nodeRequire=require;
 
 var passwords=[];
 
