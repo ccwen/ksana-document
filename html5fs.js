@@ -86,7 +86,12 @@ var download=function(url,fn,context,cb,statuscb) {
               fileWriter.onwriteend = function(e) {
                 if (statuscb) statuscb.apply(context,[ fileWriter.length / totalsize ]);
                 b++;
-                if (b<batches.length-1) batch(b);
+                if (b<batches.length-1) {
+                   setTimeout(batch.bind(this,b),0);
+                } else if (cb) {
+                    setTimeout( cb.bind(context,false) , 0) ; 
+                }
+
               };
             }, console.error);
           }, console.error);

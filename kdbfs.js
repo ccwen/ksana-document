@@ -303,7 +303,7 @@ var Open=function(path,opts) {
 		this.free=free;
 		if (html5fs) {
 		    var fn=path.substr(path.lastIndexOf("/"));
-		    FS_.root.getFile(fn,{},function(entry){
+		    fs.fs.root.getFile(fn,{},function(entry){
 		      entry.getMetadata(function(metadata) { 
 		        that.size=metadata.size;
 		        });
