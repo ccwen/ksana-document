@@ -365,15 +365,16 @@ var openLocalHtml5=function(kdbid,cb) {
 		return engine;
 	}
 	var Kdb=Require('ksana-document').kdb;
-	var kdb=new Kdb(kdbid);
-	createLocalEngine(kdb,function(engine){
-		localPool[kdbid]=engine;
-		cb(engine);
+	new Kdb(kdbid,function(){
+		createLocalEngine(this,function(engine){
+			localPool[kdbid]=engine;
+			cb(engine);
+		});		
 	});
 }
 //omit cb for syncronize open
 var openLocal=function(kdbid,cb)  {
-	if (kdbid.indexOf("filesystem:")>-1) {
+	if (kdbid.indexOf("filesystem:")>-1 || typeof process=="undefined") {
 		openLocalHtml5(kdbid,cb);
 	} else {
 		openLocalNode(kdbid,cb);

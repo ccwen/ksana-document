@@ -10,7 +10,7 @@ if (typeof process=="undefined") {
 }
 
 var signature_size=1;
-var verbose=0, readLog=function(){};
+var verbose=1, readLog=function(){};
 var _readLog=function(readtype,bytes) {
 	console.log(readtype,bytes,"bytes");
 }
@@ -36,7 +36,7 @@ var unpack_int = function (ar, count , reset) {
   } while (i<ar.length && count);
   return {data:r, adv:i };
 }
-var Open=function(path,opts) {
+var Open=function(path,opts,cb) {
 	opts=opts||{};
 
 	var readSignature=function(pos,cb) {
@@ -302,16 +302,19 @@ var Open=function(path,opts) {
 		this.signature_size=signature_size;
 		this.free=free;
 		if (html5fs) {
-		    var fn=path.substr(path.lastIndexOf("/"));
+		    var fn=path;
+		    if (path.indexOf("filesystem:")==0) fn=path.substr(path.lastIndexOf("/"));
 		    fs.fs.root.getFile(fn,{},function(entry){
 		      entry.getMetadata(function(metadata) { 
 		        that.size=metadata.size;
+		        if (cb) setTimeout(cb.bind(that),0);
 		        });
 		    });
 		} else {
 			var stat=fs.fstatSync(this.handle);
 			this.stat=stat;
-			this.size=stat.size;			
+			this.size=stat.size;		
+			if (cb)	setTimeout(cb.bind(this),0);	
 		}
 	}
 	
@@ -328,7 +331,7 @@ var Open=function(path,opts) {
 	} else {
 		this.handle=fs.openSync(path,'r');//,function(err,handle){
 		this.opened=true;
-		setupapi.call(this);		
+		setupapi.call(this);
 	}
 	//console.log('file size',path,this.size);	
 	return this;

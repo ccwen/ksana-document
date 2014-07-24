@@ -33,10 +33,22 @@ var fstatSync=function(handle) {
 var fstat=function(handle,cb) {
   throw "not implement yet";
 }
-var open=function(url,cb) {
-    var handle={url:url};
-
+var _open=function(fn_url,cb) {
+    var handle={};
+    if (fn_url.indexOf("filesystem:")==0){
+      handle.url=fn_url;
+      handle.fn=fn_url.substr( fn_url.lastIndexOf("/")+1);
+    } else {
+      handle.fn=fn_url;
+      var url=API.files.filter(function(f){ return (f[0]==fn_url)});
+      if (url) handle.url=url[0][1];
+    }
     cb(handle);//url as handle
+}
+var open=function(fn_url,cb) {
+    if (!API.initialized) {init(1024*1024,this,function(){
+      _open.apply(this,[fn_url,cb]);
+    })} else _open.apply(this,[fn_url,cb]);
 }
 var load=function(filename,mode,cb) {
   open(filename,mode,cb,true);
@@ -46,11 +58,13 @@ var  get_downloadsize=function(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open("HEAD", url, true); // Notice "HEAD" instead of "GET", //  to get only the header
     xhr.onreadystatechange = function() {
-        if (this.readyState == this.DONE) {
+      if (this.status!==200&&this.status!==206) {
+         callback(0);//no such file
+      }  else {
+          if (this.readyState == this.DONE) {
             callback(parseInt(xhr.getResponseHeader("Content-Length")));
-        } else {
-            if (this.status!==200) callback(0);//no such file
-        }
+          }
+      }
     };
     xhr.send();
 };
@@ -84,7 +98,7 @@ var download=function(url,fn,context,cb,statuscb) {
               fileWriter.seek(fileWriter.length);
               fileWriter.write(blob);
               fileWriter.onwriteend = function(e) {
-                if (statuscb) statuscb.apply(context,[ fileWriter.length / totalsize ]);
+                if (statuscb) statuscb.apply(context,[ fileWriter.length / totalsize,totalsize ]);
                 b++;
                 if (b<batches.length-1) {
                    setTimeout(batch.bind(this,b),0);
@@ -105,6 +119,7 @@ var download=function(url,fn,context,cb,statuscb) {
           if (cb) cb.apply(context,[false]);
        } else {//ready to download
          batches=createBatches(size);
+         if (statuscb) statuscb.apply(context,[ 0, totalsize ]);
          rm(fn,this,function(){
             batch(0);  //start start
          });                
@@ -140,9 +155,11 @@ var readdir=function(context,cb) {
             }
           }
       }
-      if (cb) cb.apply(context,[out]);
       API.files=out;
-    }, console.error);
+      if (cb) cb.apply(context,[out]);
+    }, function(){
+      if (cb) cb.apply(context,[null]);
+    });
 }
 var getFileURL=function(filename) {
   if (!API.files ) return null;
@@ -171,6 +188,7 @@ var rmURL=function(filename,context,cb) {
     });
 }
 var init=function(quota,context,cb) {
+
    if (typeof context=="function" && typeof cb=="undfined") {
      cb=context, context=this;
    }
@@ -179,10 +197,15 @@ var init=function(quota,context,cb) {
         webkitRequestFileSystem(PERSISTENT, grantedBytes,  function(fs) {
           API.fs=fs;
           API.quota=grantedBytes;
-          if (cb) cb.apply(context,[grantedBytes,fs]);
+          readdir(context,function(){
+            API.initialized=true;
+            if (cb) cb.apply(context,[grantedBytes,fs]);
+          })
       }, console.error );
     }, console.error);
+
 }
+if (typeof navigator!="undefined" && navigator.webkitPersistentStorage) init(1024*1024);
 var API={
   load:load
   ,open:open

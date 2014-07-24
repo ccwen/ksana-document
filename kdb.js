@@ -32,9 +32,13 @@ var DT={
 }
 
 
-var Create=function(path,opts) {
+var Create=function(path,opts,cb) {
 	/* loadxxx functions move file pointer */
 	// load variable length int
+	if (typeof opts=="function") {
+		cb=opts;
+		opts={};
+	}
 	
 	var loadVInt =function(opts,blocksize,count,cb) {
 		//if (count==0) return [];
@@ -425,13 +429,14 @@ var Create=function(path,opts) {
 		
 		//install the sync version for node
 		if (typeof process!="undefined") require("./kdb_sync")(this);
+		if (cb) setTimeout(cb.bind(this),0);
 	}
-
-	var kfs=new Kfs(path,opts);
+	var that=this;
+	var kfs=new Kfs(path,opts,function(){
+		that.size=this.size;
+		setupapi.call(that);
+	});
 	this.fs=kfs;
-	this.size=kfs.size;
-	setupapi.call(this);
-	
 	return this;
 }
 
