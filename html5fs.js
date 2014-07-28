@@ -58,21 +58,18 @@ var  get_downloadsize=function(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open("HEAD", url, true); // Notice "HEAD" instead of "GET", //  to get only the header
     xhr.onreadystatechange = function() {
-      if (this.status!==200&&this.status!==206) {
-         callback(0);//no such file
-      }  else {
-          if (this.readyState == this.DONE) {
-            callback(parseInt(xhr.getResponseHeader("Content-Length")));
+        if (this.readyState == this.DONE) {
+          callback(parseInt(xhr.getResponseHeader("Content-Length")));
+        } else {
+          if (this.status!==200&&this.status!==206) {
+            callback(0);//no such file     
           }
-      }
+        }
     };
     xhr.send();
 };
 
-var download=function(url,fn,context,cb,statuscb) {
-   if (typeof context=="function" && typeof cb=="undfined") {
-     cb=context, context=this;
-   }
+var download=function(url,fn,cb,statuscb,context) {
    var totalsize=0,batches=null;;
    var createBatches=function(size) {
       var bytes=1024*1024, out=[];
@@ -84,28 +81,44 @@ var download=function(url,fn,context,cb,statuscb) {
       out.push(b*bytes+last);
       return out;
    }
+   var finish=function(srcEntry) { //remove old file and rename temp.kdb 
+         rm(fn,function(){
+            srcEntry.moveTo(srcEntry.filesystem.root, fn,function(){
+              setTimeout( cb.bind(context,false) , 0) ; 
+            },function(e){
+              console.log("faile",e)
+            });
+         },this); 
+   }
+   var tempfn="temp.kdb";
     var batch=function(b) {
        var xhr = new XMLHttpRequest();
        
        xhr.open('get', url, true);
        xhr.setRequestHeader('Range', 'bytes='+batches[b]+'-'+(batches[b+1]-1));
-       xhr.responseType = 'blob';
-
+       xhr.responseType = 'blob';    
        xhr.addEventListener('load', function() {
          var blob=this.response;
-         API.fs.root.getFile(fn, {create: true, exclusive: false}, function(fileEntry) {
+         API.fs.root.getFile(tempfn, {create: true, exclusive: false}, function(fileEntry) {
             fileEntry.createWriter(function(fileWriter) {
               fileWriter.seek(fileWriter.length);
               fileWriter.write(blob);
               fileWriter.onwriteend = function(e) {
-                if (statuscb) statuscb.apply(context,[ fileWriter.length / totalsize,totalsize ]);
-                b++;
-                if (b<batches.length-1) {
-                   setTimeout(batch.bind(this,b),0);
-                } else if (cb) {
-                    setTimeout( cb.bind(context,false) , 0) ; 
+                var abort=false;
+                if (statuscb) {
+                  abort=statuscb.apply(context,[ fileWriter.length / totalsize,totalsize ]);
+                  if (abort) {
+                      setTimeout( cb.bind(context,false) , 0) ;                     
+                  }
                 }
-
+                b++;
+                if (!abort) {
+                  if (b<batches.length-1) {
+                     setTimeout(batch.bind(this,b),0);
+                  } else {
+                      finish(fileEntry);
+                  }                  
+                }
               };
             }, console.error);
           }, console.error);
@@ -118,18 +131,15 @@ var download=function(url,fn,context,cb,statuscb) {
        if (!size) {
           if (cb) cb.apply(context,[false]);
        } else {//ready to download
-         batches=createBatches(size);
-         if (statuscb) statuscb.apply(context,[ 0, totalsize ]);
-         rm(fn,this,function(){
-            batch(0);  //start start
-         });                
+        rm(tempfn,function(){
+           batches=createBatches(size);
+           if (statuscb) statuscb.apply(context,[ 0, totalsize ]);
+           batch(0);          
+        },this);
       }
      });
 }
-var writeFile=function(filename,buf,context,cb){
-   if (typeof context=="function" && typeof cb=="undfined") {
-     cb=context, context=this;
-   }
+var writeFile=function(filename,buf,cb,context){
    API.fs.root.getFile(filename, {create: true, exclusive: true}, function(fileEntry) {
       fileEntry.createWriter(function(fileWriter) {
         fileWriter.write(buf);
@@ -140,10 +150,7 @@ var writeFile=function(filename,buf,context,cb){
     }, console.error);
 }
 
-var readdir=function(context,cb) {
-   if (typeof context=="function" && typeof cb=="undfined") {
-     cb=context, context=this;
-   }
+var readdir=function(cb,context) {
    var dirReader = API.fs.root.createReader();
    var out=[],that=this;
     // Need to recursively read directories until there are no more results.
@@ -166,19 +173,13 @@ var getFileURL=function(filename) {
   var file= API.files.filter(function(f){return f[0]==filename});
   if (file.length) return file[0][1];
 }
-var rm=function(filename,context,cb) {
-   if (typeof context=="function" && typeof cb=="undfined") {
-     cb=context, context=this;
-   }
+var rm=function(filename,cb,context) {
    var url=getFileURL(filename);
-   if (url) rmURL(url,context,cb);
+   if (url) rmURL(url,cb,context);
    else if (cb) cb.apply(context,[false]);
 }
 
-var rmURL=function(filename,context,cb) {
-   if (typeof context=="function" && typeof cb=="undfined") {
-     cb=context, context=this;
-   }
+var rmURL=function(filename,cb,context) {
     webkitResolveLocalFileSystemURL(filename, function(fileEntry) {
       fileEntry.remove(function() {
         if (cb) cb.apply(context,[true]);
@@ -187,25 +188,33 @@ var rmURL=function(filename,context,cb) {
       if (cb) cb.apply(context,[false]);//no such file
     });
 }
-var init=function(quota,context,cb) {
-
-   if (typeof context=="function" && typeof cb=="undfined") {
-     cb=context, context=this;
-   }
+var initfs=function(grantedBytes,cb,context) {
+      webkitRequestFileSystem(PERSISTENT, grantedBytes,  function(fs) {
+      API.fs=fs;
+      API.quota=grantedBytes;
+      readdir(function(){
+        API.initialized=true;
+        cb.apply(context,[grantedBytes,fs]);
+      },context);
+    }, console.error);
+}
+var init=function(quota,cb,context) {
   navigator.webkitPersistentStorage.requestQuota(quota, 
       function(grantedBytes) {
-        webkitRequestFileSystem(PERSISTENT, grantedBytes,  function(fs) {
-          API.fs=fs;
-          API.quota=grantedBytes;
-          readdir(context,function(){
-            API.initialized=true;
-            if (cb) cb.apply(context,[grantedBytes,fs]);
-          })
-      }, console.error );
-    }, console.error);
-
+        initfs(grantedBytes,cb,context);
+    }, console.error 
+  );
 }
-if (typeof navigator!="undefined" && navigator.webkitPersistentStorage) init(1024*1024);
+var queryQuota=function(cb,context) {
+    var that=this;
+    navigator.webkitPersistentStorage.queryUsageAndQuota( 
+     function(usage,quota){
+        initfs(quota,function(){
+          cb.apply(context,[usage,quota]);
+        },context);
+    });
+}
+//if (typeof navigator!="undefined" && navigator.webkitPersistentStorage) init(1024*1024);
 var API={
   load:load
   ,open:open
@@ -218,6 +227,7 @@ var API={
   ,rmURL:rmURL
   ,getFileURL:getFileURL
   ,writeFile:writeFile
-  ,download:download}
+  ,download:download
+  ,queryQuota:queryQuota}
 
   module.exports=API;
