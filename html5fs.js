@@ -41,14 +41,14 @@ var _open=function(fn_url,cb) {
     } else {
       handle.fn=fn_url;
       var url=API.files.filter(function(f){ return (f[0]==fn_url)});
-      if (url) handle.url=url[0][1];
+      if (url.length) handle.url=url[0][1];
     }
     cb(handle);//url as handle
 }
 var open=function(fn_url,cb) {
-    if (!API.initialized) {init(1024*1024,this,function(){
+    if (!API.initialized) {init(1024*1024,function(){
       _open.apply(this,[fn_url,cb]);
-    })} else _open.apply(this,[fn_url,cb]);
+    },this)} else _open.apply(this,[fn_url,cb]);
 }
 var load=function(filename,mode,cb) {
   open(filename,mode,cb,true);
@@ -97,9 +97,10 @@ var download=function(url,fn,cb,statuscb,context) {
        xhr.open('get', url, true);
        xhr.setRequestHeader('Range', 'bytes='+batches[b]+'-'+(batches[b+1]-1));
        xhr.responseType = 'blob';    
+       var create=(b==0);
        xhr.addEventListener('load', function() {
          var blob=this.response;
-         API.fs.root.getFile(tempfn, {create: true, exclusive: false}, function(fileEntry) {
+         API.fs.root.getFile(tempfn, {create: create, exclusive: false}, function(fileEntry) {
             fileEntry.createWriter(function(fileWriter) {
               fileWriter.seek(fileWriter.length);
               fileWriter.write(blob);
@@ -138,6 +139,15 @@ var download=function(url,fn,cb,statuscb,context) {
         },this);
       }
      });
+}
+
+var readFile=function(filename,cb,context) {
+  API.fs.root.getFile(filename, function(fileEntry) {
+      var reader = new FileReader();
+      reader.onloadend = function(e) {
+          if (cb) cb.apply(cb,[this.result]);
+        };            
+    }, console.error);
 }
 var writeFile=function(filename,buf,cb,context){
    API.fs.root.getFile(filename, {create: true, exclusive: true}, function(fileEntry) {
@@ -201,6 +211,7 @@ var initfs=function(grantedBytes,cb,context) {
 var init=function(quota,cb,context) {
   navigator.webkitPersistentStorage.requestQuota(quota, 
       function(grantedBytes) {
+
         initfs(grantedBytes,cb,context);
     }, console.error 
   );
@@ -223,10 +234,12 @@ var API={
   ,fstat:fstat,close:close
   ,init:init
   ,readdir:readdir
+
   ,rm:rm
   ,rmURL:rmURL
   ,getFileURL:getFileURL
   ,writeFile:writeFile
+  ,readFile:readFile
   ,download:download
   ,queryQuota:queryQuota}
 

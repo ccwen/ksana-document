@@ -81,7 +81,7 @@ var getDocument=function(filename,cb){
 	}
 }
 
-var createLocalEngine=function(kdb,cb) {
+var createLocalEngine=function(kdb,cb,context) {
 	var engine={lastAccess:new Date(), kdb:kdb, queryCache:{}, postingCache:{}};
 
 	if (kdb.fs.html5fs) {
@@ -89,7 +89,7 @@ var createLocalEngine=function(kdb,cb) {
 	} else {
 		var customfunc=nodeRequire("ksana-document").customfunc;	
 	}	
-
+	if (typeof context=="object") engine.context=context;
 	engine.get=function(key,recursive,cb) {
 
 		if (typeof recursive=="function") {
@@ -134,8 +134,8 @@ var createLocalEngine=function(kdb,cb) {
 	}
 	if (typeof cb=="function") {
 		_gets.apply(engine,[  preload, true,function(res){
-			setPreload(res)
-			cb(engine);
+			setPreload(res);
+			cb.apply(engine.context,[engine]);
 		}]);
 	} else {
 		setPreload(_getSync.apply(engine,[preload,true]));
@@ -309,7 +309,7 @@ var open=function(kdbid,context,cb) {
 	pool[kdbid]=engine;
 	return engine;
 }
-var openLocalNode=function(kdbid,cb) {
+var openLocalNode=function(kdbid,cb,context) {
 	var fs=nodeRequire('fs');
 	var Kdb=nodeRequire('ksana-document').kdb;
 	var engine=localPool[kdbid];
@@ -344,9 +344,9 @@ var openLocalNode=function(kdbid,cb) {
 					createLocalEngine(kdb,function(engine){
 						localPool[kdbid]=engine;
 						cb(engine);
-					});					
+					},context);					
 				} else {
-					engine=localPool[kdbid]=createLocalEngine(kdb);
+					engine=localPool[kdbid]=createLocalEngine(kdb,null,context);
 				}
 				return engine;
 			}
@@ -357,7 +357,7 @@ var openLocalNode=function(kdbid,cb) {
 
 }
 
-var openLocalHtml5=function(kdbid,cb) {
+var openLocalHtml5=function(kdbid,cb,context) {
 	var Kdb=Require('ksana-document').kdb;
 	var engine=localPool[kdbid];
 	if (engine) {
@@ -365,19 +365,19 @@ var openLocalHtml5=function(kdbid,cb) {
 		return engine;
 	}
 	var Kdb=Require('ksana-document').kdb;
-	new Kdb(kdbid,function(){
-		createLocalEngine(this,function(engine){
+	new Kdb(kdbid,function(handle){
+		createLocalEngine(handle,function(engine){
 			localPool[kdbid]=engine;
-			cb(engine);
-		});		
+			cb.apply(engine.context,[engine]);
+		},context);		
 	});
 }
 //omit cb for syncronize open
-var openLocal=function(kdbid,cb)  {
+var openLocal=function(kdbid,cb,context)  {
 	if (kdbid.indexOf("filesystem:")>-1 || typeof process=="undefined") {
-		openLocalHtml5(kdbid,cb);
+		openLocalHtml5(kdbid,cb,context);
 	} else {
-		openLocalNode(kdbid,cb);
+		openLocalNode(kdbid,cb,context);
 	}
 }
 var setPath=function(path) {

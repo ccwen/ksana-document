@@ -10,7 +10,7 @@ if (typeof process=="undefined") {
 }
 
 var signature_size=1;
-var verbose=1, readLog=function(){};
+var verbose=0, readLog=function(){};
 var _readLog=function(readtype,bytes) {
 	console.log(readtype,bytes,"bytes");
 }
@@ -126,7 +126,7 @@ var Open=function(path,opts,cb) {
 			i++;
 		}
 		
-		s=String.fromCharCode.apply(null,[codes]);
+		s=String.fromCharCode.apply(null,codes);
 		if (enc=="utf8") out.push(decodeutf8(s));
 		else out.push(s);
 

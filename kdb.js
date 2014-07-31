@@ -429,7 +429,8 @@ var Create=function(path,opts,cb) {
 		
 		//install the sync version for node
 		if (typeof process!="undefined") require("./kdb_sync")(this);
-		if (cb) setTimeout(cb.bind(this),0);
+		//if (cb) setTimeout(cb.bind(this),0);
+		if (cb) cb(this);
 	}
 	var that=this;
 	var kfs=new Kfs(path,opts,function(){
