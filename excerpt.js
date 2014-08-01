@@ -126,6 +126,11 @@ var resultlist=function(engine,Q,opts,cb) {
 		cb(output);
 		return;
 	} 
+	if (opts.range) {
+		if (opts.range.maxhit && !opts.range.maxfile) {
+			opts.range.maxfile=opts.range.maxhit;
+		}
+	}
 	var fileWithHits=getFileWithHits(engine,Q,opts.range);
 	if (!fileWithHits.length) {
 		cb(output);
