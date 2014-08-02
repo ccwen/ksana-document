@@ -53,7 +53,20 @@ var open=function(fn_url,cb) {
 var load=function(filename,mode,cb) {
   open(filename,mode,cb,true);
 }
-
+var get_date=function(url,callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("HEAD", url, true); // Notice "HEAD" instead of "GET", //  to get only the header
+    xhr.onreadystatechange = function() {
+        if (this.readyState == this.DONE) {
+          callback(xhr.getResponseHeader("Date"));
+        } else {
+          if (this.status!==200&&this.status!==206) {
+            callback("");
+          }
+        }
+    };
+    xhr.send();
+}
 var  get_downloadsize=function(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open("HEAD", url, true); // Notice "HEAD" instead of "GET", //  to get only the header
@@ -68,7 +81,19 @@ var  get_downloadsize=function(url, callback) {
     };
     xhr.send();
 };
-
+var checkUpdate=function(url,fn,cb) {
+    get_date(url,function(d){
+      API.fs.root.getFile(fn, {create: false, exclusive: false}, function(fileEntry) {
+        if (fileEntry) {
+          fileEntry.getMetadata(function(metadata){
+            var localDate=Date.parse(metadata.modificationTime);
+            var urlDate=Date.parse(d);
+            cb(urlDate>localDate);
+          });
+        }
+    });
+  });
+}
 var download=function(url,fn,cb,statuscb,context) {
    var totalsize=0,batches=null;;
    var createBatches=function(size) {
@@ -234,7 +259,7 @@ var API={
   ,fstat:fstat,close:close
   ,init:init
   ,readdir:readdir
-
+  ,checkUpdate:checkUpdate
   ,rm:rm
   ,rmURL:rmURL
   ,getFileURL:getFileURL
