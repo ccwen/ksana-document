@@ -67,7 +67,7 @@ var get_date=function(url,callback) {
     };
     xhr.send();
 }
-var  get_downloadsize=function(url, callback) {
+var  getDownloadSize=function(url, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open("HEAD", url, true); // Notice "HEAD" instead of "GET", //  to get only the header
     xhr.onreadystatechange = function() {
@@ -84,13 +84,13 @@ var  get_downloadsize=function(url, callback) {
 var checkUpdate=function(url,fn,cb) {
     get_date(url,function(d){
       API.fs.root.getFile(fn, {create: false, exclusive: false}, function(fileEntry) {
-        if (fileEntry) {
           fileEntry.getMetadata(function(metadata){
             var localDate=Date.parse(metadata.modificationTime);
             var urlDate=Date.parse(d);
             cb(urlDate>localDate);
           });
-        }
+    },function(){//error
+      cb(false); //missing local file
     });
   });
 }
@@ -152,7 +152,7 @@ var download=function(url,fn,cb,statuscb,context) {
        xhr.send();
     }
      //main
-     get_downloadsize(url,function(size){
+     getDownloadSize(url,function(size){
        totalsize=size;
        if (!size) {
           if (cb) cb.apply(context,[false]);
@@ -263,6 +263,7 @@ var API={
   ,rm:rm
   ,rmURL:rmURL
   ,getFileURL:getFileURL
+  ,getDownloadSize:getDownloadSize
   ,writeFile:writeFile
   ,readFile:readFile
   ,download:download

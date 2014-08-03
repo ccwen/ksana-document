@@ -289,15 +289,10 @@ var close=function(kdbid) {
 	var engine=pool[kdbid];
 	if (engine) delete pool[kdbid];
 }
-var open=function(kdbid,context,cb) {
-	if (typeof context=="function") {
-		cb=context;
+var open=function(kdbid,cb,context) {
+	if (typeof io=="undefined") { //for offline mode
+		return openLocal(kdbid,cb,context);
 	}
-
-	if (!kdbid) {
-		cb(null);
-		return null;
-	};
 
 	var engine=pool[kdbid];
 	if (engine) {
@@ -359,13 +354,17 @@ var openLocalNode=function(kdbid,cb,context) {
 
 var openLocalHtml5=function(kdbid,cb,context) {
 	var Kdb=Require('ksana-document').kdb;
+	
+
 	var engine=localPool[kdbid];
 	if (engine) {
 		if (cb) cb(engine);
 		return engine;
 	}
 	var Kdb=Require('ksana-document').kdb;
-	new Kdb(kdbid,function(handle){
+	var kdbfn=kdbid;
+	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
+	new Kdb(kdbfn,function(handle){
 		createLocalEngine(handle,function(engine){
 			localPool[kdbid]=engine;
 			cb.apply(engine.context,[engine]);

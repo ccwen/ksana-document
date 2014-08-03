@@ -177,7 +177,9 @@ var initIndexer=function(mkdbconfig) {
 	isSkip=api["isSkip"];
 	tokenize=api["tokenize"];
 
-	session.kdbfn=session.config.name+'.kdb';
+	var folder=session.config.outdir||".";
+	session.kdbfn=require("path").resolve(folder, session.config.name+'.kdb');
+
 	if (!session.config.reset && nodeRequire("fs").existsSync(session.kdbfn)) {
 		//if old kdb exists and not reset 
 		Kde.openLocal(session.kdbfn,function(db){
@@ -297,7 +299,7 @@ var finalize=function(cb) {
 	//console.log(JSON.stringify(session.json,""," "));
 
 	var json=optimize4kdb(session.json);
-	console.log("saving kdb",session.kdbfn);
+	console.log("output to",session.kdbfn);
 	kdbw.save(json,null,{autodelete:true});
 	
 	kdbw.writeFile(session.kdbfn,function(total,written) {
