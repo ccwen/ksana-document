@@ -58,7 +58,7 @@ var get_date=function(url,callback) {
     xhr.open("HEAD", url, true); // Notice "HEAD" instead of "GET", //  to get only the header
     xhr.onreadystatechange = function() {
         if (this.readyState == this.DONE) {
-          callback(xhr.getResponseHeader("Date"));
+          callback(xhr.getResponseHeader("Last-Modified"));
         } else {
           if (this.status!==200&&this.status!==206) {
             callback("");
