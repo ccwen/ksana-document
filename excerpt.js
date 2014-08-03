@@ -165,7 +165,7 @@ var resultlist=function(engine,Q,opts,cb) {
 					hl.text=pages[i];
 					hl.hits=hitInRange(Q,startvpos,endvpos);
 				} else {
-					var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q};
+					var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q,fulltext:opts.fulltext};
 					hl=highlight(Q,o);
 				}
 				output[i].text=hl.text;
@@ -243,7 +243,8 @@ var injectTag=function(Q,opts){
 var highlight=function(Q,opts) {
 	if (!opts.text) return {text:"",hits:[]};
 	var opt={text:opts.text,
-		hits:null,tag:'hl',abridge:opts.abridge,voff:opts.startvpos
+		hits:null,tag:'hl',abridge:opts.abridge,voff:opts.startvpos,
+		fulltext:opts.fulltext
 	};
 
 	opt.hits=hitInRange(opts.Q,opts.startvpos,opts.endvpos);
