@@ -95,12 +95,12 @@ var checkUpdate=function(url,fn,cb) {
   });
 }
 var download=function(url,fn,cb,statuscb,context) {
-   var totalsize=0,batches=null;;
+   var totalsize=0,batches=null,written=0;
    var createBatches=function(size) {
       var bytes=1024*1024, out=[];
       var b=Math.floor(size / bytes);
       var last=size %bytes;
-      for (var i=0;i<b;i++) {
+      for (var i=0;i<=b;i++) {
         out.push(i*bytes);
       }
       out.push(b*bytes+last);
@@ -118,8 +118,8 @@ var download=function(url,fn,cb,statuscb,context) {
    var tempfn="temp.kdb";
     var batch=function(b) {
        var xhr = new XMLHttpRequest();
-       
-       xhr.open('get', url, true);
+       var requesturl=url+"?"+Math.random();
+       xhr.open('get', requesturl, true);
        xhr.setRequestHeader('Range', 'bytes='+batches[b]+'-'+(batches[b+1]-1));
        xhr.responseType = 'blob';    
        var create=(b==0);
@@ -129,6 +129,7 @@ var download=function(url,fn,cb,statuscb,context) {
             fileEntry.createWriter(function(fileWriter) {
               fileWriter.seek(fileWriter.length);
               fileWriter.write(blob);
+              written+=blob.size;
               fileWriter.onwriteend = function(e) {
                 var abort=false;
                 if (statuscb) {
