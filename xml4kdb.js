@@ -23,7 +23,12 @@ var parseUnit=function(unittext) {
 	// name,sunit, soff, eunit, eoff , attributes
 	var totaltaglength=0,tags=[];
 	var parsed=unittext.replace(/<(.*?)>/g,function(m,m1,off){
-		tags.push([off-totaltaglength , m1]);
+		var i=m1.indexOf(" "),tag=m1,attributes="";
+		if (i>-1) {
+			tag=m1.substr(0,i);
+			attributes=m1.substr(i+1);
+		}
+		tags.push([off-totaltaglength , tag,attributes]);
 		totaltaglength+=m.length;
 		return ""; //remove the tag from inscription
 	});

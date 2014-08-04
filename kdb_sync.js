@@ -45,12 +45,12 @@ var Sync=function(kdb) {
 				var offset=dataoffset;
 				for (var i=0;i<sz.length;i++) {
 				//prefix with a \0, impossible for normal string
-					o.push("\0"+offset.toString(16)
-						   +"\0"+sz[i].toString(16));
+					o[o.length]="\0"+offset.toString(16)
+						   +"\0"+sz[i].toString(16);
 					offset+=sz[i];
 				}
 			} else {			
-				o.push(load({blocksize:sz[i]}));
+				o[o.length]=load({blocksize:sz[i]});
 			}
 		}
 		cur=endcur;

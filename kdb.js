@@ -99,8 +99,8 @@ var Create=function(path,opts,cb) {
 				if (opts.lazy) { 
 						var offset=L.offset;
 						L.sz.map(function(sz){
-							o.push("\0"+offset.toString(16)
-								   +"\0"+sz.toString(16));
+							o[o.length]="\0"+offset.toString(16)
+								   +"\0"+sz.toString(16);
 							offset+=sz;
 						})
 				} else {

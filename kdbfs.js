@@ -116,19 +116,19 @@ var Open=function(path,opts,cb) {
 		var i=0,codes=[],out=[];
 		while (i<arr.length) {
 			if (arr[i]) {
-				codes.push(arr[i]);
+				codes[codes.length]=arr[i];
 			} else {
 				var s=String.fromCharCode.apply(null,codes);
-				if (enc=="utf8") out.push(decodeutf8(s));
-				else out.push(s);
+				if (enc=="utf8") out[out.length]=decodeutf8(s);
+				else out[out.length]=s;
 				codes=[];				
 			}
 			i++;
 		}
 		
 		s=String.fromCharCode.apply(null,codes);
-		if (enc=="utf8") out.push(decodeutf8(s));
-		else out.push(s);
+		if (enc=="utf8") out[out.length]=decodeutf8(s);
+		else out[out.length]=s;
 
 		return out;
 	}

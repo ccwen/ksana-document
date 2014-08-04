@@ -1,4 +1,5 @@
 if (typeof nodeRequire=='undefined')nodeRequire=require;
+
 var indexing=false; //only allow one indexing task
 var status={pageCount:0,progress:0,done:false}; //progress ==1 completed
 var session={};
@@ -56,56 +57,58 @@ var shortFilename=function(fn) {
 	while (arr.length>2) arr.shift();
 	return arr.join('/');
 }
+var indexpages=function(doc,parsed,cb) {
+	var fileInfo={pageNames:[],pageOffset:[],parentId:[],reverts:[]};
+	var fileContent=[];
+	var shortfn=shortFilename(status.filename);
+	var hasParentId=false, hasRevert=false;
+
+	session.json.files.push(fileInfo);
+	session.json.fileContents.push(fileContent);
+	session.json.fileNames.push(shortfn);
+	session.json.fileOffsets.push(session.vpos);
+	fileInfo.pageOffset.push(session.vpos);
+	session.pagecount+=doc.pageCount-1;
+
+	for (var i=1;i<doc.pageCount;i++) {
+		var pg=doc.getPage(i);
+		if (pg.isLeafPage()) {
+			fileContent.push(pg.inscription);
+			putPage(pg.inscription);
+		} else {
+			fileContent.push("");
+		}
+		fileInfo.pageNames.push(pg.name);
+		fileInfo.pageOffset.push(session.vpos);
+		fileInfo.parentId.push(pg.parentId);
+		if (pg.parentId) hasParentId=true;
+		var revertstr="";
+		if (pg.parentId) revertstr=JSON.stringify(pg.compressedRevert());
+		if (revertstr) hasRevert=true;
+		fileInfo.reverts.push( revertstr );
+	}
+	if (!hasParentId) delete fileInfo["parentId"];
+	if (!hasRevert) delete fileInfo["reverts"];
+	cb(parsed);//finish
+}
 var putDocument=function(parsed,cb) {
 	var D=nodeRequire("./document");
 
-	var indexpages=function(doc) {
-		var fileInfo={pageNames:[],pageOffset:[],parentId:[],reverts:[]};
-		var fileContent=[];
-		var shortfn=shortFilename(status.filename);
-		session.json.files.push(fileInfo);
-		session.json.fileContents.push(fileContent);
-		session.json.fileNames.push(shortfn);
-		session.json.fileOffsets.push(session.vpos);
-		var hasParentId=false, hasRevert=false;
-		fileInfo.pageOffset.push(session.vpos);
-		session.pagecount+=doc.pageCount-1;
-		for (var i=1;i<doc.pageCount;i++) {
-			var pg=doc.getPage(i);
-			if (pg.isLeafPage()) {
-				fileContent.push(pg.inscription);
-				putPage(pg.inscription);
-			} else {
-				fileContent.push("");
-			}
-			fileInfo.pageNames.push(pg.name);
-			fileInfo.pageOffset.push(session.vpos);
-			fileInfo.parentId.push(pg.parentId);
-			if (pg.parentId) hasParentId=true;
-			var revertstr="";
-			if (pg.parentId) revertstr=JSON.stringify(pg.compressedRevert());
-			if (revertstr) hasRevert=true;
-			fileInfo.reverts.push( revertstr );
-		}
-		if (!hasParentId) delete fileInfo["parentId"];
-		if (!hasRevert) delete fileInfo["reverts"];
-		cb(parsed);//finish
-	}
 	var dnew=D.createDocument(parsed.texts);
 
 	if (session.kdb) {
 		session.kdb.getDocument(status.filename,function(d){
 			if (d) {
 				upgradeDocument(d,dnew);
-				indexpages(d);
+				indexpages(d,parsed,cb);
 				status.pageCount+=d.pageCount;
 			} else { //no such page in old kdb
-				indexpages(dnew);
+				indexpages(dnew,parsed,cb);
 				status.pageCount+=dnew.pageCount;
 			}
 		});
 	} else {
-		indexpages(dnew);
+		indexpages(dnew,parsed,cb);
 		status.pageCount+=dnew.pageCount;
 	}
 }
@@ -115,12 +118,49 @@ var parseBody=function(body,sep,cb) {
 	putDocument(res,cb);
 }
 
-
+var pat=/([a-zA-Z:]+)="([^"]+?)"/g;
+var parseAttributesString=function(s) {
+	var out={};
+	s.replace(pat,function(m,m1,m2){out[m1]=m2});
+	return out;
+}
+var processTags=function(captureTags,tags,texts) {
+	var open=-1, openoffset=-1;
+	var getTextBetween=function(from,to,startoffset,endoffset) {
+		if (from==to) return texts[from].t.substring(startoffset,endoffset);
+		var first=texts[from].t.substr(startoffset);
+		var middle="";
+		for (var i=from+1;i<to;i++) {
+			middle+=texts[i].t;
+		}
+		var last=texts[to].t.substr(0,endoffset);
+		return first+middle+last;
+	}
+	for (var i=0;i<tags.length;i++) {
+		for (var j=0;j<tags[i].length;j++) {
+			var T=tags[i][j];			
+			if (captureTags[T[1]]) {
+				open=i; //store the page seq
+				startoffset=T[0]; //store the offset
+			}
+			if (open>-1 && T[1][0]=="/") {
+				var handler=captureTags[T[1].substr(1)];
+				if (handler) {
+					var text=getTextBetween(open,i,startoffset,T[0]);
+					var attr=parseAttributesString(T[2]);
+					handler(text, T[1], attr);
+					open=-1;
+				}
+			}
+		}	
+	}
+}
 var putFile=function(fn,cb) {
 	var fs=nodeRequire("fs");
 	var texts=fs.readFileSync(fn,session.config.inputEncoding).replace(/\r\n/g,"\n");
 	var bodyend=session.config.bodyend;
 	var bodystart=session.config.bodystart;
+	var captureTags=session.config.captureTags;
 	var callbacks=session.config.callbacks||{};
 	var started=false,stopped=false;
 
@@ -140,6 +180,9 @@ var putFile=function(fn,cb) {
 			status.parsed=parsed;
 			status.bodytext=body;
 			status.starttext=texts.substring(0,start);
+			if (captureTags) {
+				processTags(captureTags, parsed.tags, parsed.texts);
+			}
 			var ending="";
 			if (bodyend) ending=texts.substring(end+bodyend.length);
 			if (ending) callbacks.afterbodyend.apply(session,[ending,status]);
@@ -264,14 +307,14 @@ var guessSize=function() {
 var buildpostingslen=function(tokens,postings) {
 	var out=[];
 	for (var i=0;i<tokens.length;i++) {
-		out.push(postings[i].length);
+		out[i]=postings[i].length;
 	}
 	return out;
 }
 var optimize4kdb=function(json) {
 	var keys=[];
 	for (var key in json.tokens) {
-		keys.push([key,json.tokens[key]]);
+		keys[keys.length]=[key,json.tokens[key]];
 	}
 	keys.sort(function(a,b){return a[1]-b[1]});//sort by token id
 	var newtokens=keys.map(function(k){return k[0]});

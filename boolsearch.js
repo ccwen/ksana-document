@@ -14,7 +14,7 @@ function intersect(I, J) {
      if      (I[i] < J[j]) i++; 
      else if (I[i] > J[j]) j++; 
      else {
-       result.push(I[i]);
+       result[result.length]=l[i];
        i++;j++;
      }
   }
@@ -30,14 +30,14 @@ function subtract(I, J) {
     if (I[i]==J[j]) {
       i++;j++;
     } else if (I[i]<J[j]) {
-      while (I[i]<J[j]) result.push(I[i++]);
+      while (I[i]<J[j]) result[result.length]= I[i++];
     } else {
       while(J[j]<I[i]) j++;
     }
   }
 
   if (j==J.length) {
-    while (i<I.length) result.push(I[i++]);
+    while (i<I.length) result[result.length]=I[i++];
   }
 
   return result;
@@ -52,14 +52,14 @@ var union=function(a,b) {
     while (true) {
         if ( ai < a.length && bi < b.length) {
             if (a[ai] < b[bi]) {
-                result.push(a[ai]);
+                result[result.length]=a[ai];
                 ai++;
             } else if (a[ai] > b[bi]) {
-                result.push(b[bi]);
+                result[result.length]=b[bi];
                 bi++;
             } else {
-                result.push(a[ai]);
-                result.push(b[bi]);
+                result[result.length]=a[ai];
+                result[result.length]=b[bi];
                 ai++;
                 bi++;
             }

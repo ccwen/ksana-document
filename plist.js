@@ -9,7 +9,7 @@ var unpack = function (ar) { // unpack variable length integer list
 	  v += ((ar[i] & 0x7F) << shift);
 	  shift += 7;
 	} while (ar[++i] & 0x80);
-	r.push(v);
+	r[r.length]=v;
   } while (i < ar.length);
   return r;
 }
@@ -175,7 +175,7 @@ var plhead=function(pl, pltag, opts) {
        k = indexOfSorted(pl, pltag[i]);
        if (k>-1 && k<pl.length) {
         if (pl[k]==pltag[i]) {
-          out.push(pltag[i]);
+          out[out.length]=pltag[i];
           if (out.length>=opts.max) break;
         }
       }
@@ -185,7 +185,7 @@ var plhead=function(pl, pltag, opts) {
        k = indexOfSorted(pltag, pl[i]);
        if (k>-1 && k<pltag.length) {
         if (pltag[k]==pl[i]) {
-          out.push(pltag[k]);
+          out[out.length]=pltag[k];
           if (out.length>=opts.max) break;
         }
       }
@@ -206,14 +206,14 @@ var plfollow2 = function (pl1, pl2, mindis, maxdis) {
     var k = indexOfSorted(pl2, pl1[i] + mindis);
     var t = (pl2[k] >= (pl1[i] +mindis) && pl2[k]<=(pl1[i]+maxdis)) ? k : -1;
     if (t > -1) {
-      r.push(pl1[i]);
+      r[r.length]=pl1[i];
       i++;
     } else {
       if (k>=pl2.length) break;
       var k2=indexOfSorted (pl1,pl2[k]-maxdis);
       if (k2>i) {
         var t = (pl2[k] >= (pl1[i] +mindis) && pl2[k]<=(pl1[i]+maxdis)) ? k : -1;
-        if (t>-1) r.push(pl1[k2]);
+        if (t>-1) r[r.length]=pl1[k2];
         i=k2;
       } else break;
     }
