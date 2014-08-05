@@ -57,18 +57,34 @@ var shortFilename=function(fn) {
 	while (arr.length>2) arr.shift();
 	return arr.join('/');
 }
-var indexpages=function(doc,parsed,cb) {
-	var fileInfo={pageNames:[],pageOffset:[],parentId:[],reverts:[]};
-	var fileContent=[];
-	var shortfn=shortFilename(status.filename);
-	var hasParentId=false, hasRevert=false;
 
+var putFileInfo=function(fileInfo,fileContent) {
+	var shortfn=shortFilename(status.filename);
 	session.json.files.push(fileInfo);
 	session.json.fileContents.push(fileContent);
 	session.json.fileNames.push(shortfn);
 	session.json.fileOffsets.push(session.vpos);
 	fileInfo.pageOffset.push(session.vpos);
-	session.pagecount+=doc.pageCount-1;
+}
+var putPages_new=function(parsed,cb) { //25% faster than create a new document
+	var fileInfo={pageNames:[],pageOffset:[]};
+	var fileContent=[];
+
+	putFileInfo(fileInfo,fileContent);
+	for (var i=0;i<parsed.texts.length;i++) {
+		var t=parsed.texts[i];
+		fileContent.push(t.t);
+		putPage(t.t);
+		fileInfo.pageNames.push(t.n);
+		fileInfo.pageOffset.push(session.vpos);
+	}
+	cb(parsed);//finish
+}
+var putPages=function(doc,parsed,cb) {
+	var fileInfo={pageNames:[],pageOffset:[],parentId:[],reverts:[]};
+	var fileContent=[];
+	
+	var hasParentId=false, hasRevert=false;
 
 	for (var i=1;i<doc.pageCount;i++) {
 		var pg=doc.getPage(i);
@@ -92,24 +108,22 @@ var indexpages=function(doc,parsed,cb) {
 	cb(parsed);//finish
 }
 var putDocument=function(parsed,cb) {
-	var D=nodeRequire("./document");
-
-	var dnew=D.createDocument(parsed.texts);
-
-	if (session.kdb) {
+	if (session.kdb) { //update an existing kdb
+		var D=nodeRequire("./document");
+		var dnew=D.createDocument(parsed.texts);
 		session.kdb.getDocument(status.filename,function(d){
 			if (d) {
 				upgradeDocument(d,dnew);
-				indexpages(d,parsed,cb);
-				status.pageCount+=d.pageCount;
+				putPages(d,parsed,cb);
+				status.pageCount+=d.pageCount-1;
 			} else { //no such page in old kdb
-				indexpages(dnew,parsed,cb);
-				status.pageCount+=dnew.pageCount;
+				putPages(dnew,parsed,cb);
+				status.pageCount+=dnew.pageCount-1;
 			}
 		});
 	} else {
-		indexpages(dnew,parsed,cb);
-		status.pageCount+=dnew.pageCount;
+		putPages_new(parsed,cb);
+		status.pageCount+=parsed.texts.length;//dnew.pageCount;
 	}
 }
 
@@ -123,6 +137,9 @@ var parseAttributesString=function(s) {
 	var out={};
 	s.replace(pat,function(m,m1,m2){out[m1]=m2});
 	return out;
+}
+var storeTag=function() {
+
 }
 var processTags=function(captureTags,tags,texts) {
 	var open=-1, openoffset=-1;
@@ -143,12 +160,13 @@ var processTags=function(captureTags,tags,texts) {
 				open=i; //store the page seq
 				startoffset=T[0]; //store the offset
 			}
-			if (open>-1 && T[1][0]=="/") {
+			if (open>-1 && T[1][0]=="/") { //nested not allow
 				var handler=captureTags[T[1].substr(1)];
 				if (handler) {
 					var text=getTextBetween(open,i,startoffset,T[0]);
 					var attr=parseAttributesString(T[2]);
-					handler(text, T[1], attr);
+					var tagres=handler(text, T[1], attr);
+					storeTag(tagres);
 					open=-1;
 				}
 			}
@@ -296,7 +314,7 @@ var createMeta=function() {
 	meta.config=session.config.config;
 	meta.name=session.config.name;
 	meta.vsize=session.vpos;
-	meta.pagecount=session.pagecount;
+	meta.pagecount=status.pageCount;
 	return meta;
 }
 var guessSize=function() {
