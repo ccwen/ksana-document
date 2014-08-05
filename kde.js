@@ -330,26 +330,19 @@ var openLocalNode=function(kdbid,cb,context) {
 	           ];
 
 	for (var i=0;i<tries.length;i++) {
-		
 		if (fs.existsSync(tries[i])) {
 			//console.log("kdb path: "+nodeRequire('path').resolve(tries[i]));
-			kdb=new Kdb(tries[i]);
-			if (kdb) {
-				if (typeof cb=="function") {
-					createLocalEngine(kdb,function(engine){
+			new Kdb(tries[i],function(kdb){
+				createLocalEngine(kdb,function(engine){
 						localPool[kdbid]=engine;
 						cb(engine);
-					},context);					
-				} else {
-					engine=localPool[kdbid]=createLocalEngine(kdb,null,context);
-				}
-				return engine;
-			}
+				},context);
+			});
+			return engine;
 		}
 	}
 	if (cb) cb(null);
 	return null;
-
 }
 
 var openLocalHtml5=function(kdbid,cb,context) {
@@ -384,4 +377,5 @@ var setPath=function(path) {
 	console.log("set path",path)
 }
 
-module.exports={openLocal:openLocal, open:open, close:close, setPath:setPath, closeLocal:closeLocal};
+module.exports={openLocal:openLocal, open:open, close:close, 
+	setPath:setPath, closeLocal:closeLocal};

@@ -1,9 +1,9 @@
 /* OS dependent file operation */
-if (typeof nodeRequire=='undefined')var nodeRequire=require;
+
 if (typeof process=="undefined") {
 	var fs=require('./html5fs');
 	var Buffer=function(){ return ""};
-	var html5fs=true;
+	var html5fs=true; 
 } else {
 	var fs=nodeRequire('fs');
 	var Buffer=nodeRequire("buffer").Buffer;
