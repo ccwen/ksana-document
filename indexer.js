@@ -157,6 +157,7 @@ var storeTag=function() {
 
 	put a key with a value
 	put a integer with a value
+	
 	put an integer under a key // search for key then append integer
 
 */
