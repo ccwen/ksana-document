@@ -139,8 +139,31 @@ var parseAttributesString=function(s) {
 	return out;
 }
 var storeTag=function() {
+/*
+	per-file tags  (inline markup)
 
+	given a file, return all tag in the file
+
+	string to vpos // sort by string
+	vpos to string // sort by vpos
+	[names],
+	[ {		type:string
+			,content:[string]
+			,positions:[vpos] //delta for sorted
+	   }
+	]
+	
+	sorted : string or integer
+
+	put a key with a value
+	put a integer with a value
+	put an integer under a key // search for key then append integer
+
+*/
 }
+/*
+	maintain a tag stack for known tag
+*/
 var processTags=function(captureTags,tags,texts) {
 	var open=-1, openoffset=-1;
 	var getTextBetween=function(from,to,startoffset,endoffset) {
@@ -233,6 +256,8 @@ var initIndexer=function(mkdbconfig) {
 	session=initSession(mkdbconfig);
 	api=nodeRequire("ksana-document").customfunc.getAPI(mkdbconfig.config);
 	xml4kdb=nodeRequire("ksana-document").xml4kdb;
+
+	//mkdbconfig has a chance to overwrite API
 
 	normalize=api["normalize"];
 	isSkip=api["isSkip"];

@@ -277,7 +277,8 @@ var createEngine=function(kdbid,context,cb) {
 
 	return engine;
 }
- 
+ //TODO delete directly from kdb instance
+ //kdb.free();
 var closeLocal=function(kdbid) {
 	var engine=localPool[kdbid];
 	if (engine) {
@@ -287,7 +288,10 @@ var closeLocal=function(kdbid) {
 }
 var close=function(kdbid) {
 	var engine=pool[kdbid];
-	if (engine) delete pool[kdbid];
+	if (engine) {
+		engine.kdb.free();
+		delete pool[kdbid];
+	}
 }
 var open=function(kdbid,cb,context) {
 	if (typeof io=="undefined") { //for offline mode
