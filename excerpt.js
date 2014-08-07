@@ -54,29 +54,6 @@ var hitInRange=function(Q,startvoff,endvoff) {
 	return res;
 }
 
-var getFileInfo=function(engine,arr,cb) {
-	var taskqueue=[],out=[];
-	for (var i=0;i<arr.length;i++) {
-		taskqueue.push(
-			(function(idx){
-				return (
-					function(data){
-						if (typeof data=='object' && data.__empty) {
-							 //not pushing the first call
-						} else out.push(data);
-						engine.get(["files",idx],true,taskqueue.shift());
-					}
-				);
-		})(arr[i]));
-	}
-	//last call 
-	taskqueue.push(function(data){
-		out.push(data);
-		cb(out);
-	});
-	taskqueue.shift()({__empty:true});
-}
-
 /*
 given a vpos range start, file, convert to filestart, fileend
    filestart : starting file
@@ -136,51 +113,52 @@ var resultlist=function(engine,Q,opts,cb) {
 		cb(output);
 		return;
 	}
-	getFileInfo(engine,fileWithHits,function(files) {
-		var output=[];
-		for (var i=0;i<files.length;i++) {
-			var pagewithhit=plist.groupbyposting2(Q.byFile[ fileWithHits[i] ],  files[i].pageOffset);
-			pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
-			for (var j=0; j<pagewithhit.length;j++) {
-				if (!pagewithhit[j].length) continue;
-				//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
-				var name=files[i].pageNames[j];
-				output.push(  {file: fileWithHits[i] , page:j,  pagename:name});
+
+	var output=[],files=[];//temporary holder for pagenames
+	for (var i=0;i<fileWithHits.length;i++) {
+		var nfile=fileWithHits[i];
+		var pageOffsets=engine.getFilePageOffsets(nfile);
+		var pageNames=engine.getFilePageNames(nfile);
+		files[nfile]={pageOffsets:pageOffsets};
+		var pagewithhit=plist.groupbyposting2(Q.byFile[ nfile ],  pageOffsets);
+		pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
+		for (var j=0; j<pagewithhit.length;j++) {
+			if (!pagewithhit[j].length) continue;
+			//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
+			output.push(  {file: nfile, page:j,  pagename:pageNames[j+1]});
+		}
+	}
+
+	var pagekeys=output.map(function(p){
+		return ["fileContents",p.file,p.page];
+	});
+	//prepare the text
+	engine.get(pagekeys,function(pages){
+		var seq=0;
+		if (pages) for (var i=0;i<pages.length;i++) {
+			var startvpos=files[output[i].file].pageOffsets[output[i].page];
+			var endvpos=files[output[i].file].pageOffsets[output[i].page+1];
+			var hl={};
+			
+			if (opts.nohighlight) {
+				hl.text=pages[i];
+				hl.hits=hitInRange(Q,startvpos,endvpos);
+			} else {
+				var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q,fulltext:opts.fulltext};
+				hl=highlight(Q,o);
+			}
+			output[i].text=hl.text;
+			output[i].hits=hl.hits;
+			output[i].seq=seq;
+			seq+=hl.hits.length;
+
+			output[i].start=startvpos;
+			if (opts.range.maxhit && seq>opts.range.maxhit) {
+				output.length=i;
+				break;
 			}
 		}
-
-		var pagekeys=output.map(function(p){
-			return ["fileContents",p.file,p.page];
-		});
-		//prepare the text
-		engine.get(pagekeys,function(pages){
-			var seq=0;
-			if (pages) for (var i=0;i<pages.length;i++) {
-				var k=fileWithHits.indexOf(output[i].file);
-				var startvpos=files[k].pageOffset[output[i].page];
-				var endvpos=files[k].pageOffset[output[i].page+1];
-				var hl={};
-				
-				if (opts.nohighlight) {
-					hl.text=pages[i];
-					hl.hits=hitInRange(Q,startvpos,endvpos);
-				} else {
-					var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q,fulltext:opts.fulltext};
-					hl=highlight(Q,o);
-				}
-				output[i].text=hl.text;
-				output[i].hits=hl.hits;
-				output[i].seq=seq;
-				seq+=hl.hits.length;
-
-				output[i].start=startvpos;
-				if (opts.range.maxhit && seq>opts.range.maxhit) {
-					output.length=i;
-					break;
-				}
-			}
-			cb(output);
-		});
+		cb(output);
 	});
 }
 var injectTag=function(Q,opts){

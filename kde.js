@@ -62,6 +62,28 @@ var toDoc=function(pagenames,texts,parents,reverts) {
 	d.endCreatePages();
 	return d;
 }
+var getFileRange=function(i) {
+	var engine=this;
+	var fileOffsets=engine.get(["fileOffsets"]);
+	var pageOffsets=engine.get(["pageOffsets"]);
+	var pageNames=engine.get(["pageNames"]);
+	var fileStart=fileOffsets[i],fileEnd=fileOffsets[i+1];
+	var start=-1,end=-1;	
+	for (var i=0;i<pageOffsets.length;i++) {
+		if (pageOffsets[i]>=fileStart && start==-1) start=i;
+		if (pageOffsets[i]>=fileEnd && end==-1) end=i;
+	}
+	return {start:start,end:end};
+}
+var getFilePageOffsets=function(i) {
+	var range=getFileRange.apply(this,[i]);
+	return pageOffsets.slice(range.start,range.end);
+}
+
+var getFilePageNames=function(i) {
+	var range=getFileRange.apply(this,[i]);
+	return pageNames.slice(range.Start,range.end);
+}
 var getDocument=function(filename,cb){
 	var engine=this;
 	var filenames=engine.get("fileNames");
@@ -70,8 +92,8 @@ var getDocument=function(filename,cb){
 	if (i==-1) {
 		cb(null);
 	} else {
+		var pagenames=getFilePageNames(i);
 		var files=engine.get(["files",i],true,function(file){
-			var pagenames=file.pageNames;
 			var parentId=file.parentId;
 			var reverts=file.reverts;
 			engine.get(["fileContents",i],true,function(data){
@@ -123,9 +145,12 @@ var createLocalEngine=function(kdb,cb,context) {
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
 	engine.getDocument=getDocument;
+	engine.getFilePageNames=getFilePageNames;
+	engine.getFilePageOffsets=getFilePageOffsets;
 	//only local engine allow getSync
 	if (!kdb.fs.html5fs)	engine.getSync=engine.kdb.getSync;
-	var preload=[["meta"],["fileNames"],["fileOffsets"],["tokens"],["postingslen"]];
+	var preload=[["meta"],["fileNames"],["fileOffsets"],
+	["tokens"],["postingslen"],["pageNames"],["pageOffsets"]];
 
 	var setPreload=function(res) {
 		engine.dbname=res[0].name;
@@ -202,18 +227,14 @@ var getRemote=function(key,recursive,cb) {
 		}
 	}
 }
-var pageOffset=function(fn,pagename,cb) {
-	var engine=this;
-	var filenames=engine.get("fileNames");
-	var i=filenames.indexOf(fn);
-	if (i==-1) return null;
+var pageOffset=function(pagename) {
+	if (arguments.length>1) throw "argument : pagename ";
 
-	engine.get(["files",i],function(fileinfo){
-		var j=fileinfo.pageNames.indexOf(pagename);
-		if (j){
-			cb.apply(engine.context,[{start: fileinfo.pageOffset[j] , end:fileinfo.pageOffset[j+1]}]);	
-		} else cb.apply(engine.context,[null]);
-	});
+	var pageNames=engine.get("pageNames");
+	var pageOffsets=engine.get("pageOffsets");
+
+	var i=pageNames.indexOf(pagename);
+	return (i>-1)?pageOffsets[i]:0;
 }
 var fileOffset=function(fn) {
 	var engine=this;
@@ -253,16 +274,23 @@ var createEngine=function(kdbid,context,cb) {
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
 	engine.getDocument=getDocument;
+	engine.getFilePageNames=getFilePageNames;
+	engine.getFilePageOffsets=getFilePageOffsets;
+
 	if (typeof context=="object") engine.context=context;
 
 	//engine.findLinkBy=link.findLinkBy;
-	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"],["tokens"],["postingslen"]], recursive:true,db:kdbid}).done(function(res){
+	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"],["tokens"],["postingslen"],,["pageNames"],["pageOffsets"]], 
+		recursive:true,db:kdbid}).done(function(res){
 		engine.dbname=res[0].name;
 
 		engine.cache["fileNames"]=res[1];
 		engine.cache["fileOffsets"]=res[2];
 		engine.cache["tokens"]=res[3];
 		engine.cache["postingslen"]=res[4];
+		engine.cache["pageNames"]=res[5];
+		engine.cache["pageOffsets"]=res[6];
+		console.log(res[6])
 //		engine.cache["tokenId"]=res[4];
 //		engine.cache["files"]=res[2];
 

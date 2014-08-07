@@ -11,7 +11,7 @@ var tokenize=null;
 
 var putPosting=function(tk) {
 	var	postingid=session.json.tokens[tk];
-	var out=session.json;
+	var out=session.json, posting=null;
 	if (!postingid) {
 		out.postingCount++;
 		posting=out.postings[out.postingCount]=[];
@@ -58,34 +58,36 @@ var shortFilename=function(fn) {
 	return arr.join('/');
 }
 
-var putFileInfo=function(fileInfo,fileContent) {
+var putFileInfo=function(fileContent) {
 	var shortfn=shortFilename(status.filename);
-	session.json.files.push(fileInfo);
+	//session.json.files.push(fileInfo);
 	session.json.fileContents.push(fileContent);
 	session.json.fileNames.push(shortfn);
 	session.json.fileOffsets.push(session.vpos);
-	fileInfo.pageOffset.push(session.vpos);
+	//fileInfo.pageOffset.push(session.vpos);
 }
 var putPages_new=function(parsed,cb) { //25% faster than create a new document
-	var fileInfo={pageNames:[],pageOffset:[]};
+	//var fileInfo={pageNames:[],pageOffset:[]};
 	var fileContent=[];
 
-	putFileInfo(fileInfo,fileContent);
+	putFileInfo(fileContent);
 	for (var i=0;i<parsed.texts.length;i++) {
 		var t=parsed.texts[i];
 		fileContent.push(t.t);
 		putPage(t.t);
-		fileInfo.pageNames.push(t.n);
-		fileInfo.pageOffset.push(session.vpos);
+		session.json.pageNames.push(t.n);
+		session.json.pageOffsets.push(session.vpos);
 	}
 	cb(parsed);//finish
 }
 var putPages=function(doc,parsed,cb) {
-	var fileInfo={pageNames:[],pageOffset:[],parentId:[],reverts:[]};
-	var fileContent=[];
-	
+	var fileInfo={parentId:[],reverts:[]};
+	var fileContent=[];	
 	var hasParentId=false, hasRevert=false;
-
+	putFileInfo(fileContent);
+	if (!session.files) session.files=[];
+	session.json.files.push(fileInfo);
+	
 	for (var i=1;i<doc.pageCount;i++) {
 		var pg=doc.getPage(i);
 		if (pg.isLeafPage()) {
@@ -94,8 +96,9 @@ var putPages=function(doc,parsed,cb) {
 		} else {
 			fileContent.push("");
 		}
-		fileInfo.pageNames.push(pg.name);
-		fileInfo.pageOffset.push(session.vpos);
+		sesison.json.pageNames.push(pg.name);
+		session.json.pageOffsets.push(session.vpos);
+
 		fileInfo.parentId.push(pg.parentId);
 		if (pg.parentId) hasParentId=true;
 		var revertstr="";
@@ -138,35 +141,29 @@ var parseAttributesString=function(s) {
 	s.replace(pat,function(m,m1,m2){out[m1]=m2});
 	return out;
 }
-var storeTag=function() {
-/*
-	per-file tags  (inline markup)
-
-	given a file, return all tag in the file
-
-	string to vpos // sort by string
-	vpos to string // sort by vpos
-	[names],
-	[ {		type:string
-			,content:[string]
-			,positions:[vpos] //delta for sorted
-	   }
-	]
-	
-	sorted : string or integer
-
-	put a key with a value
-	put a integer with a value
-	
-	put an integer under a key // search for key then append integer
-
-*/
+var storeFields=function(fields ,root) {
+	if (!(fields instanceof Array) ) fields=[fields];
+	debugger;
+	var storeField=function(field) {
+		var path=field.path;
+		storepoint=root;
+		if (!(path instanceof Array)) path=[path];
+		for (var i=0;i<path.length;i++) {
+			if (!storepoint[path[i]]) {
+				if (i<path.length-1) storepoint[path[i]]={};
+				else storepoint[path[i]]=[];
+			}
+			storepoint=storepoint[path[i]];
+		}
+		storepoint.push(field.value);
+	}
+	fields.map(storeField);
 }
 /*
 	maintain a tag stack for known tag
 */
 var processTags=function(captureTags,tags,texts) {
-	var open=-1, openoffset=-1;
+	var open=-1, openoffset=-1,attr=null;
 	var getTextBetween=function(from,to,startoffset,endoffset) {
 		if (from==to) return texts[from].t.substring(startoffset,endoffset);
 		var first=texts[from].t.substr(startoffset);
@@ -183,14 +180,16 @@ var processTags=function(captureTags,tags,texts) {
 			if (captureTags[T[1]]) {
 				open=i; //store the page seq
 				startoffset=T[0]; //store the offset
+				attr=parseAttributesString(T[2]);
 			}
 			if (open>-1 && T[1][0]=="/") { //nested not allow
 				var handler=captureTags[T[1].substr(1)];
 				if (handler) {
 					var text=getTextBetween(open,i,startoffset,T[0]);
-					var attr=parseAttributesString(T[2]);
-					var tagres=handler(text, T[1], attr);
-					storeTag(tagres);
+					status.vpos=T[0];
+					var fields=handler(text, T[1], attr, status);
+					if (!json.fields) json.fields={};
+					if (fields) storeFields(fields,session.json.fields);
 					open=-1;
 				}
 			}
@@ -237,13 +236,14 @@ var putFile=function(fn,cb) {
 }
 var initSession=function(config) {
 	var json={
-		postings:[[0]] //first one is always empty, because tokenid cannot be 0		
-		,files:[]
+		postings:[[0]] //first one is always empty, because tokenid cannot be 0
+		,postingCount:0
 		,fileContents:[]
 		,fileNames:[]
 		,fileOffsets:[]
+		,pageNames:[]
+		,pageOffsets:[]
 		,tokens:{}
-		,postingCount:0
 	};
 	config.inputEncoding=config.inputEncoding||"utf8";
 	var session={vpos:1, json:json , kdb:null, filenow:0,done:false
@@ -374,6 +374,7 @@ var finalize=function(cb) {
 	if (session.kdb) Kde.closeLocal(session.kdbfn);
 
 	session.json.fileOffsets.push(session.vpos); //serve as terminator
+	session.json.pageOffsets.push(session.vpos); //serve as terminator
 	session.json.meta=createMeta();
 	
 	if (!session.config.nobackup) backup(session.kdbfn);
@@ -384,8 +385,13 @@ var finalize=function(cb) {
 
 	var kdbw =nodeRequire("ksana-document").kdbw(session.kdbfn,opts);
 	//console.log(JSON.stringify(session.json,""," "));
-
+	if (session.config.finalizeField) {
+		console.log("finalizing fields");
+		session.config.finalizeField(session.fields);
+	}
+	console.log("optimizing");
 	var json=optimize4kdb(session.json);
+
 	console.log("output to",session.kdbfn);
 	kdbw.save(json,null,{autodelete:true});
 	

@@ -170,16 +170,10 @@ var getPageWithHit=function(fileid,offsets) {
 	pagewithhit.map(function(p,idx){if (p.length) out.push(idx)});
 	return out;
 }
-var pageWithHit=function(fileid,cb) {
+var pageWithHit=function(fileid) {
 	var Q=this,engine=Q.engine;
-	if (typeof cb=="function") {
-		engine.get(["files",fileid,"pageOffset"],function(offsets){
-			cb(getPageWithHit.apply(this,[fileid,offsets]));
-		})
-	} else {
-		var offsets=engine.getSync(["files",fileid,"pageOffset"]);
-		return getPageWithHit.apply(this,[fileid,offsets]);
-	}
+	var offsets=engine.getFilePageOffsets(fileid);
+	return getPageWithHit.apply(this,[fileid,offsets]);
 }
 
 var newQuery =function(engine,query,opts) {
