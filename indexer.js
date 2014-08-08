@@ -188,7 +188,7 @@ var processTags=function(captureTags,tags,texts) {
 					var text=getTextBetween(open,i,startoffset,T[0]);
 					status.vpos=T[0];
 					var fields=handler(text, T[1], attr, status);
-					if (!json.fields) json.fields={};
+					if (!session.json.fields) session.json.fields={};
 					if (fields) storeFields(fields,session.json.fields);
 					open=-1;
 				}
@@ -365,6 +365,8 @@ var optimize4kdb=function(json) {
 	json.tokens=newtokens;
 	for (var i=0;i<json.postings.length;i++) json.postings[i].sorted=true; //use delta format to save space
 	json.postingslen=buildpostingslen(json.tokens,json.postings);
+	json.fileOffsets.sorted=true;
+	json.pageOffsets.sorted=true;
 	return json;
 }
 

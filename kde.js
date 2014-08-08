@@ -102,7 +102,38 @@ var getDocument=function(filename,cb){
 		});
 	}
 }
+var indexOfSorted = function (array, obj, near) { 
+  var low = 0,
+  high = array.length;
+  while (low < high) {
+    var mid = (low + high) >> 1;
+    if (array[mid]==obj) return mid;
+    array[mid] < obj ? low = mid + 1 : high = mid;
+  }
+  if (near) return low;
+  else if (array[low]==obj) return low;else return -1;
+};
+var indexOfSorted_str = function (array, obj, near) { 
+  var low = 0,
+  high = array.length;
+  while (low < high) {
+    var mid = (low + high) >> 1;
+    if (array[mid]==obj) return mid;
+    (array[mid].localeCompare(obj)<0) ? low = mid + 1 : high = mid;
+  }
+  if (near) return low;
+  else if (array[low]==obj) return low;else return -1;
+};
 
+
+var bsearch=function(array,value,near) {
+	var func=indexOfSorted;
+	if (typeof array[0]=="string") func=indexOfSorted_str;
+	return func(array,value,near);
+}
+var bsearchNear=function(array,value) {
+	return bsearch(array,value,true);
+}
 var createLocalEngine=function(kdb,cb,context) {
 	var engine={lastAccess:new Date(), kdb:kdb, queryCache:{}, postingCache:{}};
 
@@ -141,6 +172,8 @@ var createLocalEngine=function(kdb,cb,context) {
 			cb(null);	
 		}
 	};	
+	engine.bsearch=bsearch;
+	engine.bsearchNear=bsearchNear;
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
@@ -270,6 +303,8 @@ var createEngine=function(kdbid,context,cb) {
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
 	engine.setContext=function(ctx) {this.context=ctx};
 	engine.get=getRemote;
+	engine.bsearch=bsearch;
+	engine.bsearchNear=bsearchNear;
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
