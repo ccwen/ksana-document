@@ -162,8 +162,8 @@ var storeFields=function(fields ,root) {
 /*
 	maintain a tag stack for known tag
 */
+var tagStack=[];
 var processTags=function(captureTags,tags,texts) {
-	var open=-1, openoffset=-1,attr=null;
 	var getTextBetween=function(from,to,startoffset,endoffset) {
 		if (from==to) return texts[from].t.substring(startoffset,endoffset);
 		var first=texts[from].t.substr(startoffset);
@@ -175,23 +175,30 @@ var processTags=function(captureTags,tags,texts) {
 		return first+middle+last;
 	}
 	for (var i=0;i<tags.length;i++) {
+
 		for (var j=0;j<tags[i].length;j++) {
-			var T=tags[i][j];			
-			if (captureTags[T[1]]) {
-				open=i; //store the page seq
-				startoffset=T[0]; //store the offset
-				attr=parseAttributesString(T[2]);
+			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2];	
+			if (captureTags[tagname]) {
+				attr=parseAttributesString(attributes);
+				tagStack.push([tagname,tagoffset,attr,i]);
 			}
-			if (open>-1 && T[1][0]=="/") { //nested not allow
-				var handler=captureTags[T[1].substr(1)];
-				if (handler) {
-					var text=getTextBetween(open,i,startoffset,T[0]);
-					status.vpos=T[0];
-					var fields=handler(text, T[1], attr, status);
-					if (!session.json.fields) session.json.fields={};
-					if (fields) storeFields(fields,session.json.fields);
-					open=-1;
+			var handler=null;
+			if (tagname[0]=="/") {
+				handler=captureTags[tagname.substr(1)];
+			}
+			if (handler) {
+				var prev=tagStack[tagStack.length-1];
+				if (tagname.substr(1)!=prev[0]) {
+					console.error("tag unbalance",tagname,prev[0]);
+				} else {
+					tagStack.pop();
 				}
+				var text=getTextBetween(prev[3],i,prev[1],tagoffset);
+				status.vpos=tagoffset;
+				status.tagStack=tagStack;
+				var fields=handler(text, tagname, attr, status);
+				if (!session.json.fields) session.json.fields={};
+				if (fields) storeFields(fields,session.json.fields);
 			}
 		}	
 	}
