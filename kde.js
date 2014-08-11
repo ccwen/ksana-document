@@ -82,6 +82,7 @@ var getFilePageOffsets=function(i) {
 
 var getFilePageNames=function(i) {
 	var range=getFileRange.apply(this,[i]);
+	var pageNames=this.get("pageNames");
 	return pageNames.slice(range.Start,range.end);
 }
 var getDocument=function(filename,cb){
@@ -92,10 +93,13 @@ var getDocument=function(filename,cb){
 	if (i==-1) {
 		cb(null);
 	} else {
-		var pagenames=getFilePageNames(i);
+		var pagenames=getFilePageNames.apply(engine,[i]);
 		var files=engine.get(["files",i],true,function(file){
-			var parentId=file.parentId;
-			var reverts=file.reverts;
+			var parentId=null,reverts=null;
+			if (file) {
+				parentId=file.parentId;
+				reverts=file.reverts;
+			}
 			engine.get(["fileContents",i],true,function(data){
 				cb(toDoc(pagenames,data,parentId,reverts));
 			});			
@@ -415,10 +419,9 @@ var openLocalNode=function(kdbid,cb,context) {
 var openLocalHtml5=function(kdbid,cb,context) {
 	var Kdb=Require('ksana-document').kdb;
 	
-
 	var engine=localPool[kdbid];
 	if (engine) {
-		if (cb) cb(engine);
+		if (cb) cb.apply(engine.context,[engine]);
 		return engine;
 	}
 	var Kdb=Require('ksana-document').kdb;
@@ -444,5 +447,11 @@ var setPath=function(path) {
 	console.log("set path",path)
 }
 
+var enumKdb=function(cb,context){
+	Require("ksana-document").html5fs.readdir(function(out){
+		cb.apply(this,[out]);
+	},context||this);
+}
+
 module.exports={openLocal:openLocal, open:open, close:close, 
-	setPath:setPath, closeLocal:closeLocal};
+	setPath:setPath, closeLocal:closeLocal, enumKdb:enumKdb};
