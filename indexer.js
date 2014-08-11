@@ -344,7 +344,9 @@ var backup=function(ydbfn) {
 }
 var createMeta=function() {
 	var meta={};
-	meta.config=session.config.config;
+	if (session.config.meta) for (var i in session.config.meta) {
+		meta[i]=session.config.meta[i];
+	}
 	meta.name=session.config.name;
 	meta.vsize=session.vpos;
 	meta.pagecount=status.pageCount;
