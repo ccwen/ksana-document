@@ -19,8 +19,12 @@ var read=function(handle,buffer,offset,length,position,cb) {	 //buffer and offse
       xhr.setRequestHeader('Range', 'bytes='+range[0]+'-'+range[1]);
       xhr.responseType = 'arraybuffer';
       xhr.send();
+
       xhr.onload = function(e) {
-          cb(0,this.response.byteLength,this.response);
+        var that=this;
+        setTimeout(function(){
+          cb(0,that.response.byteLength,that.response);
+        },0);
       }; 
 }
 

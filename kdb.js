@@ -31,7 +31,6 @@ var DT={
 	//type a ydb in command prompt shows nothing
 }
 
-
 var Create=function(path,opts,cb) {
 	/* loadxxx functions move file pointer */
 	// load variable length int
@@ -185,7 +184,6 @@ var Create=function(path,opts,cb) {
 					taskqueue.push(function(data){
 						o[keys[keys.length-1]]=data;
 						opts.cur=endcur;
-
 						cb.apply(that,[o]);
 					});
 				}
@@ -232,7 +230,7 @@ var Create=function(path,opts,cb) {
 				this.fs.readUI8(opts.cur-1,cb);
 			} else if (signature===DT.utf8) {
 				var c=opts.cur;opts.cur+=datasize;
-				this.fs.readString(c,datasize,'utf8',cb);	
+				this.fs.readString(c,datasize,'utf8',cb);
 			} else if (signature===DT.ucs2) {
 				var c=opts.cur;opts.cur+=datasize;
 				this.fs.readString(c,datasize,'ucs2',cb);	
@@ -343,6 +341,8 @@ var Create=function(path,opts,cb) {
 			
 			var pathnow="",taskqueue=[],opts={},r=null;
 			var lastkey="";
+
+
 			for (var i=0;i<path.length;i++) {
 				var task=(function(key,k){
 

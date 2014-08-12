@@ -39,7 +39,7 @@ var _gets=function(keys,recursive,cb) { //get many data with one call
 
 	taskqueue.push(function(data){
 		output.push(data);
-		cb(output,keys); //return to caller
+		cb.apply(engine.context||engine,[output,keys]); //return to caller
 	});
 
 	taskqueue.shift()({__empty:true}); //run the task
@@ -140,7 +140,7 @@ var bsearchNear=function(array,value) {
 	return bsearch(array,value,true);
 }
 var createLocalEngine=function(kdb,cb,context) {
-	var engine={lastAccess:new Date(), kdb:kdb, queryCache:{}, postingCache:{}};
+	var engine={lastAccess:new Date(), kdb:kdb, queryCache:{}, postingCache:{}, cache:{}};
 
 	if (kdb.fs.html5fs) {
 		var customfunc=Require("ksana-document").customfunc;
@@ -330,7 +330,7 @@ var createEngine=function(kdbid,context,cb) {
 		engine.cache["postingslen"]=res[4];
 		engine.cache["pageNames"]=res[5];
 		engine.cache["pageOffsets"]=res[6];
-		console.log(res[6])
+
 //		engine.cache["tokenId"]=res[4];
 //		engine.cache["files"]=res[2];
 

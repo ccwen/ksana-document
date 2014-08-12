@@ -12,7 +12,8 @@ var warning=function(err) {
 	}	
 }
 var ontext=function(e) {
-	if (context.handler) context.text+=e;
+	//if (context.handler) 
+	context.text+=e;
 }
 var onopentag=function(e) {
 	context.paths.push(e.name);
@@ -24,11 +25,9 @@ var onopentag=function(e) {
 		if (handler) 	context.handler=handler;
 		var close_handler=context.close_handlers[context.path];
 		if (close_handler) 	context.close_handler=close_handler;
-		if (context.handler)  context.handler(true);
-	} else {
-		context.handler();
 	}
-	
+
+	if (context.handler)  context.handler(true);
 }
 
 var onclosetag=function(e) {
@@ -36,18 +35,27 @@ var onclosetag=function(e) {
 
 	var handler=context.close_handlers[context.path];
 	if (handler) {
-		if (context.close_handler) context.close_handler(true);
+		var res=null;
+		if (context.close_handler) res=context.close_handler(true);
 		context.handler=null;//stop handling
 		context.close_handler=null;//stop handling
 		context.text="";
+		if (res && context.status.storeFields) {
+			context.status.storeFields(res, context.status.json);
+		}
 	} else if (context.close_handler) {
 		context.close_handler();
 	}
+	
 	context.paths.pop();
 	context.parents.pop();
 	context.path=context.paths.join("/");		
 }
-var addHandler=function(path,tagmodule) {
+var addHandler=function(path,_tagmodule) {
+	var tagmodule=_tagmodule;
+	if (typeof tagmodule=="function") {
+		tagmodule={close_handler:_tagmodule};
+	}
 	if (tagmodule.handler) context.handlers[path]=tagmodule.handler;
 	if (tagmodule.close_handler) context.close_handlers[path]=tagmodule.close_handler;
 	if (tagmodule.reset) tagmodule.reset();
@@ -92,7 +100,7 @@ var createAnchors=function(parsed) {
 }
 var resolveAnchors=function(anchors,texts) {
 	tagmodules.map(function(m){
-		m.resolve(anchors,texts);
+		if (m.resolve) m.resolve(anchors,texts);
 	})
 }
 var  createMarkups=function(parsed) {
@@ -109,25 +117,25 @@ var  createMarkups=function(parsed) {
 var handlersResult=function() {
 	var out={};
 	tagmodules.map(function(m){
-		out[m.name]=m.result();
+		if (m.result) out[m.name]=m.result();
 	})
 }
 
-var parseP5=function(xml,parsed,fn,_config) {
+var parseP5=function(xml,parsed,fn,_config,_status) {
 	parser=require("sax").parser(true);
 	filename=fn;
-	context={ paths:[] , parents:[], handlers:{}, close_handlers:{}, text:"" ,now:null};
+	context={ paths:[] , parents:[], handlers:{}, close_handlers:{}, text:"" ,now:null,status:_status};
 	parser.onopentag=onopentag;
 	parser.onclosetag=onclosetag;
 	parser.ontext=ontext;
 	config=_config;
 	tagmodules=[];
-
+	context.addHandler=addHandler;
+	if (_config.setupHandlers) config.setupHandlers.apply(context);
 	parser.write(xml);
 	context=null;
 	parser=null;
 	if (parsed) return createMarkups(parsed);
 	else return handlersResult();
 }
-parseP5.addHandler=addHandler;
 module.exports=parseP5;
