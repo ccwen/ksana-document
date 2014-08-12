@@ -143,7 +143,6 @@ var parseAttributesString=function(s) {
 }
 var storeFields=function(fields ,root) {
 	if (!(fields instanceof Array) ) fields=[fields];
-	debugger;
 	var storeField=function(field) {
 		var path=field.path;
 		storepoint=root;
@@ -155,6 +154,7 @@ var storeFields=function(fields ,root) {
 			}
 			storepoint=storepoint[path[i]];
 		}
+		if (!field.value) throw "empty field value of "+path;
 		storepoint.push(field.value);
 	}
 	fields.map(storeField);
@@ -194,7 +194,7 @@ var processTags=function(captureTags,tags,texts) {
 					tagStack.pop();
 				}
 				var text=getTextBetween(prev[3],i,prev[1],tagoffset);
-				status.vpos=tagoffset;
+				status.vpos=status.fileStartVpos+tagoffset;
 				status.tagStack=tagStack;
 				var fields=handler(text, tagname, attr, status);
 				if (!session.json.fields) session.json.fields={};
@@ -223,6 +223,7 @@ var putFile=function(fn,cb) {
 
 	if (callbacks.beforebodystart) callbacks.beforebodystart.apply(session,[texts.substring(0,start),status]);
 	var body=texts.substring(start,end+bodyendlen);
+	status.fileStartVpos=session.vpos;
 	parseBody(body,session.config.pageSeparator,function(parsed){
 		if (callbacks.afterbodyend) {
 			status.parsed=parsed;
@@ -393,7 +394,7 @@ var finalize=function(cb) {
 	//output=api("optimize")(session.json,session.ydbmeta.config);
 	var opts={size:session.config.estimatesize};
 	if (!opts.size) opts.size=guessSize();
-
+	debugger;
 	var kdbw =nodeRequire("ksana-document").kdbw(session.kdbfn,opts);
 	//console.log(JSON.stringify(session.json,""," "));
 	if (session.config.finalizeField) {

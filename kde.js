@@ -76,6 +76,7 @@ var getFileRange=function(i) {
 	return {start:start,end:end};
 }
 var getFilePageOffsets=function(i) {
+	var pageOffsets=this.get("pageOffsets");
 	var range=getFileRange.apply(this,[i]);
 	return pageOffsets.slice(range.start,range.end);
 }
