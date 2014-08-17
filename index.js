@@ -11,6 +11,7 @@
 	,kse:require('./kse') // search engine
 	,kdb:require("./kdb")
 	,html5fs:require("./html5fs")
+	,plist:require("./plist")
 }
 if (typeof process!="undefined") {
 	API.persistent=require('./persistent');

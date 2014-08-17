@@ -181,7 +181,7 @@ var processTags=function(captureTags,tags,texts) {
 	for (var i=0;i<tags.length;i++) {
 
 		for (var j=0;j<tags[i].length;j++) {
-			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2];	
+			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos_filestart=T[3];	
 			if (captureTags[tagname]) {
 				attr=parseAttributesString(attributes);
 				tagStack.push([tagname,tagoffset,attr,i]);
@@ -198,7 +198,7 @@ var processTags=function(captureTags,tags,texts) {
 					tagStack.pop();
 				}
 				var text=getTextBetween(prev[3],i,prev[1],tagoffset);
-				status.vpos=status.fileStartVpos+tagoffset;
+				status.vpos=status.fileStartVpos+tagvpos_filestart;
 				status.tagStack=tagStack;
 				var fields=handler(text, tagname, attr, status);
 				

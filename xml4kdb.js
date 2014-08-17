@@ -19,7 +19,7 @@ var parseXMLTag=function(s) {
 	if (!count) attr=undefined;
 	return {name:name,type:type,attr:attr};
 };
-var parseUnit=function(unittext) {
+var parseUnit=function(unittext,unitstart) {
 	// name,sunit, soff, eunit, eoff , attributes
 	var totaltaglength=0,tags=[];
 	var parsed=unittext.replace(/<(.*?)>/g,function(m,m1,off){
@@ -28,7 +28,8 @@ var parseUnit=function(unittext) {
 			tag=m1.substr(0,i);
 			attributes=m1.substr(i+1);
 		}
-		tags.push([off-totaltaglength , tag,attributes]);
+		var tagoffset=off-totaltaglength;
+		tags.push([tagoffset , tag,attributes, unitstart+tagoffset]);
 		totaltaglength+=m.length;
 		return ""; //remove the tag from inscription
 	});
@@ -37,11 +38,11 @@ var parseUnit=function(unittext) {
 var splitUnit=function(buf,sep) {
 	var units=[], unit="", last=0 ,name="";
 	buf.replace(sep,function(m,m1,offset){
-		units.push([name,buf.substring(last,offset)]);
+		units.push([name,buf.substring(last,offset),last]);
 		name=m1;
 		last=offset;//+m.length;   //keep the separator
 	});
-	units.push([name,buf.substring(last)]);
+	units.push([name,buf.substring(last),last]);
 	return units;
 };
 var defaultsep="_.id";
@@ -53,7 +54,7 @@ var parseXML=function(buf, opts){
 	var units=splitUnit(buf, unitsep);
 	var texts=[], tags=[];
 	units.map(function(U,i){
-		var out=parseUnit(U[1]);
+		var out=parseUnit(U[1],U[2]);
 		texts.push({n:U[0]||emptypagename,t:out.inscription});
 		tags.push(out.tags);
 	});
