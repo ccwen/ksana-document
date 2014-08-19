@@ -82,14 +82,16 @@ var getFileWithHits=function(engine,Q,range) {
 		}
 	}
 
-	var fileWithHits=[];
+	var fileWithHits=[],totalhit=0;
+	range.maxhit=range.maxhit||1000;
+
 	for (var i=start;i<Q.byFile.length;i++) {
 		if(Q.byFile[i].length>0) {
+			totalhit+=Q.byFile[i].length;
 			fileWithHits.push(i);
 			range.nextFileStart=i;
-			if (fileWithHits.length>=filecount) {
-				break;
-			}
+			if (fileWithHits.length>=filecount) break;
+			if (totalhit>range.maxhit) break;
 		}
 	}
 	if (i>=Q.byFile.length) { //no more file
@@ -139,6 +141,10 @@ var resultlist=function(engine,Q,opts,cb) {
 			var startvpos=files[output[i].file].pageOffsets[output[i].page];
 			var endvpos=files[output[i].file].pageOffsets[output[i].page+1];
 			var hl={};
+
+			if (opts.range && opts.range.start && startvpos<opts.range.start ) {
+				startvpos=opts.range.start;
+			}
 			
 			if (opts.nohighlight) {
 				hl.text=pages[i];
@@ -147,13 +153,22 @@ var resultlist=function(engine,Q,opts,cb) {
 				var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q,fulltext:opts.fulltext};
 				hl=highlight(Q,o);
 			}
-			output[i].text=hl.text;
-			output[i].hits=hl.hits;
-			output[i].seq=seq;
-			seq+=hl.hits.length;
+			if (hl.text) {
+				output[i].text=hl.text;
+				output[i].hits=hl.hits;
+				output[i].seq=seq;
+				seq+=hl.hits.length;
 
-			output[i].start=startvpos;
+				output[i].start=startvpos;				
+			} else {
+				output[i]=null; //remove item vpos less than opts.range.start
+			}
 			if (opts.range.maxhit && seq>opts.range.maxhit) {
+				while(!output[0]) {
+					output.shift();
+					i--;
+				}
+
 				output.length=i;
 				break;
 			}
@@ -242,18 +257,17 @@ var highlightPage=function(Q,fileid,pageid,opts,cb) {
 	if (typeof opts=="function") {
 		cb=opts;
 	}
+
 	if (!Q || !Q.engine) return cb(null);
+	var pageOffsets=Q.engine.getFilePageOffsets(fileid);
+	var startvpos=pageOffsets[pageid];
+	var endvpos=pageOffsets[pageid+1];
 
-	getPage(Q.engine,fileid,pageid,function(page){
-		Q.engine.get(["files",fileid,"pageOffset"],true,function(pageOffset){
-			var startvpos=pageOffset[page.page];
-			var endvpos=pageOffset[page.page+1];
-
-			var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
-			opt.hits=hitInRange(Q,startvpos,endvpos);
-			cb.apply(Q.engine.context,[{text:injectTag(Q,opt),hits:opt.hits}]);
-		});
-	});
+	this.getPage(Q.engine, fileid,pageid,function(res){
+		var opt={text:res.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
+		opt.hits=hitInRange(Q,startvpos,endvpos);
+		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),hits:opt.hits}]);
+	})
 }
 module.exports={resultlist:resultlist, 
 	hitInRange:hitInRange, 

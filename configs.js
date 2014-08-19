@@ -13,7 +13,7 @@ var normalize_tibetan=function(token) {
 
 var isSkip_tibetan=function(token) {
 	var t=token.trim();
-	return (t=="" || t=="　" || t=="\n");	
+	return (t=="" || t=="　" ||  t=="\n");	
 }
 var simple1={
 	func:{

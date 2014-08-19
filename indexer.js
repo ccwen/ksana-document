@@ -10,6 +10,7 @@ var normalize=null;
 var tokenize=null;
 
 var putPosting=function(tk) {
+	debugger;
 	var	postingid=session.json.tokens[tk];
 	var out=session.json, posting=null;
 	if (!postingid) {
@@ -156,7 +157,7 @@ var storeFields=function(fields,json) {
 			}
 			storepoint=storepoint[path[i]];
 		}
-		if (!field.value) {
+		if (typeof field.value=="undefined") {
 			throw "empty field value of "+path;
 		} 
 		storepoint.push(field.value);
@@ -189,7 +190,7 @@ var processTags=function(captureTags,tags,texts) {
 			var handler=null;
 			if (tagname[0]=="/") {
 				handler=captureTags[tagname.substr(1)];
-			}
+			} 
 			if (handler) {
 				var prev=tagStack[tagStack.length-1];
 				if (tagname.substr(1)!=prev[0]) {
@@ -271,7 +272,7 @@ var initIndexer=function(mkdbconfig) {
 	var Kde=nodeRequire("./kde");
 
 	session=initSession(mkdbconfig);
-	api=nodeRequire("ksana-document").customfunc.getAPI(mkdbconfig.config);
+	api=nodeRequire("ksana-document").customfunc.getAPI(mkdbconfig.meta.config);
 	xml4kdb=nodeRequire("ksana-document").xml4kdb;
 
 	//mkdbconfig has a chance to overwrite API
@@ -308,6 +309,7 @@ var indexstep=function() {
 	if (session.filenow<session.files.length) {
 		status.filename=session.files[session.filenow];
 		status.progress=session.filenow/session.files.length;
+		status.filenow=session.filenow;
 		putFile(status.filename,function(){
 			session.filenow++;
 			setTimeout(indexstep,1); //rest for 1 ms to response status			

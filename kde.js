@@ -84,7 +84,7 @@ var getFilePageOffsets=function(i) {
 var getFilePageNames=function(i) {
 	var range=getFileRange.apply(this,[i]);
 	var pageNames=this.get("pageNames");
-	return pageNames.slice(range.Start,range.end);
+	return pageNames.slice(range.start,range.end);
 }
 var getDocument=function(filename,cb){
 	var engine=this;

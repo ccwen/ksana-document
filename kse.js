@@ -20,7 +20,7 @@ var _search=function(engine,q,opts,cb) {
 
 var _highlightPage=function(engine,fileid,pageid,opts,cb){
 	if (opts.q) {
-		require("./search").main(engine,opts.q,opts,function(Q){
+		_search(engine,opts.q,opts,function(Q){
 			api.excerpt.highlightPage(Q,fileid,pageid,opts,cb);
 		});
 	} else {
