@@ -127,12 +127,12 @@ var resultlist=function(engine,Q,opts,cb) {
 		for (var j=0; j<pagewithhit.length;j++) {
 			if (!pagewithhit[j].length) continue;
 			//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
-			output.push(  {file: nfile, page:j,  pagename:pageNames[j+1]});
+			output.push(  {file: nfile, page:j,  pagename:pageNames[j]});
 		}
 	}
 
 	var pagekeys=output.map(function(p){
-		return ["fileContents",p.file,p.page];
+		return ["fileContents",p.file,p.page+1];
 	});
 	//prepare the text
 	engine.get(pagekeys,function(pages){
@@ -163,16 +163,8 @@ var resultlist=function(engine,Q,opts,cb) {
 			} else {
 				output[i]=null; //remove item vpos less than opts.range.start
 			}
-			if (opts.range.maxhit && seq>opts.range.maxhit) {
-				while(!output[0]) {
-					output.shift();
-					i--;
-				}
-
-				output.length=i;
-				break;
-			}
-		}
+		} 
+		output=output.filter(function(o){return o!=null});
 		cb(output);
 	});
 }
@@ -247,9 +239,10 @@ var highlight=function(Q,opts) {
 var getPage=function(engine,fileid,pageid,cb) {
 	var fileOffsets=engine.get("fileOffsets");
 	var pagekeys=["fileContents",fileid,pageid];
+	var pagenames=engine.getFilePageNames(fileid);
 
 	engine.get(pagekeys,function(text){
-		cb.apply(engine.context,[{text:text,file:fileid,page:pageid}]);
+		cb.apply(engine.context,[{text:text,file:fileid,page:pageid,pagename:pagenames[pageid]}]);
 	});
 }
 
@@ -262,11 +255,13 @@ var highlightPage=function(Q,fileid,pageid,opts,cb) {
 	var pageOffsets=Q.engine.getFilePageOffsets(fileid);
 	var startvpos=pageOffsets[pageid];
 	var endvpos=pageOffsets[pageid+1];
+	var pagenames=Q.engine.getFilePageNames(fileid);
 
-	this.getPage(Q.engine, fileid,pageid,function(res){
+	this.getPage(Q.engine, fileid,pageid+1,function(res){
 		var opt={text:res.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
 		opt.hits=hitInRange(Q,startvpos,endvpos);
-		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),hits:opt.hits}]);
+		var pagename=pagenames[pageid];
+		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),page:pageid,file:fileid,hits:opt.hits,pagename:pagename}]);
 	})
 }
 module.exports={resultlist:resultlist, 

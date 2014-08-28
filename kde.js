@@ -6,7 +6,7 @@
 if (typeof nodeRequire=='undefined')var nodeRequire=require;
 var pool={},localPool={};
 var apppath="";
-
+var bsearch=require("./bsearch");
 var _getSync=function(keys,recursive) {
 	var out=[];
 	for (var i in keys) {
@@ -68,17 +68,20 @@ var getFileRange=function(i) {
 	var pageOffsets=engine.get(["pageOffsets"]);
 	var pageNames=engine.get(["pageNames"]);
 	var fileStart=fileOffsets[i],fileEnd=fileOffsets[i+1];
-	var start=-1,end=-1;	
-	for (var i=0;i<pageOffsets.length;i++) {
-		if (pageOffsets[i]>=fileStart && start==-1) start=i;
-		if (pageOffsets[i]>=fileEnd && end==-1) end=i;
-	}
+
+	var start=bsearch(pageOffsets,fileStart);
+	var end=bsearch(pageOffsets,fileEnd);
+	//in case of items with same value
+	//return the last one
+	while (pageOffsets[start+1]==pageOffsets[start]) start++; 
+	while (pageOffsets[end+1]==pageOffsets[end]) end++;
+
 	return {start:start,end:end};
 }
 var getFilePageOffsets=function(i) {
 	var pageOffsets=this.get("pageOffsets");
 	var range=getFileRange.apply(this,[i]);
-	return pageOffsets.slice(range.start,range.end);
+	return pageOffsets.slice(range.start,range.end+1);
 }
 
 var getFilePageNames=function(i) {
@@ -106,38 +109,6 @@ var getDocument=function(filename,cb){
 			});			
 		});
 	}
-}
-var indexOfSorted = function (array, obj, near) { 
-  var low = 0,
-  high = array.length;
-  while (low < high) {
-    var mid = (low + high) >> 1;
-    if (array[mid]==obj) return mid;
-    array[mid] < obj ? low = mid + 1 : high = mid;
-  }
-  if (near) return low;
-  else if (array[low]==obj) return low;else return -1;
-};
-var indexOfSorted_str = function (array, obj, near) { 
-  var low = 0,
-  high = array.length;
-  while (low < high) {
-    var mid = (low + high) >> 1;
-    if (array[mid]==obj) return mid;
-    (array[mid].localeCompare(obj)<0) ? low = mid + 1 : high = mid;
-  }
-  if (near) return low;
-  else if (array[low]==obj) return low;else return -1;
-};
-
-
-var bsearch=function(array,value,near) {
-	var func=indexOfSorted;
-	if (typeof array[0]=="string") func=indexOfSorted_str;
-	return func(array,value,near);
-}
-var bsearchNear=function(array,value) {
-	return bsearch(array,value,true);
 }
 var createLocalEngine=function(kdb,cb,context) {
 	var engine={lastAccess:new Date(), kdb:kdb, queryCache:{}, postingCache:{}, cache:{}};
@@ -177,8 +148,6 @@ var createLocalEngine=function(kdb,cb,context) {
 			cb(null);	
 		}
 	};	
-	engine.bsearch=bsearch;
-	engine.bsearchNear=bsearchNear;
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
@@ -266,6 +235,7 @@ var getRemote=function(key,recursive,cb) {
 	}
 }
 var pageOffset=function(pagename) {
+	var engine=this;
 	if (arguments.length>1) throw "argument : pagename ";
 
 	var pageNames=engine.get("pageNames");
@@ -308,8 +278,6 @@ var createEngine=function(kdbid,context,cb) {
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
 	engine.setContext=function(ctx) {this.context=ctx};
 	engine.get=getRemote;
-	engine.bsearch=bsearch;
-	engine.bsearchNear=bsearchNear;
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
@@ -368,7 +336,7 @@ var open=function(kdbid,cb,context) {
 
 	var engine=pool[kdbid];
 	if (engine) {
-		if (cb) cb.apply(engine.context,[engine]);
+		if (cb) cb.apply(context||engine.context,[engine]);
 		return engine;
 	}
 	engine=createEngine(kdbid,context,cb);
@@ -407,7 +375,7 @@ var openLocalNode=function(kdbid,cb,context) {
 			new Kdb(tries[i],function(kdb){
 				createLocalEngine(kdb,function(engine){
 						localPool[kdbid]=engine;
-						cb(engine);
+						cb.apply(context||engine.context,[engine]);
 				},context);
 			});
 			return engine;
@@ -422,7 +390,7 @@ var openLocalHtml5=function(kdbid,cb,context) {
 	
 	var engine=localPool[kdbid];
 	if (engine) {
-		if (cb) cb.apply(engine.context,[engine]);
+		if (cb) cb.apply(context||engine.context,[engine]);
 		return engine;
 	}
 	var Kdb=Require('ksana-document').kdb;
@@ -431,7 +399,7 @@ var openLocalHtml5=function(kdbid,cb,context) {
 	new Kdb(kdbfn,function(handle){
 		createLocalEngine(handle,function(engine){
 			localPool[kdbid]=engine;
-			cb.apply(engine.context,[engine]);
+			cb.apply(context||engine.context,[engine]);
 		},context);		
 	});
 }

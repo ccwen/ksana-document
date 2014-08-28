@@ -12,6 +12,7 @@
 	,kdb:require("./kdb")
 	,html5fs:require("./html5fs")
 	,plist:require("./plist")
+	,bsearch:require("./bsearch")
 }
 if (typeof process!="undefined") {
 	API.persistent=require('./persistent');

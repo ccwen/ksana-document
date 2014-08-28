@@ -10,7 +10,6 @@ var normalize=null;
 var tokenize=null;
 
 var putPosting=function(tk) {
-	debugger;
 	var	postingid=session.json.tokens[tk];
 	var out=session.json, posting=null;
 	if (!postingid) {
@@ -24,8 +23,11 @@ var putPosting=function(tk) {
 }
 var putPage=function(inscription) {
 	var tokenized=tokenize(inscription);
+	var tokenOffset=0, tovpos=[];
 	for (var i=0;i<tokenized.tokens.length;i++) {
 		var t=tokenized.tokens[i];
+		tovpos[tokenOffset]=session.vpos;
+		tokenOffset+=t.length;
 		if (isSkip(t)) {
 			 session.vpos--;
 		} else {
@@ -34,7 +36,9 @@ var putPage=function(inscription) {
  		}
  		session.vpos++;
 	}
+	tovpos[tokenOffset]=session.vpos;
 	session.indexedTextLength+= inscription.length;
+	return tovpos;
 }
 var upgradeDocument=function(d,dnew) {
 	var Diff=nodeRequire("./diff");	
@@ -70,21 +74,27 @@ var putFileInfo=function(fileContent) {
 var putPages_new=function(parsed,cb) { //25% faster than create a new document
 	//var fileInfo={pageNames:[],pageOffset:[]};
 	var fileContent=[];
+	parsed.tovpos=[];
 
 	putFileInfo(fileContent);
 	for (var i=0;i<parsed.texts.length;i++) {
 		var t=parsed.texts[i];
 		fileContent.push(t.t);
-		putPage(t.t);
+		var tovpos=putPage(t.t);
+		parsed.tovpos[i]=tovpos;
 		session.json.pageNames.push(t.n);
 		session.json.pageOffsets.push(session.vpos);
 	}
+	
 	cb(parsed);//finish
 }
+
 var putPages=function(doc,parsed,cb) {
 	var fileInfo={parentId:[],reverts:[]};
 	var fileContent=[];	
 	var hasParentId=false, hasRevert=false;
+	parsed.tovpos=[];
+
 	putFileInfo(fileContent);
 	if (!session.files) session.files=[];
 	session.json.files.push(fileInfo);
@@ -93,7 +103,8 @@ var putPages=function(doc,parsed,cb) {
 		var pg=doc.getPage(i);
 		if (pg.isLeafPage()) {
 			fileContent.push(pg.inscription);
-			putPage(pg.inscription);
+			var tovpos=putPage(pg.inscription);
+			parsed.tovpos[i-1]=tovpos;
 		} else {
 			fileContent.push("");
 		}
@@ -182,7 +193,7 @@ var processTags=function(captureTags,tags,texts) {
 	for (var i=0;i<tags.length;i++) {
 
 		for (var j=0;j<tags[i].length;j++) {
-			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos_filestart=T[3];	
+			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos=T[3];	
 			if (captureTags[tagname]) {
 				attr=parseAttributesString(attributes);
 				tagStack.push([tagname,tagoffset,attr,i]);
@@ -199,13 +210,24 @@ var processTags=function(captureTags,tags,texts) {
 					tagStack.pop();
 				}
 				var text=getTextBetween(prev[3],i,prev[1],tagoffset);
-				status.vpos=status.fileStartVpos+tagvpos_filestart;
+				status.vpos=tagvpos; 
 				status.tagStack=tagStack;
 				var fields=handler(text, tagname, attr, status);
 				
 				if (fields) storeFields(fields,session.json);
 			}
 		}	
+	}
+}
+var resolveTagsVpos=function(parsed) {
+	var bsearch=require("ksana-document").bsearch;
+	for (var i=0;i<parsed.tags.length;i++) {
+		for (var j=0;j<parsed.tags[i].length;j++) {
+			var t=parsed.tags[i][j];
+			var pos=t[0];
+			t[3]=parsed.tovpos[i][pos];
+			while (pos && typeof t[3]=="undefined") t[3]=parsed.tovpos[i][--pos];
+		}
 	}
 }
 var putFile=function(fn,cb) {
@@ -237,6 +259,7 @@ var putFile=function(fn,cb) {
 	parseBody(body,session.config.pageSeparator,function(parsed){
 		status.parsed=parsed;
 		if (callbacks.afterbodyend) {
+			resolveTagsVpos(parsed);
 			if (captureTags) {
 				processTags(captureTags, parsed.tags, parsed.texts);
 			}

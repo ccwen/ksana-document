@@ -19,17 +19,17 @@ var parseXMLTag=function(s) {
 	if (!count) attr=undefined;
 	return {name:name,type:type,attr:attr};
 };
-var parseUnit=function(unittext,unitstart) {
+var parseUnit=function(unittext) {
 	// name,sunit, soff, eunit, eoff , attributes
-	var totaltaglength=0,tags=[];
+	var totaltaglength=0,tags=[],tagoffset=0;
 	var parsed=unittext.replace(/<(.*?)>/g,function(m,m1,off){
 		var i=m1.indexOf(" "),tag=m1,attributes="";
 		if (i>-1) {
 			tag=m1.substr(0,i);
 			attributes=m1.substr(i+1);
 		}
-		var tagoffset=off-totaltaglength;
-		tags.push([tagoffset , tag,attributes, unitstart+tagoffset]);
+		tagoffset=off-totaltaglength;
+		tags.push([tagoffset , tag,attributes, 0 ]); //vpos to be resolved
 		totaltaglength+=m.length;
 		return ""; //remove the tag from inscription
 	});
@@ -54,7 +54,7 @@ var parseXML=function(buf, opts){
 	var units=splitUnit(buf, unitsep);
 	var texts=[], tags=[];
 	units.map(function(U,i){
-		var out=parseUnit(U[1],U[2]);
+		var out=parseUnit(U[1]);
 		texts.push({n:U[0]||emptypagename,t:out.inscription});
 		tags.push(out.tags);
 	});
