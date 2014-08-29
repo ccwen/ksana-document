@@ -73,7 +73,7 @@ var getFileRange=function(i) {
 	var end=bsearch(pageOffsets,fileEnd);
 	//in case of items with same value
 	//return the last one
-	while (pageOffsets[start+1]==pageOffsets[start]) start++; 
+	while (pageOffsets[start-1]==pageOffsets[start]) start--;
 	while (pageOffsets[end+1]==pageOffsets[end]) end++;
 
 	return {start:start,end:end};
