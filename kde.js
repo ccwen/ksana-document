@@ -69,11 +69,13 @@ var getFileRange=function(i) {
 	var pageNames=engine.get(["pageNames"]);
 	var fileStart=fileOffsets[i],fileEnd=fileOffsets[i+1];
 
-	var start=bsearch(pageOffsets,fileStart);
+	var start=bsearch(pageOffsets,fileStart+1,true);
+	if (i==0) start=0; //work around for first file
 	var end=bsearch(pageOffsets,fileEnd);
 	//in case of items with same value
 	//return the last one
-	while (pageOffsets[start-1]==pageOffsets[start]) start--;
+	while (start && pageOffsets[start-1]==pageOffsets[start]) start--;	
+	
 	while (pageOffsets[end+1]==pageOffsets[end]) end++;
 
 	return {start:start,end:end};
@@ -87,7 +89,7 @@ var getFilePageOffsets=function(i) {
 var getFilePageNames=function(i) {
 	var range=getFileRange.apply(this,[i]);
 	var pageNames=this.get("pageNames");
-	return pageNames.slice(range.start,range.end);
+	return pageNames.slice(range.start,range.end+1);
 }
 var getDocument=function(filename,cb){
 	var engine=this;
