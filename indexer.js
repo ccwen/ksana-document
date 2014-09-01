@@ -143,7 +143,7 @@ var putDocument=function(parsed,cb) {
 }
 
 var parseBody=function(body,sep,cb) {
-	var res=xml4kdb.parseXML(body, {sep:sep});
+	var res=xml4kdb.parseXML(body, {sep:sep,trim:!!session.config.trim});
 	putDocument(res,cb);
 }
 

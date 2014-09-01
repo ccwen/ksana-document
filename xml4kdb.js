@@ -55,6 +55,7 @@ var parseXML=function(buf, opts){
 	var texts=[], tags=[];
 	units.map(function(U,i){
 		var out=parseUnit(U[1]);
+		if (opts.trim) out.inscription=out.inscription.trim();
 		texts.push({n:U[0]||emptypagename,t:out.inscription});
 		tags.push(out.tags);
 	});
