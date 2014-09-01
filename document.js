@@ -405,7 +405,7 @@ var mergeMarkup = function(markups,offsets,type) {
 
 var strikeout=function(start,length,user,type) {
 	this.clearMarkups(start,length,user);
-	markups=this.__markups__();
+	var markups=this.__markups__();
 	var M=require("./markup");
 	type=type||"suggest";
 	return M.strikeout(markups,start,length,user,type);
