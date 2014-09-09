@@ -86,6 +86,10 @@ var  getDownloadSize=function(url, callback) {
     xhr.send();
 };
 var checkUpdate=function(url,fn,cb) {
+    if (!url) {
+      cb(false);
+      return;
+    }
     get_date(url,function(d){
       API.fs.root.getFile(fn, {create: false, exclusive: false}, function(fileEntry) {
           fileEntry.getMetadata(function(metadata){

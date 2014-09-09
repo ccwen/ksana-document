@@ -435,6 +435,10 @@ var finalize=function(cb) {
 	console.log("optimizing");
 	var json=optimize4kdb(session.json);
 
+	if (session.config.extra) {
+		json.extra=session.config.extra;
+	}
+	
 	console.log("output to",session.kdbfn);
 	kdbw.save(json,null,{autodelete:true});
 	

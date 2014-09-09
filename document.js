@@ -471,7 +471,12 @@ var newPage = function(opts) {
 			} else {
 			*/
 				var mu=this.getMutant(0); //revert from Mutant
-				inscription=checkLength(applyChanges(mu.inscription,mu.revert));				
+				if (mu) {
+					inscription=checkLength(applyChanges(mu.inscription,mu.revert));					
+				} else {
+					inscription="";
+				}
+				
 			//}
 			hasInscription=true;
 			return inscription;
