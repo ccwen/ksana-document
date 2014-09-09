@@ -19,7 +19,8 @@
     "kdb.js","kdbfs.js", "kdbw.js","kdb_sync.js","kdbfs_sync.js","html5fs.js",
     "kse.js","kde.js","boolsearch.js",
     "search.js","plist.js","excerpt.js","link.js","tibetan/wylie.js","languages.js",
-    "diff.js","xml4kdb.js","buildfromxml.js","tei.js","concordance.js","regex.js","bsearch.js"
+    "diff.js","xml4kdb.js","buildfromxml.js","tei.js","concordance.js","regex.js","bsearch.js",
+    "persistentmarkup.js"
   ],
   "remotes": []
 }

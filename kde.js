@@ -45,7 +45,7 @@ var _gets=function(keys,recursive,cb) { //get many data with one call
 	taskqueue.shift()({__empty:true}); //run the task
 }
 
-var toDoc=function(pagenames,texts,parents,reverts) {
+var toDoc=function(pagenames,texts,others) {
 	if (typeof Require!="undefined") {
 		var D=Require("ksana-document").document;
 	} else {
@@ -53,12 +53,13 @@ var toDoc=function(pagenames,texts,parents,reverts) {
 	}
 	var d=D.createDocument() ,revert=null;
 	for (var i=0;i<texts.length;i++) {
-		if (reverts && reverts[i].trim()) revert=JSON.parse(reverts[i]);
+		if (others.reverts && others.reverts[i].trim()) revert=JSON.parse(others.reverts[i]);
 		else revert=null;
 		var p=null;
-		if (parents) p=parents[i];
+		if (others.parents) p=others.parents[i];
 		d.createPage({n:pagenames[i],t:texts[i],p:p,r:revert});
 	}
+	if (others.markups) d.addMarkups(others.markups);
 	d.endCreatePages();
 	return d;
 }
@@ -91,10 +92,15 @@ var getFilePageNames=function(i) {
 	var pageNames=this.get("pageNames");
 	return pageNames.slice(range.start,range.end+1);
 }
-var getDocument=function(filename,cb){
+var getDocument=function(filename,markups,cb){
 	var engine=this;
 	var filenames=engine.get("fileNames");
-	
+
+	if (typeof markups=="function")  { //no markups
+		cb=markups;
+		markups=null;
+	}
+
 	var i=filenames.indexOf(filename);
 	if (i==-1) {
 		cb(null);
@@ -107,7 +113,7 @@ var getDocument=function(filename,cb){
 				reverts=file.reverts;
 			}
 			engine.get(["fileContents",i],true,function(data){
-				cb(toDoc(pagenames,data,parentId,reverts));
+				cb(toDoc(pagenames,data,{parents:parentId,reverts:reverts,markups:markups}));
 			});			
 		});
 	}

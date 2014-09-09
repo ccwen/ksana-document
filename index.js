@@ -13,6 +13,7 @@
 	,html5fs:require("./html5fs")
 	,plist:require("./plist")
 	,bsearch:require("./bsearch")
+	,persistentmarkup:require("./persistentmarkup")
 }
 if (typeof process!="undefined") {
 	API.persistent=require('./persistent');
