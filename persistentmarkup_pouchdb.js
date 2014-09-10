@@ -7,8 +7,9 @@ markup format:
 var combineMarkups=function(db,markups,fn,pageid,cb) {
 
 	var key="M!"+pageid+"!"+fn;
-	db.get('doc1',function(err,res){
-		var existing=res;
+	db.get(key,function(err,res){
+		var existing=[] ;
+		if (res && res.M) existing=res.M ;
 		if (!markups || !markups.length) {
 			if (err.error) cb([]);
 			else cb(existing);
@@ -28,18 +29,18 @@ var combineMarkups=function(db,markups,fn,pageid,cb) {
 			return (a.i*65536 +a.start) - (b.i*65536 +b.start);
 		}
 		others.sort(sortfunc);
-		cb(others);
+		cb(others,res._rev);
 	});
 }
 
 var saveMarkup=function(opts,cb){
-	combineMarkups(opts.db,opts.markups,opts.filename,opts.i,function(markups){
+	combineMarkups(opts.db,opts.markups,opts.filename,opts.i,function(markups,rev){
 		for (var i=0;i<markups.length;i++) {
 			markups[i].i=opts.i;
 		}
 		var key="M!"+opts.i+"!"+opts.filename;
 		if (markups.length) {
-			opts.db.put({M:markups},key,function(err,response){
+			opts.db.put({M:markups,_rev:rev,_id:key},function(err,response){
 				cb();
 			});
 		} else {
