@@ -62,7 +62,7 @@ var Open=function(path,opts,cb) {
   var decodeutf8 = function (utftext) {
         var string = "";
         var i = 0;
-        var c=0,c1 = 0, c2 = 0;
+        var c=0,c1 = 0, c2 = 0 , c3=0;
  				for (var i=0;i<utftext.length;i++) {
  					if (utftext.charCodeAt(i)>127) break;
  				}
