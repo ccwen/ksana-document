@@ -145,11 +145,12 @@ var Open=function(path,opts,cb) {
 		  
 		  if (html5fs) {
 	  		readLog("stringArray",buffer.byteLength);
-			if (encoding=='utf8') {
-				out=buf2stringarr(buffer,"utf8");
-			} else { //ucs2 is 3 times faster
-				out=buf2stringarr(buffer,"ucs2");
-			}
+
+				if (encoding=='utf8') {
+					out=buf2stringarr(buffer,"utf8");
+				} else { //ucs2 is 3 times faster
+					out=buf2stringarr(buffer,"ucs2");
+				}
 		  } else {
 			readLog("stringArray",buffer.length);
 			out=buffer.toString(encoding).split('\0');
@@ -199,6 +200,7 @@ var Open=function(path,opts,cb) {
 		var that=this;
 		var buf=new Buffer(blocksize);
 		fs.read(this.handle,buf,0,blocksize,pos,function(err,len,buffer){
+
 			readLog("buf",len);
 			/*
 			var buff=[];

@@ -30,6 +30,11 @@ var DT={
 	//ydb start with object signature,
 	//type a ydb in command prompt shows nothing
 }
+var verbose=0, readLog=function(){};
+var _readLog=function(readtype,bytes) {
+	console.log(readtype,bytes,"bytes");
+}
+if (verbose) readLog=_readLog;
 
 var Create=function(path,opts,cb) {
 	/* loadxxx functions move file pointer */
@@ -173,6 +178,7 @@ var Create=function(path,opts,cb) {
 											o[key]=data; 
 										}
 										opts.blocksize=sz;
+										if (verbose) readLog("key",key);
 										load.apply(that,[opts, taskqueue.shift()]);
 									}
 								);

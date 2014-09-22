@@ -150,7 +150,9 @@ var parseBody=function(body,sep,cb) {
 var pat=/([a-zA-Z:]+)="([^"]+?)"/g;
 var parseAttributesString=function(s) {
 	var out={};
-	s.replace(pat,function(m,m1,m2){out[m1]=m2});
+	//work-around for repeated attribute,
+	//take the first one
+	s.replace(pat,function(m,m1,m2){if (!out[m1]) out[m1]=m2});
 	return out;
 }
 var storeFields=function(fields,json) {
@@ -181,35 +183,41 @@ var storeFields=function(fields,json) {
 var tagStack=[];
 var processTags=function(captureTags,tags,texts) {
 	var getTextBetween=function(from,to,startoffset,endoffset) {
-		if (from==to) return texts[from].t.substring(startoffset,endoffset);
-		var first=texts[from].t.substr(startoffset);
+		if (from==to) return texts[from].t.substring(startoffset-1,endoffset-1);
+		var first=texts[from].t.substr(startoffset-1);
 		var middle="";
 		for (var i=from+1;i<to;i++) {
 			middle+=texts[i].t;
 		}
-		var last=texts[to].t.substr(0,endoffset);
+		var last=texts[to].t.substr(0,endoffset-1);
 		return first+middle+last;
 	}
 	for (var i=0;i<tags.length;i++) {
 
 		for (var j=0;j<tags[i].length;j++) {
 			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos=T[3];	
+			var nulltag=attributes[attributes.length-1]=='/';
 			if (captureTags[tagname]) {
-				attr=parseAttributesString(attributes);
-				tagStack.push([tagname,tagoffset,attr,i]);
+				var attr=parseAttributesString(attributes);
+				if (!nulltag) tagStack.push([tagname,tagoffset,attr,i]);
 			}
 			var handler=null;
-			if (tagname[0]=="/") {
-				handler=captureTags[tagname.substr(1)];
-			} 
+			if (tagname[0]=="/") handler=captureTags[tagname.substr(1)];
+			else if (nulltag) handler=captureTags[tagname];
+
 			if (handler) {
 				var prev=tagStack[tagStack.length-1];
-				if (tagname.substr(1)!=prev[0]) {
-					console.error("tag unbalance",tagname,prev[0]);
+				if (!nulltag) {				
+					if (tagname.substr(1)!=prev[0]) {
+						console.error("tag unbalance",tagname,prev[0]);
+					} else {
+						tagStack.pop();
+					}
+					var text=getTextBetween(prev[3],i,prev[1],tagoffset);
 				} else {
-					tagStack.pop();
+					var text="";
 				}
-				var text=getTextBetween(prev[3],i,prev[1],tagoffset);
+				
 				status.vpos=tagvpos; 
 				status.tagStack=tagStack;
 				var fields=handler(text, tagname, attr, status);

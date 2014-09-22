@@ -13,19 +13,19 @@ extension id
 */
 
 var read=function(handle,buffer,offset,length,position,cb) {	 //buffer and offset is not used
-     var xhr = new XMLHttpRequest();
-      xhr.open('GET', handle.url , true);
-      var range=[position,length+position-1];
-      xhr.setRequestHeader('Range', 'bytes='+range[0]+'-'+range[1]);
-      xhr.responseType = 'arraybuffer';
-      xhr.send();
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', handle.url , true);
+  var range=[position,length+position-1];
+  xhr.setRequestHeader('Range', 'bytes='+range[0]+'-'+range[1]);
+  xhr.responseType = 'arraybuffer';
+  xhr.send();
 
-      xhr.onload = function(e) {
-        var that=this;
-        setTimeout(function(){
-          cb(0,that.response.byteLength,that.response);
-        },0);
-      }; 
+  xhr.onload = function(e) {
+    var that=this;
+    setTimeout(function(){
+      cb(0,that.response.byteLength,that.response);
+    },0);
+  }; 
 }
 
 var close=function(handle) {
