@@ -742,7 +742,7 @@ var createDocument = function(docjson,markupjson) {
 		}
 	}
 	var pageNames=function() {
-		out=[];
+		var out=[];
 		for (var i=1;i<this.pageCount;i++) {
 			var pg=pages[i];
 			if (pg.parentId!=0)  continue; //not a root page, 

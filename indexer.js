@@ -66,6 +66,7 @@ var shortFilename=function(fn) {
 var putFileInfo=function(fileContent) {
 	var shortfn=shortFilename(status.filename);
 	//session.json.files.push(fileInfo);
+	//empty or first line empty
 	session.json.fileContents.push(fileContent);
 	session.json.fileNames.push(shortfn);
 	session.json.fileOffsets.push(session.vpos);
@@ -86,6 +87,11 @@ var putPages_new=function(parsed,cb) { //25% faster than create a new document
 		session.json.pageOffsets.push(session.vpos);
 	}
 	
+	if (fileContent.length==0 || (fileContent.length==1&&!fileContent[0])) {
+		console.log("no content in"+status.filename);
+		fileContent[0]=" "; //work around to avoid empty string array throw in kdbw
+	}
+
 	cb(parsed);//finish
 }
 
@@ -209,7 +215,7 @@ var processTags=function(captureTags,tags,texts) {
 				var prev=tagStack[tagStack.length-1];
 				if (!nulltag) {				
 					if (tagname.substr(1)!=prev[0]) {
-						console.error("tag unbalance",tagname,prev[0]);
+						console.error("tag unbalance",tagname,prev[0],T);
 					} else {
 						tagStack.pop();
 					}

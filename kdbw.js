@@ -94,7 +94,9 @@ var Kfs=function(path,opts) {
 		
 		var v=value.join('\0');
 		var len=Buffer.byteLength(v, encoding);
-		if (0===len) throw "empty string array " + key_writing;
+		if (0===len) {
+			throw "empty string array " + key_writing;
+		}
 		dbuf.write(v,pos+1,len,encoding);
 		if (pos+len+1>cur) cur=pos+len+1;
 		return len+1;
@@ -227,7 +229,11 @@ var Create=function(path,opts) {
 	var saveStringArray = function(arr,key,encoding) {
 		encoding=encoding||stringencoding;
 		key_writing=key;
-		var written=kfs.writeStringArray(arr,cur,encoding);
+		try {
+			var written=kfs.writeStringArray(arr,cur,encoding);
+		} catch(e) {
+			throw e;
+		}
 		cur+=written;
 		pushitem(key,written);
 		return written;

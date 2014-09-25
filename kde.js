@@ -65,20 +65,36 @@ var toDoc=function(pagenames,texts,others) {
 }
 var getFileRange=function(i) {
 	var engine=this;
+	var fileNames=engine.get(["fileNames"]);
 	var fileOffsets=engine.get(["fileOffsets"]);
 	var pageOffsets=engine.get(["pageOffsets"]);
 	var pageNames=engine.get(["pageNames"]);
-	var fileStart=fileOffsets[i],fileEnd=fileOffsets[i+1];
+	var fileStart=fileOffsets[i], fileEnd=fileOffsets[i+1]-1;
 
-	var start=bsearch(pageOffsets,fileStart+1,true);
-	if (i==0) start=0; //work around for first file
-	var end=bsearch(pageOffsets,fileEnd);
+	
+	var start=bsearch(pageOffsets,fileStart+1,true);	
+	//if (pageOffsets[start]==fileStart) start--;
+	
+  //if (i==0) start=0; //work around for first file
+	var end=bsearch(pageOffsets,fileEnd,true);
+
+
 	//in case of items with same value
 	//return the last one
-	while (start && pageOffsets[start-1]==pageOffsets[start]) start--;	
 	
-	while (pageOffsets[end+1]==pageOffsets[end]) end++;
-
+	//while (start && pageOffsets[start]==pageOffsets[start-1]) start--;
+	
+	//while (pageOffsets[end+1]==pageOffsets[end]) end--;
+	/*
+	if (i==0) {
+		var files="", offsets=""
+		for (var i=0;i<33;i++) offsets+=i+"."+fileOffsets[i]+"="+fileNames[i]+"\n";
+		console.log(files);
+		
+		for (var i=0;i<700;i++) offsets+=i+"."+pageOffsets[i]+"="+pageNames[i]+"\n";
+		console.log(offsets);
+	}
+	*/
 	return {start:start,end:end};
 }
 var getFilePageOffsets=function(i) {
