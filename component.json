@@ -20,7 +20,7 @@
     "kse.js","kde.js","boolsearch.js",
     "search.js","plist.js","excerpt.js","link.js","tibetan/wylie.js","languages.js",
     "diff.js","xml4kdb.js","buildfromxml.js","tei.js","concordance.js","regex.js","bsearch.js",
-    "persistentmarkup_pouchdb.js"
+    "persistentmarkup_pouchdb.js","underlines.js"
   ],
   "remotes": []
 }

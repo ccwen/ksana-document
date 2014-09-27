@@ -72,9 +72,12 @@ var getFileRange=function(i) {
 	var fileStart=fileOffsets[i], fileEnd=fileOffsets[i+1]-1;
 
 	
-	var start=bsearch(pageOffsets,fileStart+1,true);	
+	var start=bsearch(pageOffsets,fileStart,true);	
 	//if (pageOffsets[start]==fileStart) start--;
 	
+	//work around for jiangkangyur
+	while (pageNames[start+1]=="_") start++;
+
   //if (i==0) start=0; //work around for first file
 	var end=bsearch(pageOffsets,fileEnd,true);
 
@@ -82,7 +85,7 @@ var getFileRange=function(i) {
 	//in case of items with same value
 	//return the last one
 	
-	//while (start && pageOffsets[start]==pageOffsets[start-1]) start--;
+	
 	
 	//while (pageOffsets[end+1]==pageOffsets[end]) end--;
 	/*

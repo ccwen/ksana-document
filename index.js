@@ -14,6 +14,7 @@
 	,plist:require("./plist")
 	,bsearch:require("./bsearch")
 	,persistentmarkup:require("./persistentmarkup_pouchdb")
+	,underlines:require("./underlines")
 }
 if (typeof process!="undefined") {
 	API.persistent=require('./persistent');
