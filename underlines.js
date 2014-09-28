@@ -38,28 +38,30 @@ var calculateLevels=function(tokens,M) {
 	}
 	return out;
 }
+
+var TAG_START=0, TAG_END=1;
 var fixOverlaps=function(S) {
 	// insert extra tags because we cannot have overlaps in html
 	var out = [], stack = [] ;
 	for (i = S.length - 1; i >= 0; i--) {
-		var id=S[i][0], pos=S[i][1],type=S[i][2];
-		if (type == 0) { 
+		var id=S[i][0], pos=S[i][1],tagtype=S[i][2];
+		if (tagtype == TAG_START) { 
 			stack.push(id); 
 			out.unshift(S[i]);
-		}	else if (type == 1) {
+		}	else if (tagtype == TAG_END) {
 			if (id == stack[stack.length - 1]) {
 				stack.pop();
 				out.unshift(S[i]);
 			} else {
 				var z = stack.length - 1;
 				while (z > 0 && stack[z] != id) {
-					out.unshift([stack[z], pos, 1]);
+					out.unshift([stack[z], pos, TAG_END]);
 					z--;
 				}
-				out.unshift([stack[z], pos, 1]);
+				out.unshift([stack[z], pos, TAG_END]);
 				stack.splice(z, 1);
 				while (z < stack.length) {
-					out.unshift([stack[z], pos, 0]);
+					out.unshift([stack[z], pos, TAG_START]);
 					z++;
 				}
 			} 
@@ -70,13 +72,13 @@ var fixOverlaps=function(S) {
 var renderXML=function(tokens, M) {
 	var P=calculateLevels(tokens,M), S = [];
 	for (var p = 0; p < P.length; p++) {
-		S.push([p,M[p][0],0]);
-		S.push([p,M[p][0]+M[p][1],1]);
+		S.push([p,M[p][0],TAG_START]);
+		S.push([p,M[p][0]+M[p][1],TAG_END]);
 	}
 	S = S.sort(function(a, b){ 
 		if (b[1] == a[1]) {
-			if (b[2] == 0 && a[2] == 1) return 1;
-			if (a[2] == 0 && b[2] == 1) return -1;
+			if (b[2] == TAG_START && a[2] == TAG_END) return 1;
+			if (a[2] == TAG_START && b[2] == TAG_END) return -1;
 		}
 		return b[1] - a[1];
 	});
@@ -86,10 +88,10 @@ var renderXML=function(tokens, M) {
 	var idx=0,out="";
 	for (var i=tokens.length;i>0;i--) {
 		while (idx<S.length && S[idx][1]==i) {
-			var id=S[idx][0], type=S[idx][2] ;
+			var id=S[idx][0], tagtype=S[idx][2] ;
 			var tag = M[id][2] , level=P[id][1];
-			if (type==0) out= '<'+tag+' lv="'+level+'">' +out;
-			if (type==1) out= '</'+tag+'>' +out;
+			if (tagtype==TAG_START) out= '<'+tag+' lv="'+level+'">' +out;
+			if (tagtype==TAG_END) out= '</'+tag+'>' +out;
 			idx++;
 		}
 		out=tokens[i-1]+out;
