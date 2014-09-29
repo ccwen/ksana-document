@@ -32,7 +32,7 @@ var calculateLevels=function(M) {
 			if (levels[x].length > max) max = levels[x].length;
 		}
 		// check if there is an empty level
-		level = max;
+		var level = max;
 		for (var l = 0; l < max; l++) {
 			var ok = true ;
 			for (var m = pos; m < pos + count; m++) {
@@ -51,7 +51,7 @@ var TAG_START=0, TAG_END=1;
 var fixOverlaps=function(S) {
 	// insert extra tags because we cannot have overlaps in html
 	var out = [], stack = [] ,lstack=[];
-	for (i = S.length - 1; i >= 0; i--) {
+	for (var i = S.length - 1; i >= 0; i--) {
 		var id=S[i][0], pos=S[i][1],tagtype=S[i][2], level=S[i][3];
 		if (tagtype == TAG_START) { 
 			stack.push(id);
@@ -82,25 +82,34 @@ var fixOverlaps=function(S) {
 }
 var levelMarkups=function(M) {
 	var P=calculateLevels(M), S = [];
+	var backward=function(a, b){ 
+		if (b[1] == a[1]) {
+				if (b[2] == TAG_START && a[2] == TAG_END) return 1;
+				if (a[2] == TAG_START && b[2] == TAG_END) return -1;
+			}
+			return b[1] - a[1];
+	};
+	var forward=function(a, b){ 
+				if (b[1] == a[1]) {
+					if (b[2] == TAG_START && a[2] == TAG_END) return -1;
+					if (a[2] == TAG_START && b[2] == TAG_END) return 1;
+				}
+				return a[1] - b[1];
+	};
 
 	for (var p = 0; p < P.length; p++) {
 		S.push([p,M[p][0],TAG_START,P[p][1]]); // id, pos, tagtype, level
 		S.push([p,M[p][0]+M[p][1],TAG_END,P[p][1]]);
 	}
-	S = S.sort(function(a, b){ 
-		if (b[1] == a[1]) {
-			if (b[2] == TAG_START && a[2] == TAG_END) return 1;
-			if (a[2] == TAG_START && b[2] == TAG_END) return -1;
-		}
-		return b[1] - a[1];
-	});
-
+	S = S.sort(backward);
+			
 	/* s[0] == markup id , s[1]==pos , s[2]==tagtype  */
 	S = fixOverlaps(S);
+	//if (!inverse) S = S.sort(forward);		
 	return S;
 }
 var renderXML=function(tokens, M) {
-	var S=levelMarkups(M);
+	var S=levelMarkups(M,true);
 
 	var idx=0,out="";
 	for (var i=tokens.length;i>0;i--) {
@@ -115,7 +124,9 @@ var renderXML=function(tokens, M) {
 	}
 	return out;//return text
 }
-module.exports={calculateLevels:calculateLevels, levelMarkups:levelMarkups,renderXML:renderXML};
+module.exports={calculateLevels:calculateLevels, 
+	levelMarkups:levelMarkups,renderXML:renderXML,
+  TAG_START:TAG_START,TAG_END:TAG_END};
 
 /*
 var indexOfSorted = function (array, obj) {  //taken from ksana-document/bsearch.js
