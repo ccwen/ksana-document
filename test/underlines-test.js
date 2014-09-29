@@ -9,7 +9,7 @@ QUnit.test("yakov tag rendering algorithm",function(){
 	];
 	var tokens=["a","b","c","d","e"];
 
-	var res=markup.calculateLevels(tokens,m);
+	var res=markup.calculateLevels(m);
 	deepEqual(res,[ [0,0],[1,1]]);
 
 	var s=markup.renderXML(tokens,m);

@@ -11,11 +11,19 @@
 
  base on http://codepen.io/anon/pen/fHben by exebook@gmail.com
 */
-var calculateLevels=function(tokens,M) {
-	//M = M.sort(function(a, b) { return b.len - a.len } ); // sort longest first
+var getTextLen=function(markups) {
+	var textlen=0;
+	markups.map(function(m){
+		if (m[0]+m[1]>textlen) textlen=m[0]+m[1];
+	});
+	return textlen;
+}
 
+var calculateLevels=function(M) {
+	//M = M.sort(function(a, b) { return b.len - a.len } ); // sort longest first
+	var textlen=getTextLen(M);
 	var levels=[],out=[];
-	for (var i = 0; i < tokens.length; i++) levels[i] = [];
+	for (var i = 0; i < textlen; i++) levels[i] = [];
 
 	for (var i = 0; i < M.length; i++) {
 		var max = -1, pos = M[i][0], count = M[i][1];
@@ -42,26 +50,29 @@ var calculateLevels=function(tokens,M) {
 var TAG_START=0, TAG_END=1;
 var fixOverlaps=function(S) {
 	// insert extra tags because we cannot have overlaps in html
-	var out = [], stack = [] ;
+	var out = [], stack = [] ,lstack=[];
 	for (i = S.length - 1; i >= 0; i--) {
-		var id=S[i][0], pos=S[i][1],tagtype=S[i][2];
+		var id=S[i][0], pos=S[i][1],tagtype=S[i][2], level=S[i][3];
 		if (tagtype == TAG_START) { 
-			stack.push(id); 
+			stack.push(id);
+			lstack.push(level);
 			out.unshift(S[i]);
 		}	else if (tagtype == TAG_END) {
 			if (id == stack[stack.length - 1]) {
 				stack.pop();
+				lstack.pop();
 				out.unshift(S[i]);
 			} else {
 				var z = stack.length - 1;
 				while (z > 0 && stack[z] != id) {
-					out.unshift([stack[z], pos, TAG_END]);
+					out.unshift([stack[z], pos, TAG_END, lstack[z]]);
 					z--;
 				}
-				out.unshift([stack[z], pos, TAG_END]);
+				out.unshift([stack[z], pos, TAG_END, lstack[z]]);
 				stack.splice(z, 1);
+				lstack.splice(z, 1);
 				while (z < stack.length) {
-					out.unshift([stack[z], pos, TAG_START]);
+					out.unshift([stack[z], pos, TAG_START,  lstack[z]]);
 					z++;
 				}
 			} 
@@ -69,11 +80,12 @@ var fixOverlaps=function(S) {
 	}
 	return out
 }
-var renderXML=function(tokens, M) {
-	var P=calculateLevels(tokens,M), S = [];
+var levelMarkups=function(M) {
+	var P=calculateLevels(M), S = [];
+
 	for (var p = 0; p < P.length; p++) {
-		S.push([p,M[p][0],TAG_START]);
-		S.push([p,M[p][0]+M[p][1],TAG_END]);
+		S.push([p,M[p][0],TAG_START,P[p][1]]); // id, pos, tagtype, level
+		S.push([p,M[p][0]+M[p][1],TAG_END,P[p][1]]);
 	}
 	S = S.sort(function(a, b){ 
 		if (b[1] == a[1]) {
@@ -83,13 +95,18 @@ var renderXML=function(tokens, M) {
 		return b[1] - a[1];
 	});
 
+	/* s[0] == markup id , s[1]==pos , s[2]==tagtype  */
 	S = fixOverlaps(S);
+	return S;
+}
+var renderXML=function(tokens, M) {
+	var S=levelMarkups(M);
 
 	var idx=0,out="";
 	for (var i=tokens.length;i>0;i--) {
 		while (idx<S.length && S[idx][1]==i) {
 			var id=S[idx][0], tagtype=S[idx][2] ;
-			var tag = M[id][2] , level=P[id][1];
+			var tag = M[id][2] , level=S[idx][3] ; //level=P[id][1];
 			if (tagtype==TAG_START) out= '<'+tag+' lv="'+level+'">' +out;
 			if (tagtype==TAG_END) out= '</'+tag+'>' +out;
 			idx++;
@@ -98,7 +115,7 @@ var renderXML=function(tokens, M) {
 	}
 	return out;//return text
 }
-module.exports={calculateLevels:calculateLevels, renderXML:renderXML};
+module.exports={calculateLevels:calculateLevels, levelMarkups:levelMarkups,renderXML:renderXML};
 
 /*
 var indexOfSorted = function (array, obj) {  //taken from ksana-document/bsearch.js
