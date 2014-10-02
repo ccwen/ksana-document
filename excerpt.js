@@ -123,7 +123,9 @@ var resultlist=function(engine,Q,opts,cb) {
 		var pageNames=engine.getFilePageNames(nfile);
 		files[nfile]={pageOffsets:pageOffsets};
 		var pagewithhit=plist.groupbyposting2(Q.byFile[ nfile ],  pageOffsets);
-		pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
+		//if (pageOffsets[0]==1)
+		//pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
+
 		for (var j=0; j<pagewithhit.length;j++) {
 			if (!pagewithhit[j].length) continue;
 			//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
@@ -132,14 +134,14 @@ var resultlist=function(engine,Q,opts,cb) {
 	}
 
 	var pagekeys=output.map(function(p){
-		return ["fileContents",p.file,p.page+1];
+		return ["fileContents",p.file,p.page];
 	});
 	//prepare the text
 	engine.get(pagekeys,function(pages){
 		var seq=0;
 		if (pages) for (var i=0;i<pages.length;i++) {
-			var startvpos=files[output[i].file].pageOffsets[output[i].page];
-			var endvpos=files[output[i].file].pageOffsets[output[i].page+1];
+			var startvpos=files[output[i].file].pageOffsets[output[i].page-1];
+			var endvpos=files[output[i].file].pageOffsets[output[i].page];
 			var hl={};
 
 			if (opts.range && opts.range.start && startvpos<opts.range.start ) {
