@@ -17,6 +17,7 @@
     "sha1.js","users.js","customfunc.js","configs.js",
     "projects.js","indexer.js","indexer_kd.js",
     "kdb.js","kdbfs.js", "kdbw.js","kdb_sync.js","kdbfs_sync.js","html5fs.js",
+    "kdbfs_ksanagap.js",
     "kse.js","kde.js","boolsearch.js",
     "search.js","plist.js","excerpt.js","link.js","tibetan/wylie.js","languages.js",
     "diff.js","xml4kdb.js","buildfromxml.js","tei.js","concordance.js","regex.js","bsearch.js",

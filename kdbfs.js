@@ -117,12 +117,12 @@ var Open=function(path,opts,cb) {
 	var buf2stringarr=function(buf,enc) {
 		if (enc=="utf8") 	var arr=new Uint8Array(buf);
 		else var arr=new Uint16Array(buf);
-		var i=0,codes=[],out=[];
+		var i=0,codes=[],out=[],s="";
 		while (i<arr.length) {
 			if (arr[i]) {
 				codes[codes.length]=arr[i];
 			} else {
-				var s=String.fromCharCode.apply(null,codes);
+				s=String.fromCharCode.apply(null,codes);
 				if (enc=="utf8") out[out.length]=decodeutf8(s);
 				else out[out.length]=s;
 				codes=[];				

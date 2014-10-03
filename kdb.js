@@ -9,7 +9,12 @@
 
   
 */
-var Kfs=require('./kdbfs');	
+if (typeof ksanagap=="undefined") {
+	var Kfs=require('./kdbfs');		
+} else {
+	var Kfs=require("./kdbfs_ksanagap");
+}
+
 
 var DT={
 	uint8:'1', //unsigned 1 byte integer
@@ -43,6 +48,7 @@ var Create=function(path,opts,cb) {
 		cb=opts;
 		opts={};
 	}
+
 	
 	var loadVInt =function(opts,blocksize,count,cb) {
 		//if (count==0) return [];

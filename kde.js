@@ -371,19 +371,8 @@ var open=function(kdbid,cb,context) {
 	pool[kdbid]=engine;
 	return engine;
 }
-var openLocalNode=function(kdbid,cb,context) {
-	var fs=nodeRequire('fs');
-	var Kdb=nodeRequire('ksana-document').kdb;
-	var engine=localPool[kdbid];
-	if (engine) {
-		if (cb) cb(engine);
-		return engine;
-	}
-
-	var kdbfn=kdbid;
-	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
-
-	var tries=["./"+kdbfn  //TODO , allow any depth
+var getLocalTries=function(kdbfn) {
+	return ["./"+kdbfn  //TODO , allow any depth
 	           ,apppath+"/"+kdbfn,
 	           ,apppath+"/ksana_databases/"+kdbfn
 	           ,apppath+"/"+kdbfn,
@@ -395,6 +384,51 @@ var openLocalNode=function(kdbid,cb,context) {
 	           ,"../../../"+kdbfn
 	           ,"../../../ksana_databases/"+kdbfn
 	           ];
+}
+var openLocalKsanagap=function(kdbid,cb,context) {
+	console.log("open local ksanagap");
+	var engine=localPool[kdbid];
+	if (engine) {
+		if (cb) cb(engine);
+		return engine;
+	}
+	console.log("open local ksanagap2.5");
+
+	var Kdb=Require('ksana-document').kdb;
+	var kdbfn=kdbid;
+	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
+
+	var tries=getLocalTries(kdbfn);
+
+	for (var i=0;i<tries.length;i++) {
+		if (fs.existsSync(tries[i])) {
+			//console.log("kdb path: "+nodeRequire('path').resolve(tries[i]));
+			new Kdb(tries[i],function(kdb){
+				createLocalEngine(kdb,function(engine){
+						localPool[kdbid]=engine;
+						cb.apply(context||engine.context,[engine]);
+				},context);
+			});
+			return engine;
+		}
+	}
+	if (cb) cb(null);
+	return null;
+
+}
+var openLocalNode=function(kdbid,cb,context) {
+	var fs=nodeRequire('fs');
+	var engine=localPool[kdbid];
+	if (engine) {
+		if (cb) cb(engine);
+		return engine;
+	}
+
+	var Kdb=nodeRequire('ksana-document').kdb;
+	var kdbfn=kdbid;
+	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
+
+	var tries=getLocalTries(kdbfn);
 
 	for (var i=0;i<tries.length;i++) {
 		if (fs.existsSync(tries[i])) {
@@ -432,10 +466,14 @@ var openLocalHtml5=function(kdbid,cb,context) {
 }
 //omit cb for syncronize open
 var openLocal=function(kdbid,cb,context)  {
-	if (kdbid.indexOf("filesystem:")>-1 || typeof process=="undefined") {
-		openLocalHtml5(kdbid,cb,context);
+	if (typeof ksanagap=="undefined") {
+		if (kdbid.indexOf("filesystem:")>-1 || typeof process=="undefined") {
+			openLocalHtml5(kdbid,cb,context);
+		} else {
+			openLocalNode(kdbid,cb,context);
+		}		
 	} else {
-		openLocalNode(kdbid,cb,context);
+		openLocalKsanagap(kdbid,cb,context);
 	}
 }
 var setPath=function(path) {
