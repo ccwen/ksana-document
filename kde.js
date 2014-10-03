@@ -138,16 +138,15 @@ var getDocument=function(filename,markups,cb){
 	}
 }
 var createLocalEngine=function(kdb,cb,context) {
-	var engine={lastAccess:new Date(), kdb:kdb, queryCache:{}, postingCache:{}, cache:{}};
-
-	if (kdb.fs.html5fs) {
+	var engine={kdb:kdb, queryCache:{}, postingCache:{}, cache:{}};
+	if ((kdb.fs && kdb.fs.html5fs) || typeof ksanagap!="undefined") {
 		var customfunc=Require("ksana-document").customfunc;
 	} else {
-		var customfunc=nodeRequire("ksana-document").customfunc;	
+		var customfunc=nodeRequire("ksana-document").customfunc;		
 	}	
+
 	if (typeof context=="object") engine.context=context;
 	engine.get=function(key,recursive,cb) {
-
 		if (typeof recursive=="function") {
 			cb=recursive;
 			recursive=false;
@@ -156,7 +155,6 @@ var createLocalEngine=function(kdb,cb,context) {
 			if (cb) cb(null);
 			return null;
 		}
-
 		if (typeof cb!="function") {
 			if (kdb.fs.html5fs) {
 				return engine.kdb.get(key,recursive,cb);
@@ -175,6 +173,7 @@ var createLocalEngine=function(kdb,cb,context) {
 			cb(null);	
 		}
 	};	
+
 	engine.fileOffset=fileOffset;
 	engine.folderOffset=folderOffset;
 	engine.pageOffset=pageOffset;
@@ -182,7 +181,9 @@ var createLocalEngine=function(kdb,cb,context) {
 	engine.getFilePageNames=getFilePageNames;
 	engine.getFilePageOffsets=getFilePageOffsets;
 	//only local engine allow getSync
-	if (!kdb.fs.html5fs)	engine.getSync=engine.kdb.getSync;
+	if (kdb.fs.getSync) {
+		engine.getSync=engine.kdb.getSync;
+	}
 	var preload=[["meta"],["fileNames"],["fileOffsets"],
 	["tokens"],["postingslen"],["pageNames"],["pageOffsets"]];
 
@@ -191,6 +192,7 @@ var createLocalEngine=function(kdb,cb,context) {
 		engine.customfunc=customfunc.getAPI(res[0].config);
 		engine.ready=true;
 	}
+	console.log("preloading3 4");
 	if (typeof cb=="function") {
 		_gets.apply(engine,[  preload, true,function(res){
 			setPreload(res);
@@ -301,7 +303,7 @@ var createEngine=function(kdbid,context,cb) {
 	//var link=Require("./link");
 	var customfunc=Require("ksana-document").customfunc;
 	var $kse=Require("ksanaforge-kse").$ksana; 
-	var engine={lastAccess:new Date(), kdbid:kdbid, cache:{} , 
+	var engine={kdbid:kdbid, cache:{} , 
 	postingCache:{}, queryCache:{}, traffic:0,fetched:0};
 	engine.setContext=function(ctx) {this.context=ctx};
 	engine.get=getRemote;
@@ -386,13 +388,11 @@ var getLocalTries=function(kdbfn) {
 	           ];
 }
 var openLocalKsanagap=function(kdbid,cb,context) {
-	console.log("open local ksanagap");
 	var engine=localPool[kdbid];
 	if (engine) {
 		if (cb) cb(engine);
 		return engine;
 	}
-	console.log("open local ksanagap2.5");
 
 	var Kdb=Require('ksana-document').kdb;
 	var kdbfn=kdbid;
@@ -403,13 +403,12 @@ var openLocalKsanagap=function(kdbid,cb,context) {
 	for (var i=0;i<tries.length;i++) {
 		if (fs.existsSync(tries[i])) {
 			//console.log("kdb path: "+nodeRequire('path').resolve(tries[i]));
-			new Kdb(tries[i],function(kdb){
-				createLocalEngine(kdb,function(engine){
-						localPool[kdbid]=engine;
-						cb.apply(context||engine.context,[engine]);
-				},context);
-			});
-			return engine;
+			var kdb=new Kdb(tries[i]);
+			createLocalEngine(kdb,function(engine){
+				localPool[kdbid]=engine;
+				cb.apply(context||engine.context,[engine]);
+			},context);
+			return null;
 		}
 	}
 	if (cb) cb(null);

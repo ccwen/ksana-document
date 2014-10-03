@@ -54,6 +54,7 @@ var Create=function(path,opts,cb) {
 		//if (count==0) return [];
 		var that=this;
 		this.fs.readBuf_packedint(opts.cur,blocksize,count,true,function(o){
+			//console.log("vint");
 			opts.cur+=o.adv;
 			cb.apply(that,[o.data]);
 		});
@@ -61,6 +62,7 @@ var Create=function(path,opts,cb) {
 	var loadVInt1=function(opts,cb) {
 		var that=this;
 		loadVInt.apply(this,[opts,6,1,function(data){
+			//console.log("vint1");
 			cb.apply(that,[data[0]]);
 		}])
 	}
@@ -68,6 +70,7 @@ var Create=function(path,opts,cb) {
 	var loadPInt =function(opts,blocksize,count,cb) {
 		var that=this;
 		this.fs.readBuf_packedint(opts.cur,blocksize,count,false,function(o){
+			//console.log("pint");
 			opts.cur+=o.adv;
 			cb.apply(that,[o.data]);
 		});
