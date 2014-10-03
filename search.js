@@ -252,10 +252,8 @@ var newQuery =function(engine,query,opts) {
 	return Q;
 }
 var loadPostings=function(engine,terms,cb) {
-	//
 	var tokens=engine.get("tokens");
 	   //var tokenIds=terms.map(function(t){return tokens[t.key]});
-
 	var tokenIds=terms.map(function(t){ return 1+tokens.indexOf(t.key)});
 	var postingid=[];
 	for (var i=0;i<tokenIds.length;i++) {
@@ -343,7 +341,6 @@ var countFolderFile=function(Q) {
 var main=function(engine,q,opts,cb){
 	if (typeof opts=="function") cb=opts;
 	opts=opts||{};
-	
 	var Q=engine.queryCache[q];
 	if (!Q) Q=newQuery(engine,q,opts);
 	if (!Q) {
@@ -351,15 +348,13 @@ var main=function(engine,q,opts,cb){
 		else cb({rawresult:[]});
 		return;
 	};
-
 	engine.queryCache[q]=Q;
-	
 	loadPostings(engine,Q.terms,function(){
-	
 		if (!Q.phrases[0].posting) {
 			cb.apply(engine.context,[{rawresult:[]}]);
 			return;			
 		}
+		
 		if (!Q.phrases[0].posting.length) { //
 			Q.phrases.forEach(loadPhrase.bind(Q));
 		}
@@ -369,7 +364,8 @@ var main=function(engine,q,opts,cb){
 			phrase_intersect(engine,Q);
 		}
 		var fileOffsets=Q.engine.get("fileOffsets");
-		
+		console.log("search opts "+JSON.stringify(opts));
+
 		if (!Q.byFile && Q.rawresult && !opts.nogroup) {
 			Q.byFile=plist.groupbyposting2(Q.rawresult, fileOffsets);
 			Q.byFile.shift();Q.byFile.pop();
@@ -377,15 +373,15 @@ var main=function(engine,q,opts,cb){
 
 			countFolderFile(Q);
 		}
+
 		if (opts.range) {
-			excerpt.resultlist(engine,Q,opts,function(data) {
+			excerpt.resultlist(engine,Q,opts,function(data) { 
+				console.log("excerpt ok");
 				Q.excerpt=data;
-				if (engine.context) cb.apply(engine.context,[Q]);
-				else cb(Q);
+				cb.apply(engine.context,[Q]);
 			});
 		} else {
-			if (engine.context) cb.apply(engine.context,[Q]);
-			else cb(Q);
+			cb.apply(engine.context,[Q]);
 		}		
 	});
 }

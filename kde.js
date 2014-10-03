@@ -156,11 +156,7 @@ var createLocalEngine=function(kdb,cb,context) {
 			return null;
 		}
 		if (typeof cb!="function") {
-			if (kdb.fs.html5fs) {
-				return engine.kdb.get(key,recursive,cb);
-			} else {
-				return engine.kdb.getSync(key,recursive);
-			}
+			return engine.kdb.get(key,recursive);
 		}
 
 		if (typeof key=="string") {
@@ -192,7 +188,6 @@ var createLocalEngine=function(kdb,cb,context) {
 		engine.customfunc=customfunc.getAPI(res[0].config);
 		engine.ready=true;
 	}
-	console.log("preloading3 4");
 	if (typeof cb=="function") {
 		_gets.apply(engine,[  preload, true,function(res){
 			setPreload(res);
@@ -390,7 +385,7 @@ var getLocalTries=function(kdbfn) {
 var openLocalKsanagap=function(kdbid,cb,context) {
 	var engine=localPool[kdbid];
 	if (engine) {
-		if (cb) cb(engine);
+		if (cb) cb.apply(context||engine.context,[engine]);
 		return engine;
 	}
 
@@ -419,7 +414,7 @@ var openLocalNode=function(kdbid,cb,context) {
 	var fs=nodeRequire('fs');
 	var engine=localPool[kdbid];
 	if (engine) {
-		if (cb) cb(engine);
+		if (cb) cb.apply(context||engine.context,[engine]);
 		return engine;
 	}
 

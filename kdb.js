@@ -328,8 +328,8 @@ var Create=function(path,opts,cb) {
 		if (!CACHE) return undefined;	
 		var o=CACHE;
 		for (var i=0;i<path.length;i++) {
-			var r=o[path[i]] ;
-			if (r===undefined) return undefined;
+			var r=o[path[i]];
+			if (typeof r=="undefined") return null;
 			o=r;
 		}
 		return o;

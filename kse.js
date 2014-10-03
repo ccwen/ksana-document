@@ -15,7 +15,8 @@ var _search=function(engine,q,opts,cb) {
 		opts.q=q;
 		$kse.search(opts,cb);
 	} else {//nw or brower
-		return require("./search")(engine,q,opts,cb);		
+		var dosearch=require("./search");
+		return dosearch(engine,q,opts,cb);		
 	}
 }
 
