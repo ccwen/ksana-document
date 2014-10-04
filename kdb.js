@@ -40,7 +40,7 @@ var _readLog=function(readtype,bytes) {
 	console.log(readtype,bytes,"bytes");
 }
 if (verbose) readLog=_readLog;
-
+var strsep="\uffff";
 var Create=function(path,opts,cb) {
 	/* loadxxx functions move file pointer */
 	// load variable length int
@@ -112,8 +112,8 @@ var Create=function(path,opts,cb) {
 				if (opts.lazy) { 
 						var offset=L.offset;
 						L.sz.map(function(sz){
-							o[o.length]="\0"+offset.toString(16)
-								   +"\0"+sz.toString(16);
+							o[o.length]=strsep+offset.toString(16)
+								   +strsep+sz.toString(16);
 							offset+=sz;
 						})
 				} else {
@@ -170,8 +170,8 @@ var Create=function(path,opts,cb) {
 					var offset=L.offset;
 					for (var i=0;i<L.sz.length;i++) {
 						//prefix with a \0, impossible for normal string
-						o[keys[i]]="\0"+offset.toString(16)
-							   +"\0"+L.sz[i].toString(16);
+						o[keys[i]]=strsep+offset.toString(16)
+							   +strsep+L.sz[i].toString(16);
 						offset+=L.sz[i];
 					}
 				} else {
@@ -316,8 +316,8 @@ var Create=function(path,opts,cb) {
 		var key=path.pop();
 		var that=this;
 		get.apply(this,[path,false,function(data){
-			if (!path.join('\0')) return (!!KEY[key]);
-			var keys=KEY[path.join('\0')];
+			if (!path.join(strsep)) return (!!KEY[key]);
+			var keys=KEY[path.join(strsep)];
 			path.push(key);//put it back
 			if (keys) cb.apply(that,[keys.indexOf(key)>-1]);
 			else cb.apply(that,[false]);
@@ -346,9 +346,7 @@ var Create=function(path,opts,cb) {
 		if (typeof cb!='function') return getSync(path);
 
 		reset.apply(this,[function(){
-
 			var o=CACHE;
-
 			if (path.length==0) {
 				cb(Object.keys(CACHE));
 				return;
@@ -357,13 +355,12 @@ var Create=function(path,opts,cb) {
 			var pathnow="",taskqueue=[],opts={},r=null;
 			var lastkey="";
 
-
 			for (var i=0;i<path.length;i++) {
 				var task=(function(key,k){
 
 					return (function(data){
 						if (!(typeof data=='object' && data.__empty)) {
-							if (typeof o[lastkey]=='string' && o[lastkey][0]=="\0") o[lastkey]={};
+							if (typeof o[lastkey]=='string' && o[lastkey][0]==strsep) o[lastkey]={};
 							o[lastkey]=data; 
 							o=o[lastkey];
 							r=data[key];
@@ -377,15 +374,15 @@ var Create=function(path,opts,cb) {
 							taskqueue=null;
 							cb.apply(that,[r]); //return empty value
 						} else {							
-							if (parseInt(k)) pathnow+="\0";
+							if (parseInt(k)) pathnow+=strsep;
 							pathnow+=key;
-							if (typeof r=='string' && r[0]=="\0") { //offset of data to be loaded
-								var p=r.substring(1).split("\0").map(function(item){return parseInt(item,16)});
+							if (typeof r=='string' && r[0]==strsep) { //offset of data to be loaded
+								var p=r.substring(1).split(strsep).map(function(item){return parseInt(item,16)});
 								var cur=p[0],sz=p[1];
 								opts.lazy=!recursive || (k<path.length-1) ;
 								opts.blocksize=sz;opts.cur=cur,opts.keys=[];
+								lastkey=key; //load is sync in android
 								load.apply(that,[opts, taskqueue.shift()]);
-								lastkey=key;
 							} else {
 								var next=taskqueue.shift();
 								next.apply(that,[r]);
@@ -418,7 +415,7 @@ var Create=function(path,opts,cb) {
 		var that=this;
 		get.apply(this,[path,false,function(){
 			if (path && path.length) {
-				cb.apply(that,[KEY[path.join("\0")]]);
+				cb.apply(that,[KEY[path.join(strsep)]]);
 			} else {
 				cb.apply(that,[Object.keys(CACHE)]); 
 				//top level, normally it is very small

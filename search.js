@@ -329,7 +329,7 @@ var phrase_intersect=function(engine,Q) {
 	}
 	Q.rawresult=out;
 	countFolderFile(Q);
-	console.log(emptycount,hashit);
+	//console.log(emptycount,hashit);
 }
 var countFolderFile=function(Q) {
 	Q.fileWithHitCount=0;
@@ -364,7 +364,7 @@ var main=function(engine,q,opts,cb){
 			phrase_intersect(engine,Q);
 		}
 		var fileOffsets=Q.engine.get("fileOffsets");
-		console.log("search opts "+JSON.stringify(opts));
+		//console.log("search opts "+JSON.stringify(opts));
 
 		if (!Q.byFile && Q.rawresult && !opts.nogroup) {
 			Q.byFile=plist.groupbyposting2(Q.rawresult, fileOffsets);
@@ -376,7 +376,7 @@ var main=function(engine,q,opts,cb){
 
 		if (opts.range) {
 			excerpt.resultlist(engine,Q,opts,function(data) { 
-				console.log("excerpt ok");
+				//console.log("excerpt ok");
 				Q.excerpt=data;
 				cb.apply(engine.context,[Q]);
 			});

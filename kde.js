@@ -7,6 +7,7 @@ if (typeof nodeRequire=='undefined')var nodeRequire=require;
 var pool={},localPool={};
 var apppath="";
 var bsearch=require("./bsearch");
+var strsep="\uffff";
 var _getSync=function(keys,recursive) {
 	var out=[];
 	for (var i in keys) {
@@ -216,7 +217,7 @@ var getRemote=function(key,recursive,cb) {
 	if (key[0] instanceof Array) { //multiple keys
 		var keys=[],output=[];
 		for (var i=0;i<key.length;i++) {
-			var cachekey=key[i].join("\0");
+			var cachekey=key[i].join(strsep);
 			var data=engine.cache[cachekey];
 			if (typeof data!="undefined") {
 				keys.push(null);//  place holder for LINE 28
@@ -234,7 +235,7 @@ var getRemote=function(key,recursive,cb) {
 			//merge the server result with cached 
 			for (var i=0;i<output.length;i++) {
 				if (datum[i] && keys[i]) {
-					var cachekey=keys[i].join("\0");
+					var cachekey=keys[i].join(strsep);
 					engine.cache[cachekey]=datum[i];
 					output[i]=datum[i];
 				}
@@ -242,7 +243,7 @@ var getRemote=function(key,recursive,cb) {
 			cb.apply(engine.context,[output]);	
 		});
 	} else { //single key
-		var cachekey=key.join("\0");
+		var cachekey=key.join(strsep);
 		var data=engine.cache[cachekey];
 		if (typeof data!="undefined") {
 			if (cb) cb.apply(engine.context,[data]);
