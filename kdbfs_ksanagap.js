@@ -3,74 +3,84 @@
 	array and buffer return in string format
 	need JSON.parse
 */
+var verbose=1;
+
 var readSignature=function(pos,cb) {
-	//console.log("read signature");
-	var signature=fs.readStringSync(this.handle,pos,1);
-	//console.log(signature);
+	//console.debug("read signature");
+	var signature=kfs.readUTF8String(this.handle,pos,1);
+	//console.debug(signature,signature.charCodeAt(0));
 	cb.apply(this,[signature]);
 }
 var readI32=function(pos,cb) {
-	//console.log("read i32");
-	var i32=fs.readInt32Sync(this.handle,pos);
-	//console.log(i32);
+	//console.debug("read i32");
+	var i32=kfs.readInt32(this.handle,pos);
+	//console.debug(i32);
 	cb.apply(this,[i32]);	
 }
 var readUI32=function(pos,cb) {
-	//console.log("read ui32");
-	var ui32=fs.readUInt32Sync(this.handle,pos);
-	//console.log(ui32);
+	//console.debug("read ui32");
+	var ui32=kfs.readUInt32(this.handle,pos);
+	//console.debug(ui32);
 	cb.apply(this,[ui32]);
 }
 var readUI8=function(pos,cb) {
-	//console.log("read ui8"); 
-	var ui8=fs.readUInt8Sync(this.handle,pos);
-	//console.log("ui8="+ui8);
+	//console.debug("read ui8"); 
+	var ui8=kfs.readUInt8(this.handle,pos);
+	//console.debug(ui8);
 	cb.apply(this,[ui8]);
 }
 var readBuf=function(pos,blocksize,cb) {
-	//console.log("read buffer");
-	var buf=fs.readBufSync(this.handle,pos,blocksize);
+	//console.debug("read buffer");
+	var buf=kfs.readBuf(this.handle,pos,blocksize);
 	var buff=JSON.parse(buf);
-	//console.log(buff);
+	//console.debug("buffer length"+buff.length);
 	cb.apply(this,[buff]);	
 }
 var readBuf_packedint=function(pos,blocksize,count,reset,cb) {
-	//console.log("read packed int3");
-	var buf=fs.readBufSync_packedint(this.handle,pos,blocksize,count,reset);
+	//console.debug("read packed int, blocksize "+blocksize);
+	var buf=kfs.readBuf_packedint(this.handle,pos,blocksize,count,reset);
 	var adv=parseInt(buf);
 	var buff=JSON.parse(buf.substr(buf.indexOf("[")));
-	//console.log(buff.length);
+	//console.debug("packedInt length "+buff.length+" first item="+buff[0]);
 	cb.apply(this,[{data:buff,adv:adv}]);	
 }
 
 
 var readString= function(pos,blocksize,encoding,cb) {
-	//console.log("readstring"+blocksize+" "+encoding);
-	var str=fs.readEncodedStringSync(this.handle,pos,blocksize,encoding);
-	//console.log(str);
+	//console.debug("readstring"+blocksize+" "+encoding);
+	if (encoding=="ucs2") {
+		var str=kfs.readULE16String(this.handle,pos,blocksize);
+	} else {
+		var str=kfs.readUTF8String(this.handle,pos,blocksize);	
+	}
+	 
+	if (str.length>10) {
+		str=str.substring(0,10)+"...";
+	}
+	//console.debug(str);
 	cb.apply(this,[str]);	
 }
 
 var readFixedArray = function(pos ,count, unitsize,cb) {
-	//console.log("read fixed array"); 
-	var buf=fs.readFixedArraySync(this.handle,pos,count,unitsize);
+	//console.debug("read fixed array"); 
+	var buf=kfs.readFixedArray(this.handle,pos,count,unitsize);
 	var buff=JSON.parse(buf);
-	//console.log(buff.length);
+	//console.debug("array length"+buff.length);
 	cb.apply(this,[buff]);	
 }
 var readStringArray = function(pos,blocksize,encoding,cb) {
 	//console.log("read String array "+blocksize +" "+encoding); 
 
-	var buf=fs.readStringArraySync(this.handle,pos,blocksize,encoding);
+	var buf=kfs.readStringArray(this.handle,pos,blocksize,encoding);
 	//var buff=JSON.parse(buf);
-	//console.log(buf);
+	//console.debug("read string array");
 	var buff=buf.split("\uffff"); //cannot return string with 0
-	//console.log(buff.length);
+	//console.debug("array length"+buff.length);
 	cb.apply(this,[buff]);	
 }
 var free=function() {
 	////console.log('closing ',handle);
-	fs.closeSync(this.handle);
+	kfs.close(this.handle);
 }
 var Open=function(path,opts,cb) {
 	opts=opts||{};
@@ -87,12 +97,12 @@ var Open=function(path,opts,cb) {
 		this.readStringArray=readStringArray;
 		this.signature_size=signature_size;
 		this.free=free;
-		this.size=fs.getFileSize(this.handle);
+		this.size=kfs.getFileSize(this.handle);
 		//console.log("filesize  "+this.size);
 		if (cb)	cb.call(this);
 	}
 
-	this.handle=fs.openSync(path);
+	this.handle=kfs.open(path);
 	this.opened=true;
 	setupapi.call(this);
 	return this;
