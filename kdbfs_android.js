@@ -66,7 +66,7 @@ var readFixedArray = function(pos ,count, unitsize,cb) {
 }
 var readStringArray = function(pos,blocksize,encoding,cb) {
 	//console.log("read String array "+blocksize +" "+encoding); 
-
+	encoding = encoding||"utf8";
 	var buf=kfs.readStringArray(this.handle,pos,blocksize,encoding);
 	//var buff=JSON.parse(buf);
 	//console.debug("read string array");
