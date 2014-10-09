@@ -9,10 +9,17 @@
 
   
 */
+var Kfs=null;
+
 if (typeof ksanagap=="undefined") {
-	var Kfs=require('./kdbfs');		
+	Kfs=require('./kdbfs');		
 } else {
-	var Kfs=require("./kdbfs_ksanagap");
+	if (ksanagap.platform=="ios") {
+		Kfs=require("./kdbfs_ios");
+	} else {
+		Kfs=require("./kdbfs_android");
+	}
+		
 }
 
 
