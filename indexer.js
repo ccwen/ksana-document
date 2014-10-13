@@ -344,7 +344,6 @@ var start=function(mkdbconfig) {
 }
 
 var indexstep=function() {
-	
 	if (session.filenow<session.files.length) {
 		status.filename=session.files[session.filenow];
 		status.progress=session.filenow/session.files.length;
