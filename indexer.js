@@ -216,7 +216,8 @@ var processTags=function(captureTags,tags,texts) {
 				var prev=tagStack[tagStack.length-1];
 				if (!nulltag) {				
 					if (tagname.substr(1)!=prev[0]) {
-						console.error("tag unbalance",tagname,prev[0],T);
+						console.error("tag unbalance",tagname,prev[0],status.filename);
+						
 					} else {
 						tagStack.pop();
 					}
