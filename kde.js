@@ -101,6 +101,32 @@ var getFileRange=function(i) {
 	*/
 	return {start:start,end:end};
 }
+
+var getfp=function(npage) {
+	var fileOffsets=this.get(["fileOffsets"]);
+	var pageOffsets=this.get(["pageOffsets"]);
+	var pageoffset=pageOffsets[npage];
+	var file=bsearch(fileOffsets,pageoffset,true)-1;
+
+	var fileStart=fileOffsets[file];
+	var start=bsearch(pageOffsets,fileStart,true);	
+
+	var page=npage-start-1;
+	return {file:file,page:page};
+}
+//return array of object of nfile npage given pagename
+var findPage=function(pagename) {
+	var pagenames=this.get("pageNames");
+	var out=[];
+	for (var i=0;i<pagenames.length;i++) {
+		if (pagenames[i]==pagename) {
+			var fp=getfp.apply(this,[i]);
+			out.push({file:fp.file,page:fp.page,abspage:i});
+		}
+	}
+
+	return out;
+}
 var getFilePageOffsets=function(i) {
 	var pageOffsets=this.get("pageOffsets");
 	var range=getFileRange.apply(this,[i]);
@@ -177,6 +203,7 @@ var createLocalEngine=function(kdb,cb,context) {
 	engine.getDocument=getDocument;
 	engine.getFilePageNames=getFilePageNames;
 	engine.getFilePageOffsets=getFilePageOffsets;
+	engine.findPage=findPage;
 	//only local engine allow getSync
 	if (kdb.fs.getSync) {
 		engine.getSync=engine.kdb.getSync;
@@ -309,6 +336,7 @@ var createEngine=function(kdbid,context,cb) {
 	engine.getDocument=getDocument;
 	engine.getFilePageNames=getFilePageNames;
 	engine.getFilePageOffsets=getFilePageOffsets;
+	engine.findPage=findPage;
 
 	if (typeof context=="object") engine.context=context;
 
