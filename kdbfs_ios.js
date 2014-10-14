@@ -4,66 +4,67 @@
 var verbose=1;
 
 var readSignature=function(pos,cb) {
-	//console.debug("read signature");
+	console.log("read signature");
 	var signature=kfs.readUTF8String(this.handle,pos,1);
-	//console.debug(signature,signature.charCodeAt(0));
+	console.log(signature,signature.charCodeAt(0));
 	cb.apply(this,[signature]);
 }
 var readI32=function(pos,cb) {
-	//console.debug("read i32");
+	console.log("read i32");
 	var i32=kfs.readInt32(this.handle,pos);
-	//console.debug(i32);
+	console.log(i32);
 	cb.apply(this,[i32]);	
 }
 var readUI32=function(pos,cb) {
-	//console.debug("read ui32");
+	console.log("read ui32");
 	var ui32=kfs.readUInt32(this.handle,pos);
-	//console.debug(ui32);
+	console.log(ui32);
 	cb.apply(this,[ui32]);
 }
 var readUI8=function(pos,cb) {
-	//console.debug("read ui8"); 
+	console.log("read ui8"); 
 	var ui8=kfs.readUInt8(this.handle,pos);
-	//console.debug(ui8);
+	console.log(ui8);
 	cb.apply(this,[ui8]);
 }
 var readBuf=function(pos,blocksize,cb) {
-	//console.debug("read buffer");
+	console.log("read buffer");
 	var buf=kfs.readBuf(this.handle,pos,blocksize);
-	//console.debug("buffer length"+buff.length);
+	console.log("buffer length"+buff.length);
 	cb.apply(this,[buf]);	
 }
 var readBuf_packedint=function(pos,blocksize,count,reset,cb) {
-	//console.debug("read packed int, blocksize "+blocksize);
+	console.log("read packed int, blocksize "+blocksize);
 	var buf=kfs.readBuf_packedint(this.handle,pos,blocksize,count,reset);
 	cb.apply(this,[buf]);
 }
 
 
 var readString= function(pos,blocksize,encoding,cb) {
-	//console.debug("readstring"+blocksize+" "+encoding);
+	console.log("readstring"+blocksize+" "+encoding);
 	if (encoding=="ucs2") {
 		var str=kfs.readULE16String(this.handle,pos,blocksize);
 	} else {
 		var str=kfs.readUTF8String(this.handle,pos,blocksize);	
 	}
-	//console.debug(str);
+	console.log(str);
 	cb.apply(this,[str]);	
 }
 
 var readFixedArray = function(pos ,count, unitsize,cb) {
-	//console.debug("read fixed array"); 
+	console.log("read fixed array"); 
 	var buf=kfs.readFixedArray(this.handle,pos,count,unitsize);
+	console.log("array length"+buff.length);
 	cb.apply(this,[buf]);	
 }
 var readStringArray = function(pos,blocksize,encoding,cb) {
 	//console.log("read String array "+blocksize +" "+encoding); 
 	encoding = encoding||"utf8";
+	console.log("read string array");
 	var buf=kfs.readStringArray(this.handle,pos,blocksize,encoding);
 	//var buff=JSON.parse(buf);
-	//console.debug("read string array");
 	//var buff=buf.split("\uffff"); //cannot return string with 0
-	//console.debug("array length"+buff.length);
+	console.log("string array length"+buff.length);
 	cb.apply(this,[buf]);	
 }
 var free=function() {
