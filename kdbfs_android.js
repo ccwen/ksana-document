@@ -6,76 +6,76 @@
 var verbose=1;
 
 var readSignature=function(pos,cb) {
-	//console.debug("read signature");
+	console.debug("read signature");
 	var signature=kfs.readUTF8String(this.handle,pos,1);
-	//console.debug(signature,signature.charCodeAt(0));
+	console.debug(signature,signature.charCodeAt(0));
 	cb.apply(this,[signature]);
 }
 var readI32=function(pos,cb) {
-	//console.debug("read i32");
+	console.debug("read i32 at "+pos);
 	var i32=kfs.readInt32(this.handle,pos);
-	//console.debug(i32);
+	console.debug(i32);
 	cb.apply(this,[i32]);	
 }
 var readUI32=function(pos,cb) {
-	//console.debug("read ui32");
+	console.debug("read ui32 at "+pos);
 	var ui32=kfs.readUInt32(this.handle,pos);
-	//console.debug(ui32);
+	console.debug(ui32);
 	cb.apply(this,[ui32]);
 }
 var readUI8=function(pos,cb) {
-	//console.debug("read ui8"); 
+	console.debug("read ui8 at "+pos); 
 	var ui8=kfs.readUInt8(this.handle,pos);
-	//console.debug(ui8);
+	console.debug(ui8);
 	cb.apply(this,[ui8]);
 }
 var readBuf=function(pos,blocksize,cb) {
-	//console.debug("read buffer");
+	console.debug("read buffer at "+pos+ " blocksize "+blocksize);
 	var buf=kfs.readBuf(this.handle,pos,blocksize);
 	var buff=JSON.parse(buf);
-	//console.debug("buffer length"+buff.length);
+	console.debug("buffer length"+buff.length);
 	cb.apply(this,[buff]);	
 }
 var readBuf_packedint=function(pos,blocksize,count,reset,cb) {
-	//console.debug("read packed int, blocksize "+blocksize);
+	console.debug("read packed int at "+pos+" blocksize "+blocksize+" count "+count);
 	var buf=kfs.readBuf_packedint(this.handle,pos,blocksize,count,reset);
 	var adv=parseInt(buf);
 	var buff=JSON.parse(buf.substr(buf.indexOf("[")));
-	//console.debug("packedInt length "+buff.length+" first item="+buff[0]);
+	console.debug("packedInt length "+buff.length+" first item="+buff[0]);
 	cb.apply(this,[{data:buff,adv:adv}]);	
 }
 
 
 var readString= function(pos,blocksize,encoding,cb) {
-	//console.debug("readstring"+blocksize+" "+encoding);
+	console.debug("readstring at "+pos+" blocksize " +blocksize+" enc:"+encoding);
 	if (encoding=="ucs2") {
 		var str=kfs.readULE16String(this.handle,pos,blocksize);
 	} else {
 		var str=kfs.readUTF8String(this.handle,pos,blocksize);	
 	}	 
-	//console.debug(str);
+	console.debug(str);
 	cb.apply(this,[str]);	
 }
 
 var readFixedArray = function(pos ,count, unitsize,cb) {
-	//console.debug("read fixed array"); 
+	console.debug("read fixed array at "+pos+" count "+count+" unitsize "+unitsize); 
 	var buf=kfs.readFixedArray(this.handle,pos,count,unitsize);
 	var buff=JSON.parse(buf);
-	//console.debug("array length"+buff.length);
+	console.debug("array length"+buff.length);
 	cb.apply(this,[buff]);	
 }
 var readStringArray = function(pos,blocksize,encoding,cb) {
-	//console.log("read String array "+blocksize +" "+encoding); 
+	console.log("read String array at "+pos+" blocksize "+blocksize +" enc "+encoding); 
 	encoding = encoding||"utf8";
 	var buf=kfs.readStringArray(this.handle,pos,blocksize,encoding);
 	//var buff=JSON.parse(buf);
-	//console.debug("read string array");
+	console.debug("read string array");
 	var buff=buf.split("\uffff"); //cannot return string with 0
-	//console.debug("array length"+buff.length);
+	console.debug("array length"+buff.length);
 	cb.apply(this,[buff]);	
 }
 var free=function() {
-	////console.log('closing ',handle);
+	//console.log('closing ',handle);
 	kfs.close(this.handle);
 }
 var Open=function(path,opts,cb) {
@@ -94,7 +94,7 @@ var Open=function(path,opts,cb) {
 		this.signature_size=signature_size;
 		this.free=free;
 		this.size=kfs.getFileSize(this.handle);
-		//console.log("filesize  "+this.size);
+		console.log("filesize  "+this.size);
 		if (cb)	cb.call(this);
 	}
 
