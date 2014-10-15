@@ -4,42 +4,42 @@
 var verbose=1;
 
 var readSignature=function(pos,cb) {
-	if (verbose)  ksanagap.log("read signature");
+	if (verbose)  ksanagap.log("read signature at "+pos);
 	var signature=kfs.readUTF8String(this.handle,pos,1);
 	if (verbose)  ksanagap.log(signature+" "+signature.charCodeAt(0));
 	cb.apply(this,[signature]);
 }
 var readI32=function(pos,cb) {
-	if (verbose)  ksanagap.log("read i32");
+	if (verbose)  ksanagap.log("read i32 at "+pos);
 	var i32=kfs.readInt32(this.handle,pos);
 	if (verbose)  ksanagap.log(i32);
 	cb.apply(this,[i32]);	
 }
 var readUI32=function(pos,cb) {
-	if (verbose)  ksanagap.log("read ui32");
+	if (verbose)  ksanagap.log("read ui32 at "+pos);
 	var ui32=kfs.readUInt32(this.handle,pos);
 	if (verbose)  ksanagap.log(ui32);
 	cb.apply(this,[ui32]);
 }
 var readUI8=function(pos,cb) {
-	if (verbose)  ksanagap.log("read ui8"); 
+	if (verbose)  ksanagap.log("read ui8 at "+pos); 
 	var ui8=kfs.readUInt8(this.handle,pos);
 	if (verbose)  ksanagap.log(ui8);
 	cb.apply(this,[ui8]);
 }
 var readBuf=function(pos,blocksize,cb) {
-	if (verbose)  ksanagap.log("read buffer");
+	if (verbose)  ksanagap.log("read buffer at "+pos);
 	var buf=kfs.readBuf(this.handle,pos,blocksize);
 	if (verbose)  ksanagap.log("buffer length"+buf.length);
 	cb.apply(this,[buf]);	
 }
 var readBuf_packedint=function(pos,blocksize,count,reset,cb) {
-	if (verbose)  ksanagap.log("read packed int fast, blocksize "+blocksize);var t=new Date();
+	if (verbose)  ksanagap.log("read packed int fast, blocksize "+blocksize+" at "+pos);var t=new Date();
 	var buf=kfs.readBuf_packedint(this.handle,pos,blocksize,count,reset);
 	if (verbose)  ksanagap.log("return from packedint, time" + (new Date()-t));
 	if (typeof buf.data=="string") {
 		buf.data=JSON.parse("["+buf.data.substr(0,buf.data.length-1)+"]");
-	} 
+	}
 	if (verbose)  ksanagap.log("unpacked length"+buf.data.length+" time" + (new Date()-t) );
 	cb.apply(this,[buf]);
 }
@@ -47,7 +47,7 @@ var readBuf_packedint=function(pos,blocksize,count,reset,cb) {
 
 var readString= function(pos,blocksize,encoding,cb) {
 
-	if (verbose)  ksanagap.log("readstring"+blocksize+" "+encoding);var t=new Date();
+	if (verbose)  ksanagap.log("readstring at "+pos+" blocksize "+blocksize+" "+encoding);var t=new Date();
 	if (encoding=="ucs2") {
 		var str=kfs.readULE16String(this.handle,pos,blocksize);
 	} else {
@@ -58,7 +58,7 @@ var readString= function(pos,blocksize,encoding,cb) {
 }
 
 var readFixedArray = function(pos ,count, unitsize,cb) {
-	if (verbose)  ksanagap.log("read fixed array"); var t=new Date();
+	if (verbose)  ksanagap.log("read fixed array at "+pos); var t=new Date();
 	var buf=kfs.readFixedArray(this.handle,pos,count,unitsize);
 	if (verbose)  ksanagap.log("array length "+buf.length+" time"+(new Date()-t));
 	cb.apply(this,[buf]);	
@@ -66,7 +66,7 @@ var readFixedArray = function(pos ,count, unitsize,cb) {
 var readStringArray = function(pos,blocksize,encoding,cb) {
 	//if (verbose)  ksanagap.log("read String array "+blocksize +" "+encoding); 
 	encoding = encoding||"utf8";
-	if (verbose)  ksanagap.log("read string array");var t=new Date();
+	if (verbose)  ksanagap.log("read string array at "+pos);var t=new Date();
 	var buf=kfs.readStringArray(this.handle,pos,blocksize,encoding);
 	if (typeof buf=="string") buf=buf.split("\0");
 	//var buff=JSON.parse(buf);
