@@ -38,7 +38,7 @@ var readBuf_packedint=function(pos,blocksize,count,reset,cb) {
 	var buf=kfs.readBuf_packedint(this.handle,pos,blocksize,count,reset);
 	if (verbose)  ksanagap.log("return from packedint, time" + (new Date()-t));
 	if (typeof buf.data=="string") {
-		buf.data=JSON.parse("["+buf.data.substr(0,buf.data.length-1)+"]");
+		buf.data=eval("["+buf.data.substr(0,buf.data.length-1)+"]");
 	}
 	if (verbose)  ksanagap.log("unpacked length"+buf.data.length+" time" + (new Date()-t) );
 	cb.apply(this,[buf]);
