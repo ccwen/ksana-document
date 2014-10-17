@@ -104,6 +104,7 @@ var checkUpdate=function(url,fn,cb) {
 }
 var download=function(url,fn,cb,statuscb,context) {
    var totalsize=0,batches=null,written=0;
+   var fileEntry=0, fileWriter=0;
    var createBatches=function(size) {
       var bytes=1024*1024, out=[];
       var b=Math.floor(size / bytes);
@@ -114,53 +115,45 @@ var download=function(url,fn,cb,statuscb,context) {
       out.push(b*bytes+last);
       return out;
    }
-   var finish=function(srcEntry) { //remove old file and rename temp.kdb 
+   var finish=function() { //remove old file and rename temp.kdb 
          rm(fn,function(){
-            srcEntry.moveTo(srcEntry.filesystem.root, fn,function(){
+            fileEntry.moveTo(fileEntry.filesystem.root, fn,function(){
               setTimeout( cb.bind(context,false) , 0) ; 
             },function(e){
               console.log("faile",e)
             });
          },this); 
    }
-   var tempfn="temp.kdb";
+    var tempfn="temp.kdb";
     var batch=function(b) {
+       var abort=false;
        var xhr = new XMLHttpRequest();
        var requesturl=url+"?"+Math.random();
        xhr.open('get', requesturl, true);
        xhr.setRequestHeader('Range', 'bytes='+batches[b]+'-'+(batches[b+1]-1));
        xhr.responseType = 'blob';    
-       var create=(b==0);
        xhr.addEventListener('load', function() {
          var blob=this.response;
-         API.fs.root.getFile(tempfn, {create: create, exclusive: false}, function(fileEntry) {
-            fileEntry.createWriter(function(fileWriter) {
-              fileWriter.seek(fileWriter.length);
-              fileWriter.write(blob);
-              written+=blob.size;
-              fileWriter.onwriteend = function(e) {
-                var abort=false;
-                if (statuscb) {
-                  abort=statuscb.apply(context,[ fileWriter.length / totalsize,totalsize ]);
-                  if (abort) {
-                      setTimeout( cb.bind(context,false) , 0) ;                     
-                  }
-                }
-                b++;
-                if (!abort) {
-                  if (b<batches.length-1) {
-                     setTimeout(batch.bind(this,b),0);
-                  } else {
-                      finish(fileEntry);
-                  }                  
-                }
-              };
-            }, console.error);
-          }, console.error);
+		 fileEntry.createWriter(function(fileWriter) {
+         fileWriter.seek(fileWriter.length);
+         fileWriter.write(blob);
+         written+=blob.size;
+         fileWriter.onwriteend = function(e) {
+           if (statuscb) {
+              abort=statuscb.apply(context,[ fileWriter.length / totalsize,totalsize ]);
+              if (abort) setTimeout( cb.bind(context,false) , 0) ;
+           }
+           b++;
+           if (!abort) {
+              if (b<batches.length-1) setTimeout(batch.bind(context,b),0);
+              else                    finish();
+           }
+         };
+        }, console.error);
        },false);
        xhr.send();
     }
-     //main
+
      getDownloadSize(url,function(size){
        totalsize=size;
        if (!size) {
@@ -169,7 +162,11 @@ var download=function(url,fn,cb,statuscb,context) {
         rm(tempfn,function(){
            batches=createBatches(size);
            if (statuscb) statuscb.apply(context,[ 0, totalsize ]);
-           batch(0);          
+           
+       	   API.fs.root.getFile(tempfn, {create: 1, exclusive: false}, function(_fileEntry) {
+       	   	   	fileEntry=_fileEntry;
+           		batch(0);
+       	   });
         },this);
       }
      });
