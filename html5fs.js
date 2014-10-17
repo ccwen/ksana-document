@@ -232,6 +232,9 @@ var rmURL=function(filename,cb,context) {
       if (cb) cb.apply(context,[false]);//no such file
     });
 }
+function errorHandler(e) {
+  console.error('Error: ' +e.name+ " "+e.message);
+}
 var initfs=function(grantedBytes,cb,context) {
       webkitRequestFileSystem(PERSISTENT, grantedBytes,  function(fs) {
       API.fs=fs;
@@ -240,7 +243,7 @@ var initfs=function(grantedBytes,cb,context) {
         API.initialized=true;
         cb.apply(context,[grantedBytes,fs]);
       },context);
-    }, console.error);
+    }, errorHandler);
 }
 var init=function(quota,cb,context) {
   navigator.webkitPersistentStorage.requestQuota(quota, 
