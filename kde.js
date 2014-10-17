@@ -3,7 +3,7 @@
    each ydb has one engine instance.
    all data from server will be cache at client side to save network roundtrip.
 */
-if (typeof nodeRequire=='undefined')var nodeRequire=require;
+if (typeof nodeRequire=='undefined') var nodeRequire=(typeof ksana=="undefined")?require:ksana.require;
 var pool={},localPool={};
 var apppath="";
 var bsearch=require("./bsearch");
@@ -496,7 +496,12 @@ var openLocal=function(kdbid,cb,context)  {
 			openLocalNode(kdbid,cb,context);
 		}		
 	} else {
-		openLocalKsanagap(kdbid,cb,context);
+		if (ksanagap.platform=="node-webkit") {
+			openLocalNode(kdbid,cb,context);
+		} else {
+			openLocalKsanagap(kdbid,cb,context);	
+		}
+		
 	}
 }
 var setPath=function(path) {

@@ -1,6 +1,7 @@
-if (typeof nodeRequire=='undefined')var nodeRequire=require;
+if (typeof nodeRequire=='undefined') var nodeRequire=(typeof ksana=="undefined")?require:ksana.require;
 var appPath=""; //for servermode
 var getProjectPath=function(p) {
+  debugger;
   var path=nodeRequire('path');
   return path.resolve(p.filename);
 };

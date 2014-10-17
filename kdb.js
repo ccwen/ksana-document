@@ -12,7 +12,12 @@
 var Kfs=null;
 
 if (typeof ksanagap=="undefined") {
-	Kfs=require('./kdbfs');		
+	if (typeof process=="undefined") {
+		Kfs=require('./kdbfs');			
+	} else {
+		debugger;
+		Kfs=require('./kdbfs');			
+	}
 } else {
 	if (ksanagap.platform=="ios") {
 		Kfs=require("./kdbfs_ios");

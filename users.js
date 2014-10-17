@@ -1,4 +1,4 @@
-if (typeof nodeRequire=='undefined')var nodeRequire=require;
+if (typeof nodeRequire=='undefined') var nodeRequire=(typeof ksana=="undefined")?require:ksana.require;
 
 var passwords=[];
 

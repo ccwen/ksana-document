@@ -1,4 +1,6 @@
-if (typeof nodeRequire!="function") nodeRequire=require; 
+debugger;
+if (typeof nodeRequire=='undefined') var nodeRequire=(typeof ksana=="undefined")?require:ksana.require;
+
 var maxFileSize=512*1024;//for github
 var D=require("./document");
 var fs=nodeRequire("fs"); 

@@ -5,9 +5,10 @@ if (typeof process=="undefined") {
 	var Buffer=function(){ return ""};
 	var html5fs=true; 
 } else {
+	debugger;
 	if (typeof nodeRequire=="undefined") {
-		if (typeof ksana!="undefined") var nodeRequire=ksana.require;
-		else var nodeRequire=require;
+		if (typeof ksana!="undefined") nodeRequire=ksana.require;
+		else nodeRequire=require;
 	} 
 	var fs=nodeRequire('fs');
 	var Buffer=nodeRequire("buffer").Buffer;
