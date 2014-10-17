@@ -346,14 +346,10 @@ var Create=function(path,opts,cb) {
 		}
 		return o;
 	}
-	var get=function(path,recursive,cb) {
+	var get=function(path,opts,cb) {
 		if (typeof path=='undefined') path=[];
 		if (typeof path=="string") path=[path];
-		if (typeof recursive=='function') {
-			cb=recursive;
-			recursive=false;
-		}
-		recursive=recursive||false;
+		//opts.recursive=!!opts.recursive;
 		var that=this;
 		if (typeof cb!='function') return getSync(path);
 
@@ -364,7 +360,7 @@ var Create=function(path,opts,cb) {
 				return;
 			} 
 			
-			var pathnow="",taskqueue=[],opts={},r=null;
+			var pathnow="",taskqueue=[],newopts={},r=null;
 			var lastkey="";
 
 			for (var i=0;i<path.length;i++) {
@@ -391,10 +387,10 @@ var Create=function(path,opts,cb) {
 							if (typeof r=='string' && r[0]==strsep) { //offset of data to be loaded
 								var p=r.substring(1).split(strsep).map(function(item){return parseInt(item,16)});
 								var cur=p[0],sz=p[1];
-								opts.lazy=!recursive || (k<path.length-1) ;
-								opts.blocksize=sz;opts.cur=cur,opts.keys=[];
+								newopts.lazy=!opts.recursive || (k<path.length-1) ;
+								newopts.blocksize=sz;newopts.cur=cur,newopts.keys=[];
 								lastkey=key; //load is sync in android
-								load.apply(that,[opts, taskqueue.shift()]);
+								load.apply(that,[newopts, taskqueue.shift()]);
 							} else {
 								var next=taskqueue.shift();
 								next.apply(that,[r]);
