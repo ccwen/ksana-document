@@ -258,7 +258,7 @@ var getRemote=function(key,opts,cb) {
 		}
 		//now ask server for unknown datum
 		engine.traffic++;
-		var newopts={recursive:!!opts.recursive, position:opts.position,
+		var newopts={recursive:!!opts.recursive, address:opts.address,
 			key:keys,db:engine.kdbid};
 		$kse("get",newopts).done(function(datum){
 			//merge the server result with cached 

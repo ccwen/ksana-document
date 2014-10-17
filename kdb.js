@@ -15,7 +15,6 @@ if (typeof ksanagap=="undefined") {
 	if (typeof process=="undefined") {
 		Kfs=require('./kdbfs');			
 	} else {
-		debugger;
 		Kfs=require('./kdbfs');			
 	}
 } else {
@@ -65,6 +64,7 @@ var Create=function(path,opts,cb) {
 	var loadVInt =function(opts,blocksize,count,cb) {
 		//if (count==0) return [];
 		var that=this;
+
 		this.fs.readBuf_packedint(opts.cur,blocksize,count,true,function(o){
 			//console.log("vint");
 			opts.cur+=o.adv;
@@ -312,6 +312,7 @@ var Create=function(path,opts,cb) {
 	}
 	var CACHE=null;
 	var KEY={};
+	var ADDRESS={};
 	var reset=function(cb) {
 		if (!CACHE) {
 			load.apply(this,[{cur:0,lazy:true},function(data){
@@ -356,7 +357,11 @@ var Create=function(path,opts,cb) {
 		reset.apply(this,[function(){
 			var o=CACHE;
 			if (path.length==0) {
-				cb(Object.keys(CACHE));
+				if (opts.address) {
+					cb([0,that.fs.size]);
+				} else {
+					cb(Object.keys(CACHE));	
+				}
 				return;
 			} 
 			
@@ -372,7 +377,7 @@ var Create=function(path,opts,cb) {
 							o[lastkey]=data; 
 							o=o[lastkey];
 							r=data[key];
-							KEY[pathnow]=opts.keys;
+							KEY[pathnow]=opts.keys;								
 						} else {
 							data=o[key];
 							r=data;
@@ -390,10 +395,18 @@ var Create=function(path,opts,cb) {
 								newopts.lazy=!opts.recursive || (k<path.length-1) ;
 								newopts.blocksize=sz;newopts.cur=cur,newopts.keys=[];
 								lastkey=key; //load is sync in android
-								load.apply(that,[newopts, taskqueue.shift()]);
+								if (opts.address && taskqueue.length==1) {
+									ADDRESS[pathnow]=[cur,sz];
+									taskqueue.shift()(null,ADDRESS[pathnow]);
+								} else {
+									load.apply(that,[newopts, taskqueue.shift()]);
+								}
 							} else {
-								var next=taskqueue.shift();
-								next.apply(that,[r]);
+								if (opts.address && taskqueue.length==1) {
+									taskqueue.shift()(null,ADDRESS[pathnow]);
+								} else {
+									taskqueue.shift().apply(that,[r]);
+								}
 							}
 						}
 					})
@@ -407,10 +420,14 @@ var Create=function(path,opts,cb) {
 				cb.apply(that,[o]);
 			} else {
 				//last call to child load
-				taskqueue.push(function(data){
-					var key=path[path.length-1];
-					o[key]=data; KEY[pathnow]=opts.keys;
-					cb.apply(that,[data]);
+				taskqueue.push(function(data,cursz){
+					if (opts.address) {
+						cb.apply(that,[cursz]);
+					} else{
+						var key=path[path.length-1];
+						o[key]=data; KEY[pathnow]=opts.keys;
+						cb.apply(that,[data]);
+					}
 				});
 				taskqueue.shift()({__empty:true});			
 			}
