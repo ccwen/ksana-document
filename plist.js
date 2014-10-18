@@ -159,7 +159,7 @@ var sortedIndex = function (array, obj, iterator) { //taken from underscore
 
 var indexOfSorted = function (array, obj) { 
   var low = 0,
-  high = array.length;
+  high = array.length-1;
   while (low < high) {
     var mid = (low + high) >> 1;
     array[mid] < obj ? low = mid + 1 : high = mid;
@@ -339,17 +339,16 @@ var unique = function(ar){
 var plphrase = function (postings,ops) {
   var r = [];
   for (var i=0;i<postings.length;i++) {
-	if (!postings[i])
-	  return [];
-	if (0 === i) {
-	  r = postings[0];
-	} else {
-    if (ops[i]=='andnot') {
-      r = plnotfollow(r, postings[i], i);  
-    }else {
-      r = pland(r, postings[i], i);  
-    }
-	}
+  	if (!postings[i])  return [];
+  	if (0 === i) {
+  	  r = postings[0];
+  	} else {
+      if (ops[i]=='andnot') {
+        r = plnotfollow(r, postings[i], i);  
+      }else {
+        r = pland(r, postings[i], i);  
+      }
+  	}
   }
   
   return r;

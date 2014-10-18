@@ -72,9 +72,16 @@ var readStringArray = function(pos,blocksize,encoding,cb) {
 	//var buff=JSON.parse(buf);
 	//var buff=buf.split("\uffff"); //cannot return string with 0
 	if (verbose)  ksanagap.log("string array length"+buf.length+" time"+(new Date()-t));
-	+cb.apply(this,[buf]);	
+	cb.apply(this,[buf]);
 }
 
+var mergePostings=function(postions,cb) {
+	var buf=kfs.mergePostings(this.handle,positions);
+	if (typeof buf=="string") {
+		buf=eval("["+buf.data.substr(0,buf.data.length-1)+"]");
+	}
+	cb.apply(this,buf);
+}
 var free=function() {
 	////if (verbose)  ksanagap.log('closing ',handle);
 	kfs.close(this.handle);
@@ -93,6 +100,7 @@ var Open=function(path,opts,cb) {
 		this.readString=readString;
 		this.readStringArray=readStringArray;
 		this.signature_size=signature_size;
+		this.mergePosting=mergePosting;
 		this.free=free;
 		this.size=kfs.getFileSize(this.handle);
 		if (verbose)  ksanagap.log("filesize  "+this.size);

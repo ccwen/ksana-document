@@ -205,9 +205,13 @@ var createLocalEngine=function(kdb,cb,context) {
 	engine.getFilePageOffsets=getFilePageOffsets;
 	engine.findPage=findPage;
 	//only local engine allow getSync
-	if (kdb.fs.getSync) {
-		engine.getSync=engine.kdb.getSync;
+	if (kdb.fs.getSync) engine.getSync=engine.kdb.getSync;
+	
+	//speedy native functions
+	if (kdb.fs.mergePostings) {
+		engine.mergePostings=kdb.fs.mergePostings.bind(kdb.fs);
 	}
+	
 	var preload=[["meta"],["fileNames"],["fileOffsets"],
 	["tokens"],["postingslen"],["pageNames"],["pageOffsets"]];
 

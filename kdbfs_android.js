@@ -74,6 +74,12 @@ var readStringArray = function(pos,blocksize,encoding,cb) {
 	console.debug("array length"+buff.length);
 	cb.apply(this,[buff]);	
 }
+var mergePostings=function(positions,cb) {
+	var buf=kfs.mergePostings(this.handle,JSON.stringify(positions));
+	if (!buf || buf.length==0) return [];
+	else return JSON.parse(buf);
+}
+
 var free=function() {
 	//console.log('closing ',handle);
 	kfs.close(this.handle);
@@ -92,6 +98,7 @@ var Open=function(path,opts,cb) {
 		this.readString=readString;
 		this.readStringArray=readStringArray;
 		this.signature_size=signature_size;
+		this.mergePostings=mergePostings;
 		this.free=free;
 		this.size=kfs.getFileSize(this.handle);
 		console.log("filesize  "+this.size);
