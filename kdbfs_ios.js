@@ -75,12 +75,12 @@ var readStringArray = function(pos,blocksize,encoding,cb) {
 	cb.apply(this,[buf]);
 }
 
-var mergePostings=function(postions,cb) {
+var mergePostings=function(positions) {
 	var buf=kfs.mergePostings(this.handle,positions);
 	if (typeof buf=="string") {
-		buf=eval("["+buf.data.substr(0,buf.data.length-1)+"]");
+		buf=eval("["+buf.substr(0,buf.length-1)+"]");
 	}
-	cb.apply(this,buf);
+	return buf;
 }
 var free=function() {
 	////if (verbose)  ksanagap.log('closing ',handle);
@@ -100,7 +100,7 @@ var Open=function(path,opts,cb) {
 		this.readString=readString;
 		this.readStringArray=readStringArray;
 		this.signature_size=signature_size;
-		this.mergePosting=mergePosting;
+		this.mergePostings=mergePostings;
 		this.free=free;
 		this.size=kfs.getFileSize(this.handle);
 		if (verbose)  ksanagap.log("filesize  "+this.size);
