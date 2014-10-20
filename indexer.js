@@ -199,13 +199,14 @@ var processTags=function(captureTags,tags,texts) {
 		return first+middle+last;
 	}
 	for (var i=0;i<tags.length;i++) {
-
 		for (var j=0;j<tags[i].length;j++) {
 			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos=T[3];	
 			var nulltag=attributes[attributes.length-1]=='/';
 			if (captureTags[tagname]) {
 				var attr=parseAttributesString(attributes);
-				if (!nulltag) tagStack.push([tagname,tagoffset,attr,i]);
+				if (!nulltag) {
+					tagStack.push([tagname,tagoffset,attr,i]);
+				}
 			}
 			var handler=null;
 			if (tagname[0]=="/") handler=captureTags[tagname.substr(1)];
@@ -213,16 +214,15 @@ var processTags=function(captureTags,tags,texts) {
 
 			if (handler) {
 				var prev=tagStack[tagStack.length-1];
-				if (!nulltag) {				
-					if (tagname.substr(1)!=prev[0]) {
-						console.error("tag unbalance",tagname,prev[0],status.filename);
-						
+				var text="";
+				if (!nulltag) {
+					if (typeof prev=="undefined" || tagname.substr(1)!=prev[0]) {
+						console.error("tag unbalance",tagname,prev,status.filename);						
+						throw "tag unbalance"
 					} else {
 						tagStack.pop();
+						text=getTextBetween(prev[3],i,prev[1],tagoffset);
 					}
-					var text=getTextBetween(prev[3],i,prev[1],tagoffset);
-				} else {
-					var text="";
 				}
 				
 				status.vpos=tagvpos; 
