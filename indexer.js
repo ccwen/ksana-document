@@ -247,6 +247,11 @@ var resolveTagsVpos=function(parsed) {
 }
 var putFile=function(fn,cb) {
 	var fs=nodeRequire("fs");
+	if (!fs.existsSync(fn)){
+		console.warn("file ",fn,"doens't exist");
+		cb();
+		return;
+	}
 	var texts=fs.readFileSync(fn,session.config.inputEncoding).replace(/\r\n/g,"\n");
 	var bodyend=session.config.bodyend;
 	var bodystart=session.config.bodystart;
