@@ -105,13 +105,13 @@ var getFileRange=function(i) {
 var getfp=function(absolutepage) {
 	var fileOffsets=this.get(["fileOffsets"]);
 	var pageOffsets=this.get(["pageOffsets"]);
-	var pageoffset=pageOffsets[npage];
+	var pageoffset=pageOffsets[absolutepage];
 	var file=bsearch(fileOffsets,pageoffset,true)-1;
 
 	var fileStart=fileOffsets[file];
 	var start=bsearch(pageOffsets,fileStart,true);	
 
-	var page=npage-start-1;
+	var page=absolutepage-start-1;
 	return {file:file,page:page};
 }
 //return array of object of nfile npage given pagename
