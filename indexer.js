@@ -218,7 +218,7 @@ var processTags=function(captureTags,tags,texts) {
 				if (!nulltag) {
 					if (typeof prev=="undefined" || tagname.substr(1)!=prev[0]) {
 						console.error("tag unbalance",tagname,prev,status.filename);						
-						throw "tag unbalance"
+						throw "tag unbalance";
 					} else {
 						tagStack.pop();
 						text=getTextBetween(prev[3],i,prev[1],tagoffset);

@@ -8,39 +8,39 @@ var pool={},localPool={};
 var apppath="";
 var bsearch=require("./bsearch");
 var strsep="\uffff";
-var _getSync=function(keys,opts) {
+var _getSync=function(paths,opts) {
 	var out=[];
-	for (var i in keys) {
-		out.push(this.getSync(keys[i],opts));	
+	for (var i in paths) {
+		out.push(this.getSync(paths[i],opts));	
 	}
 	return out;
 }
-var _gets=function(keys,opts,cb) { //get many data with one call
-	if (!keys) return ;
-	if (typeof keys=='string') {
-		keys=[keys];
+var _gets=function(paths,opts,cb) { //get many data with one call
+	if (!paths) return ;
+	if (typeof paths=='string') {
+		paths=[paths];
 	}
 	var engine=this, output=[];
 
-	var makecb=function(key){
+	var makecb=function(path){
 		return function(data){
 				if (!(data && typeof data =='object' && data.__empty)) output.push(data);
-				engine.get(key,opts,taskqueue.shift());
+				engine.get(path,opts,taskqueue.shift());
 		};
 	};
 
 	var taskqueue=[];
-	for (var i=0;i<keys.length;i++) {
-		if (typeof keys[i]=="null") { //this is only a place holder for key data already in client cache
+	for (var i=0;i<paths.length;i++) {
+		if (typeof paths[i]=="null") { //this is only a place holder for key data already in client cache
 			output.push(null);
 		} else {
-			taskqueue.push(makecb(keys[i]));
+			taskqueue.push(makecb(paths[i]));
 		}
 	};
 
 	taskqueue.push(function(data){
 		output.push(data);
-		cb.apply(engine.context||engine,[output,keys]); //return to caller
+		cb.apply(engine.context||engine,[output,paths]); //return to caller
 	});
 
 	taskqueue.shift()({__empty:true}); //run the task
@@ -102,7 +102,7 @@ var getFileRange=function(i) {
 	return {start:start,end:end};
 }
 
-var getfp=function(npage) {
+var getfp=function(absolutepage) {
 	var fileOffsets=this.get(["fileOffsets"]);
 	var pageOffsets=this.get(["pageOffsets"]);
 	var pageoffset=pageOffsets[npage];
@@ -173,25 +173,25 @@ var createLocalEngine=function(kdb,cb,context) {
 	}	
 
 	if (typeof context=="object") engine.context=context;
-	engine.get=function(key,opts,cb) {
+	engine.get=function(path,opts,cb) {
 		if (typeof opts=="function") {
 			cb=opts;
 			opts={recursive:false};
 		}
-		if (!key) {
+		if (!path) {
 			if (cb) cb(null);
 			return null;
 		}
 		if (typeof cb!="function") {
-			return engine.kdb.get(key,opts);
+			return engine.kdb.get(path,opts);
 		}
 
-		if (typeof key=="string") {
-			return engine.kdb.get([key],opts,cb);
-		} else if (typeof key[0] =="string") {
-			return engine.kdb.get(key,opts,cb);
-		} else if (typeof key[0] =="object") {
-			return _gets.apply(engine,[key,opts,cb]);
+		if (typeof path=="string") {
+			return engine.kdb.get([path],opts,cb);
+		} else if (typeof path[0] =="string") {
+			return engine.kdb.get(path,opts,cb);
+		} else if (typeof path[0] =="object") {
+			return _gets.apply(engine,[path,opts,cb]);
 		} else {
 			cb(null);	
 		}
@@ -232,7 +232,7 @@ var createLocalEngine=function(kdb,cb,context) {
 	return engine;
 }
 
-var getRemote=function(key,opts,cb) {
+var getRemote=function(path,opts,cb) {
 	var $kse=Require("ksanaforge-kse").$ksana; 
 	var engine=this;
 	if (!engine.ready) {
@@ -244,49 +244,49 @@ var getRemote=function(key,opts,cb) {
 		opts={recursive:false};
 	}
 	opts.recursive=opts.recursive||false;
-	if (typeof key=="string") key=[key];
+	if (typeof path=="string") path=[path];
 
-	if (key[0] instanceof Array) { //multiple keys
-		var keys=[],output=[];
-		for (var i=0;i<key.length;i++) {
-			var cachekey=key[i].join(strsep);
-			var data=engine.cache[cachekey];
+	if (path[0] instanceof Array) { //multiple paths
+		var paths=[],output=[];
+		for (var i=0;i<path.length;i++) {
+			var cachepath=path[i].join(strsep);
+			var data=engine.cache[cachepath];
 			if (typeof data!="undefined") {
-				keys.push(null);//  place holder for LINE 28
+				paths.push(null);//  place holder for LINE 28
 				output.push(data); //put cached data into output
 			} else{
 				engine.fetched++;
-				keys.push(key[i]); //need to ask server
+				paths.push(path[i]); //need to ask server
 				output.push(null); //data is unknown yet
 			}
 		}
 		//now ask server for unknown datum
 		engine.traffic++;
 		var newopts={recursive:!!opts.recursive, address:opts.address,
-			key:keys,db:engine.kdbid};
+			key:paths,db:engine.kdbid};
 		$kse("get",newopts).done(function(datum){
 			//merge the server result with cached 
 			for (var i=0;i<output.length;i++) {
-				if (datum[i] && keys[i]) {
-					var cachekey=keys[i].join(strsep);
-					engine.cache[cachekey]=datum[i];
+				if (datum[i] && paths[i]) {
+					var cachekey=paths[i].join(strsep);
+					engine.cache[cachepath]=datum[i];
 					output[i]=datum[i];
 				}
 			}
 			cb.apply(engine.context,[output]);	
 		});
-	} else { //single key
-		var cachekey=key.join(strsep);
-		var data=engine.cache[cachekey];
+	} else { //single path
+		var cachepath=path.join(strsep);
+		var data=engine.cache[cachepath];
 		if (typeof data!="undefined") {
 			if (cb) cb.apply(engine.context,[data]);
 			return data;//in cache , return immediately
 		} else {
 			engine.traffic++;
 			engine.fetched++;
-			var opts={key:key,recursive:recursive,db:engine.kdbid};
+			var opts={key:path,recursive:recursive,db:engine.kdbid};
 			$kse("get",opts).done(function(data){
-				engine.cache[cachekey]=data;
+				engine.cache[cachepath]=data;
 				if (cb) cb.apply(engine.context,[data]);	
 			});
 		}

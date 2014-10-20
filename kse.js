@@ -29,6 +29,24 @@ var _highlightPage=function(engine,fileid,pageid,opts,cb){
 		api.excerpt.getPage(engine,fileid,pageid,cb);
 	}
 }
+var _highlightRange=function(engine,start,end,opts,cb){
+	if (opts.q) {
+		_search(engine,opts.q,opts,function(Q){
+			api.excerpt.highlightRange(Q,start,end,opts,cb);
+		});
+	} else {
+		api.excerpt.getRange(engine,start,end,cb);
+	}
+}
+var _highlightFile=function(engine,fileid,opts,cb){
+	if (opts.q) {
+		_search(engine,opts.q,opts,function(Q){
+			api.excerpt.highlightFile(Q,fileid,opts,cb);
+		});
+	} else {
+		api.excerpt.getFile(engine,fileid,cb);
+	}
+}
 
 var vpos2filepage=function(engine,vpos) {
     var pageOffsets=engine.get("pageOffsets");
@@ -54,6 +72,8 @@ var api={
 	,concordance:require("./concordance")
 	,regex:require("./regex")
 	,highlightPage:_highlightPage
+	,highlightFile:_highlightFile
+//	,highlightRange:_highlightRange
 	,excerpt:require("./excerpt")
 	,vpos2filepage:vpos2filepage
 }
