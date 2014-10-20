@@ -263,7 +263,7 @@ var getFile=function(engine,fileid,cb) {
 	var pc=0;
 	engine.get(["fileContents",fileid],true,function(data){
 		var text=data.join("<pb>").replace(/<pb>/g,function(m){
-			return '\n<pb n="'+pagenames[++pc]+'"/>'; // skip _
+			return '\n<pb n="'+pagenames[++pc]+'"></pb>'; // skip _
 		})
 		cb({text:text,file:fileid,filename:filename}); //force different token
 	});
