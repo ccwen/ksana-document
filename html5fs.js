@@ -233,14 +233,14 @@ function errorHandler(e) {
   console.error('Error: ' +e.name+ " "+e.message);
 }
 var initfs=function(grantedBytes,cb,context) {
-      webkitRequestFileSystem(PERSISTENT, grantedBytes,  function(fs) {
-      API.fs=fs;
-      API.quota=grantedBytes;
-      readdir(function(){
-        API.initialized=true;
-        cb.apply(context,[grantedBytes,fs]);
-      },context);
-    }, errorHandler);
+  webkitRequestFileSystem(PERSISTENT, grantedBytes,  function(fs) {
+    API.fs=fs;
+    API.quota=grantedBytes;
+    readdir(function(){
+      API.initialized=true;
+      cb.apply(context,[grantedBytes,fs]);
+    },context);
+  }, errorHandler);
 }
 var init=function(quota,cb,context) {
   navigator.webkitPersistentStorage.requestQuota(quota, 
