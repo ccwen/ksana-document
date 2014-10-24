@@ -28,7 +28,7 @@ var startindexer=function(mkdbconfig) {
   }
   var getstatus=function() {
     var status=indexer.status();
-    outback((Math.floor(status.progress*1000)/10)+'%'+status.message);
+    console.log((Math.floor(status.progress*1000)/10)+'%');
     if (status.done) {
       var endtime=new Date();
       console.log("END",endtime, "elapse",(endtime-starttime) /1000,"seconds") ;

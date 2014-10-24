@@ -200,8 +200,22 @@ var processTags=function(captureTags,tags,texts) {
 	}
 	for (var i=0;i<tags.length;i++) {
 		for (var j=0;j<tags[i].length;j++) {
-			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos=T[3];	
-			var nulltag=attributes[attributes.length-1]=='/';
+			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos=T[3];
+			var lastchar=attributes[attributes.length-1];
+			var nulltag=false;
+			if (typeof lastchar!="undefined") {
+				if (lastchar=="/") {
+					nulltag=true;
+				} else {
+					var lastcc=lastchar.charCodeAt(0);
+					if (!(lastchar=='"' || (lastcc>0x40 && lastcc<0x7b))) {
+						console.error("error lastchar of tag ("+lastchar+")");
+						console.error("in <"+tagname,attributes+"> of",status.filename)	;
+						throw 'last char of should be / " or ascii ';
+					}
+				}
+			}
+
 			if (captureTags[tagname]) {
 				var attr=parseAttributesString(attributes);
 				if (!nulltag) {
