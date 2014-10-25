@@ -208,7 +208,7 @@ var processTags=function(captureTags,tags,texts) {
 					nulltag=true;
 				} else {
 					var lastcc=lastchar.charCodeAt(0);
-					if (!(lastchar=='"' || (lastcc>0x40 && lastcc<0x7b))) {
+					if (!(lastchar=='"' ||lastchar=='-'|| (lastcc>0x40 && lastcc<0x7b))) {
 						console.error("error lastchar of tag ("+lastchar+")");
 						console.error("in <"+tagname,attributes+"> of",status.filename)	;
 						throw 'last char of should be / " or ascii ';
