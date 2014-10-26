@@ -11,17 +11,6 @@ if (typeof process=="undefined") {
 	} 
 	var fs=nodeRequire('fs');
 	var Buffer=nodeRequire("buffer").Buffer;
-	
-	//Simulate feature in ksanagap
-	var readDir=function() { //simulate Ksanagap function
-		var dirs=fs.readdirSync("..");
-		return dirs.filter(function(d){
-			return fs.statSync("../"+d).isDirectory() && d[0]!=".";
-		}).join("\uffff");
-	}
-	kfs={
-		readDir: readDir
-	};
 }
 
 var signature_size=1;

@@ -471,7 +471,7 @@ var openLocalNode=function(kdbid,cb,context) {
 			return engine;
 		}
 	}
-	if (cb) cb(null);
+	if (cb) cb.apply(context,[null]);
 	return null;
 }
 
