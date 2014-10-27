@@ -474,6 +474,35 @@ var openLocalNode=function(kdbid,cb,context) {
 	if (cb) cb.apply(context,[null]);
 	return null;
 }
+var openLocalNodeWebkit=function(kdbid,cb,context) {
+	var fs=nodeRequire('fs');
+	var engine=localPool[kdbid];
+	if (engine) {
+		if (cb) cb.apply(context||engine.context,[engine]);
+		return engine;
+	}
+
+	var Kdb=Require('ksana-document').kdb;
+	var kdbfn=kdbid;
+	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
+
+	var tries=getLocalTries(kdbfn);
+
+	for (var i=0;i<tries.length;i++) {
+		if (fs.existsSync(tries[i])) {
+			//console.log("kdb path: "+nodeRequire('path').resolve(tries[i]));
+			new Kdb(tries[i],function(kdb){
+				createLocalEngine(kdb,function(engine){
+						localPool[kdbid]=engine;
+						cb.apply(context||engine.context,[engine]);
+				},context);
+			});
+			return engine;
+		}
+	}
+	if (cb) cb.apply(context,[null]);
+	return null;
+}
 
 var openLocalHtml5=function(kdbid,cb,context) {
 	var Kdb=Require('ksana-document').kdb;
@@ -503,7 +532,7 @@ var openLocal=function(kdbid,cb,context)  {
 		}		
 	} else {
 		if (ksanagap.platform=="node-webkit") {
-			openLocalNode(kdbid,cb,context);
+			openLocalNodeWebkit(kdbid,cb,context);
 		} else {
 			openLocalKsanagap(kdbid,cb,context);	
 		}

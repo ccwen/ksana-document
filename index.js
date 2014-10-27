@@ -17,19 +17,22 @@
 	,underlines:require("./underlines")
 }
 if (typeof process!="undefined") {
-	API.persistent=require('./persistent');
-	API.indexer_kd=require('./indexer_kd');
-	API.indexer=require('./indexer');
-	API.projects=require('./projects');
-	//API.kdb=require('./kdb');  // file format
-	API.kdbw=require('./kdbw');  // create ydb
-	API.xml4kdb=require('./xml4kdb');  
-	API.build=require("./buildfromxml");
-	API.tei=require("./tei");
-	API.regex=require("./regex");
-	API.setPath=function(path) {
-		console.log("API set path ",path)
-		API.kde.setPath(path);
+	if (typeof process.versions!="undefined" 
+		  && typeof process.versions["node-webkit"]=="undefined") {
+		API.persistent=require('./persistent');
+		API.indexer_kd=require('./indexer_kd');
+		API.indexer=require('./indexer');
+		API.projects=require('./projects');
+		//API.kdb=require('./kdb');  // file format
+		API.kdbw=require('./kdbw');  // create ydb
+		API.xml4kdb=require('./xml4kdb');  
+		API.build=require("./buildfromxml");
+		API.tei=require("./tei");
+		API.regex=require("./regex");
+		API.setPath=function(path) {
+			console.log("API set path ",path)
+			API.kde.setPath(path);
+		}		
 	}
 }
 module.exports=API;

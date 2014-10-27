@@ -1,6 +1,7 @@
 /* OS dependent file operation */
+if (typeof nodeRequire=='undefined') var nodeRequire=(typeof ksana=="undefined")?require:ksana.require;
 
-var fs=require('fs');
+var fs=nodeRequire('fs');
 var signature_size=1;
 
 var unpack_int = function (ar, count , reset) {

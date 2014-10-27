@@ -4,8 +4,8 @@
 var Kfs=require('./kdbfs_sync');
 
 var Sync=function(kdb) {
-	DT=kdb.DT;
-	kfs=Kfs(kdb.fs);
+	var DT=kdb.DT;
+	var kfs=Kfs(kdb.fs);
 	var cur=0;
 	/* loadxxx functions move file pointer */
 	// load variable length int
