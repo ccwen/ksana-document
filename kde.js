@@ -533,6 +533,8 @@ var openLocal=function(kdbid,cb,context)  {
 	} else {
 		if (ksanagap.platform=="node-webkit") {
 			openLocalNodeWebkit(kdbid,cb,context);
+		} else if (ksanagap.platform=="chrome") {
+			openLocalHtml5(kdbid,cb,context);
 		} else {
 			openLocalKsanagap(kdbid,cb,context);	
 		}

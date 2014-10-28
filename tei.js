@@ -146,7 +146,6 @@ var parseP5=function(xml,parsed,fn,_config,_status) {
 		xml=config.callbacks.beforeParseTag(xml);
 	}
 	parser.write(xml);
-	debugger;
 	context=null;
 	parser=null;
 	if (parsed) return createMarkups(parsed);

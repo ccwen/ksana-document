@@ -22,6 +22,8 @@ if (typeof ksanagap=="undefined") {
 		Kfs=require("./kdbfs_ios");
 	} else if (ksanagap.platform=="node-webkit") {
 		Kfs=require("./kdbfs");
+	} else if (ksanagap.platform=="chrome") {
+		Kfs=require("./kdbfs");
 	} else {
 		Kfs=require("./kdbfs_android");
 	}
