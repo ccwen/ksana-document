@@ -40,8 +40,9 @@ var startindexer=function(mkdbconfig) {
 
 }
 
-var build=function(path){
+var build=function(path,mkdbjs){
   var fs=require("fs");
+  mkdbjs=mkdbjs||"mkdb.js";
 
   if (!fs.existsSync(mkdbjs)) {
       throw "no "+mkdbjs  ;

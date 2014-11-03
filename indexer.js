@@ -358,7 +358,7 @@ var start=function(mkdbconfig) {
 	if (!mkdbconfig.files.length) return null;//nothing to index
 
 	initIndexer(mkdbconfig);
-  	return status;
+  return status;
 }
 
 var indexstep=function() {
