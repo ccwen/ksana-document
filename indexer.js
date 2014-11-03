@@ -189,7 +189,7 @@ var storeFields=function(fields,json) {
 var tagStack=[];
 var processTags=function(captureTags,tags,texts) {
 	var getTextBetween=function(from,to,startoffset,endoffset) {
-		if (from==to) return texts[from].t.substring(startoffset-1,endoffset-1);
+		if (from==to) return texts[from].t.substring(startoffset,endoffset);
 		var first=texts[from].t.substr(startoffset-1);
 		var middle="";
 		for (var i=from+1;i<to;i++) {
@@ -235,7 +235,9 @@ var processTags=function(captureTags,tags,texts) {
 						throw "tag unbalance";
 					} else {
 						tagStack.pop();
+
 						text=getTextBetween(prev[3],i,prev[1],tagoffset);
+						//console.log(text,prev[1],tagoffset)
 					}
 				}
 				
