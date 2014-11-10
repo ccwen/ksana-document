@@ -249,6 +249,15 @@ var getPage=function(engine,fileid,pageid,cb) {
 	});
 }
 
+var getPageSync=function(engine,fileid,pageid) {
+	var fileOffsets=engine.get("fileOffsets");
+	var pagepaths=["fileContents",fileid,pageid];
+	var pagenames=engine.getFilePageNames(fileid);
+
+	var text=engine.get(pagepaths);
+	return {text:text,file:fileid,page:pageid,pagename:pagenames[pageid]};
+}
+
 var getRange=function(engine,start,end,cb) {
 	var fileOffsets=engine.get("fileOffsets");
 	//var pagepaths=["fileContents",];
@@ -260,12 +269,11 @@ var getRange=function(engine,start,end,cb) {
 var getFile=function(engine,fileid,cb) {
 	var filename=engine.get("fileNames")[fileid];
 	var pagenames=engine.getFilePageNames(fileid);
+	var filestart=engine.get("fileOffsets")[fileid];
+	var offsets=engine.getFilePageOffsets(fileid);
 	var pc=0;
 	engine.get(["fileContents",fileid],true,function(data){
-		var text=data.join("<pb>").replace(/<pb>/g,function(m){
-			return '\n<pb n="'+pagenames[++pc]+'"></pb>'; // skip _
-		})
-		cb({text:text,file:fileid,filename:filename}); //force different token
+		cb({texts:data,pagenames:pagenames,filestart:filestart,offsets:offsets,file:fileid,filename:filename}); //force different token
 	});
 }
 
@@ -278,16 +286,26 @@ var highlightFile=function(Q,fileid,opts,cb) {
 	if (typeof opts=="function") {
 		cb=opts;
 	}
+
 	if (!Q || !Q.engine) return cb(null);
-	var fileOffsets=Q.engine.get("fileOffsets");
-	var startvpos=fileOffsets[fileid];
-	var endvpos=fileOffsets[fileid+1];
+
+	var pageOffsets=Q.engine.getFilePageOffsets(fileid);
+	var output=[];	
 	//console.log(startvpos,endvpos)
-	this.getFile(Q.engine,fileid,function(res){
-		//console.log(res.text)
-		var opt={text:res.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
-		opt.hits=hitInRange(Q,startvpos,endvpos);
-		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),file:fileid,hits:opt.hits}]);
+	Q.engine.get(["fileContents",fileid],true,function(data){
+		for (var i=0;i<data.length-1;i++ ){
+			var startvpos=pageOffsets[i];
+			var endvpos=pageOffsets[i+1];
+			var pagenames=Q.engine.getFilePageNames(fileid);	
+			var page=getPageSync(Q.engine, fileid,i+1);
+			var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
+			var pagename=pagenames[i];
+			opt.hits=hitInRange(Q,startvpos,endvpos);
+			var pb='<pb n="'+pagename+'"></pb>';
+			output.push(pb+injectTag(Q,opt));
+		}
+
+		cb.apply(Q.engine.context,[{text:output.join(""),file:fileid}]);
 	})
 }
 var highlightPage=function(Q,fileid,pageid,opts,cb) {
@@ -306,7 +324,7 @@ var highlightPage=function(Q,fileid,pageid,opts,cb) {
 		opt.hits=hitInRange(Q,startvpos,endvpos);
 		var pagename=pagenames[pageid];
 		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),page:pageid,file:fileid,hits:opt.hits,pagename:pagename}]);
-	})
+	});
 }
 module.exports={resultlist:resultlist, 
 	hitInRange:hitInRange, 
