@@ -296,10 +296,10 @@ var highlightFile=function(Q,fileid,opts,cb) {
 		for (var i=0;i<data.length-1;i++ ){
 			var startvpos=pageOffsets[i];
 			var endvpos=pageOffsets[i+1];
-			var pagenames=Q.engine.getFilePageNames(fileid);	
+			var pagenames=Q.engine.getFilePageNames(fileid);
 			var page=getPageSync(Q.engine, fileid,i+1);
-			var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
-			var pagename=pagenames[i];
+				var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
+			var pagename=pagenames[i+1];
 			opt.hits=hitInRange(Q,startvpos,endvpos);
 			var pb='<pb n="'+pagename+'"></pb>';
 			output.push(pb+injectTag(Q,opt));
