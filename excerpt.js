@@ -273,7 +273,12 @@ var getFile=function(engine,fileid,cb) {
 	var offsets=engine.getFilePageOffsets(fileid);
 	var pc=0;
 	engine.get(["fileContents",fileid],true,function(data){
-		cb({texts:data,pagenames:pagenames,filestart:filestart,offsets:offsets,file:fileid,filename:filename}); //force different token
+		var text=data.map(function(t,idx) {
+			if (idx==0) return ""; 
+			var pb='<pb n="'+pagenames[idx]+'"></pb>';
+			return pb+t;
+		});
+		cb({texts:data,text:text.join(""),pagenames:pagenames,filestart:filestart,offsets:offsets,file:fileid,filename:filename}); //force different token
 	});
 }
 

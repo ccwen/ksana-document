@@ -44,7 +44,9 @@ var _highlightFile=function(engine,fileid,opts,cb){
 			api.excerpt.highlightFile(Q,fileid,opts,cb);
 		});
 	} else {
-		api.excerpt.getFile(engine,fileid,cb);
+		api.excerpt.getFile(engine,fileid,function(data) {
+			cb.apply(engine.context,[data]);
+		});
 	}
 }
 
