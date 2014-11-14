@@ -298,6 +298,9 @@ var highlightFile=function(Q,fileid,opts,cb) {
 	var output=[];	
 	//console.log(startvpos,endvpos)
 	Q.engine.get(["fileContents",fileid],true,function(data){
+		if (!data) {
+			console.error("wrong file id",fileid);
+		}
 		for (var i=0;i<data.length-1;i++ ){
 			var startvpos=pageOffsets[i];
 			var endvpos=pageOffsets[i+1];
