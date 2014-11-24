@@ -66,7 +66,7 @@ var vpos2filepage=function(engine,vpos) {
     }
 */
     var fileOffset=fileOffsets[fileid];
-    var pageOffset=bsearch(pageOffsets,fileOffset+1,true);
+    var pageOffset=bsearch(pageOffsets,fileOffset+2,true); //quick fix for jiangkangyur
     pageOffset--;
     pageid-=pageOffset;
     return {file:fileid,page:pageid};
