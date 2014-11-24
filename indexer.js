@@ -251,7 +251,7 @@ var processTags=function(captureTags,tags,texts) {
 	}
 }
 var resolveTagsVpos=function(parsed) {
-	var bsearch=require("ksana-document").bsearch;
+	var bsearch=nodeRequire("ksana-document").bsearch;
 	for (var i=0;i<parsed.tags.length;i++) {
 		for (var j=0;j<parsed.tags[i].length;j++) {
 			var t=parsed.tags[i][j];
@@ -341,7 +341,7 @@ var initIndexer=function(mkdbconfig) {
 	tokenize=api["tokenize"];
 
 	var folder=session.config.outdir||".";
-	session.kdbfn=require("path").resolve(folder, session.config.name+'.kdb');
+	session.kdbfn=nodeRequire("path").resolve(folder, session.config.name+'.kdb');
 
 	if (!session.config.reset && nodeRequire("fs").existsSync(session.kdbfn)) {
 		//if old kdb exists and not reset 

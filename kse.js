@@ -57,12 +57,14 @@ var vpos2filepage=function(engine,vpos) {
     var fileid=bsearch(fileOffsets,vpos+1,true);
     fileid--;
     var pageid=bsearch(pageOffsets,vpos+1,true);
+    
+/*
     pageid--;
     while (pageid&&pageid<pageOffsets.length-1&&
     	pageOffsets[pageid-1]==pageOffsets[pageid]) {
     	pageid++;
     }
-
+*/
     var fileOffset=fileOffsets[fileid];
     var pageOffset=bsearch(pageOffsets,fileOffset+1,true);
     pageOffset--;
