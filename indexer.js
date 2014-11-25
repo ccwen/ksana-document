@@ -269,6 +269,9 @@ var putFile=function(fn,cb) {
 		return;
 	}
 	var texts=fs.readFileSync(fn,session.config.inputEncoding).replace(/\r\n/g,"\n");
+	if (texts.charCodeAt(0)==0xfeff) {
+		texts=texts.substring(1);
+	}
 	var bodyend=session.config.bodyend;
 	var bodystart=session.config.bodystart;
 	var captureTags=session.config.captureTags;
