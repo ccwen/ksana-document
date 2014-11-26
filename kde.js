@@ -66,6 +66,17 @@ var toDoc=function(pagenames,texts,others) {
 }
 var getFileRange=function(i) {
 	var engine=this;
+
+	var filePageCount=engine.get(["filePageCount"]);
+	if (filePageCount) {
+		if (i==0) {
+			return {start:0,end:filePageCount[0]-1};
+		} else {
+			return {start:filePageCount[i-1],end:filePageCount[i]-1};
+		}
+	}
+
+	//old buggy code
 	var fileNames=engine.get(["fileNames"]);
 	var fileOffsets=engine.get(["fileOffsets"]);
 	var pageOffsets=engine.get(["pageOffsets"]);
@@ -86,8 +97,7 @@ var getFileRange=function(i) {
 	//in case of items with same value
 	//return the last one
 	
-	
-	
+
 	//while (pageOffsets[end+1]==pageOffsets[end]) end--;
 	/*
 	if (i==0) {
@@ -213,7 +223,7 @@ var createLocalEngine=function(kdb,cb,context) {
 	}
 	
 	var preload=[["meta"],["fileNames"],["fileOffsets"],
-	["tokens"],["postingslen"],["pageNames"],["pageOffsets"]];
+	["tokens"],["postingslen"],["pageNames"],["pageOffsets"],["filePageCount"]];
 
 	var setPreload=function(res) {
 		engine.dbname=res[0].name;
@@ -347,7 +357,8 @@ var createEngine=function(kdbid,context,cb) {
 	if (typeof context=="object") engine.context=context;
 
 	//engine.findLinkBy=link.findLinkBy;
-	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"],["tokens"],["postingslen"],,["pageNames"],["pageOffsets"]], 
+	$kse("get",{key:[["meta"],["fileNames"],["fileOffsets"],
+		["tokens"],["postingslen"],,["pageNames"],["pageOffsets"],["filePageCount"]], 
 		recursive:true,db:kdbid}).done(function(res){
 		engine.dbname=res[0].name;
 
@@ -357,6 +368,7 @@ var createEngine=function(kdbid,context,cb) {
 		engine.cache["postingslen"]=res[4];
 		engine.cache["pageNames"]=res[5];
 		engine.cache["pageOffsets"]=res[6];
+		engine.cache["filePageCount"]=res[7];
 
 //		engine.cache["tokenId"]=res[4];
 //		engine.cache["files"]=res[2];

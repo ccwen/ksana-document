@@ -86,7 +86,10 @@ var putPages_new=function(parsed,cb) { //25% faster than create a new document
 		session.json.pageNames.push(t.n);
 		session.json.pageOffsets.push(session.vpos);
 	}
-	
+	var lastfilecount=0;
+	if (session.json.filePageCount.length) lastfilecount=session.json.filePageCount[session.json.filePageCount.length-1];
+	session.json.filePageCount.push(lastfilecount+parsed.texts.length); //accurate page count
+
 	if (fileContent.length==0 || (fileContent.length==1&&!fileContent[0])) {
 		console.log("no content in"+status.filename);
 		fileContent[0]=" "; //work around to avoid empty string array throw in kdbw
@@ -188,6 +191,7 @@ var storeFields=function(fields,json) {
 */
 var tagStack=[];
 var processTags=function(captureTags,tags,texts) {
+
 	var getTextBetween=function(from,to,startoffset,endoffset) {
 		if (from==to) return texts[from].t.substring(startoffset,endoffset);
 		var first=texts[from].t.substr(startoffset-1);
@@ -217,6 +221,7 @@ var processTags=function(captureTags,tags,texts) {
 			}
 
 			if (captureTags[tagname]) {
+
 				var attr=parseAttributesString(attributes);
 				if (!nulltag) {
 					tagStack.push([tagname,tagoffset,attr,i]);
@@ -320,6 +325,7 @@ var initSession=function(config) {
 		,fileContents:[]
 		,fileNames:[]
 		,fileOffsets:[]
+		,filePageCount:[] //2014/11/26
 		,pageNames:[]
 		,pageOffsets:[]
 		,tokens:{}
@@ -421,6 +427,7 @@ var createMeta=function() {
 	meta.name=session.config.name;
 	meta.vsize=session.vpos;
 	meta.pagecount=status.pageCount;
+	meta.version=0x20141126;
 	return meta;
 }
 var guessSize=function() {
