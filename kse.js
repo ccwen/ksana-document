@@ -57,18 +57,8 @@ var vpos2filepage=function(engine,vpos) {
     var fileid=bsearch(fileOffsets,vpos+1,true);
     fileid--;
     var pageid=bsearch(pageOffsets,vpos+1,true);
-    
-/*
-    pageid--;
-    while (pageid&&pageid<pageOffsets.length-1&&
-    	pageOffsets[pageid-1]==pageOffsets[pageid]) {
-    	pageid++;
-    }
-*/
-    var fileOffset=fileOffsets[fileid];
-    var pageOffset=bsearch(pageOffsets,fileOffset+2,true); //quick fix for jiangkangyur
-    pageOffset--;
-    pageid-=pageOffset;
+	var range=engine.getFileRange(fileid);
+	pageid-=range.start;
     return {file:fileid,page:pageid};
 }
 var api={

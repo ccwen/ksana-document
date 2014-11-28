@@ -194,6 +194,7 @@ var processTags=function(captureTags,tags,texts) {
 
 	var getTextBetween=function(from,to,startoffset,endoffset) {
 		if (from==to) return texts[from].t.substring(startoffset,endoffset);
+		throw "getTextBetween cannot deal with cross page text";
 		var first=texts[from].t.substr(startoffset-1);
 		var middle="";
 		for (var i=from+1;i<to;i++) {
@@ -202,6 +203,7 @@ var processTags=function(captureTags,tags,texts) {
 		var last=texts[to].t.substr(0,endoffset-1);
 		return first+middle+last;
 	}
+
 	for (var i=0;i<tags.length;i++) {
 		for (var j=0;j<tags[i].length;j++) {
 			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos=T[3];
@@ -240,12 +242,10 @@ var processTags=function(captureTags,tags,texts) {
 						throw "tag unbalance";
 					} else {
 						tagStack.pop();
-
-						text=getTextBetween(prev[3],i,prev[1],tagoffset);
+						text=getTextBetween(prev[3],i,prev[1],tagoffset);						
 						//console.log(text,prev[1],tagoffset)
 					}
 				}
-				
 				status.vpos=tagvpos; 
 				status.tagStack=tagStack;
 				var fields=handler(text, tagname, attr, status);

@@ -213,6 +213,7 @@ var createLocalEngine=function(kdb,cb,context) {
 	engine.getDocument=getDocument;
 	engine.getFilePageNames=getFilePageNames;
 	engine.getFilePageOffsets=getFilePageOffsets;
+	engine.getFileRange=getFileRange;
 	engine.findPage=findPage;
 	//only local engine allow getSync
 	if (kdb.fs.getSync) engine.getSync=engine.kdb.getSync;
@@ -352,6 +353,7 @@ var createEngine=function(kdbid,context,cb) {
 	engine.getDocument=getDocument;
 	engine.getFilePageNames=getFilePageNames;
 	engine.getFilePageOffsets=getFilePageOffsets;
+	engine.getFileRange=getFileRange;
 	engine.findPage=findPage;
 
 	if (typeof context=="object") engine.context=context;

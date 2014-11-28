@@ -324,11 +324,11 @@ var highlightPage=function(Q,fileid,pageid,opts,cb) {
 
 	if (!Q || !Q.engine) return cb(null);
 	var pageOffsets=Q.engine.getFilePageOffsets(fileid);
-	var startvpos=pageOffsets[pageid];
-	var endvpos=pageOffsets[pageid+1];
+	var startvpos=pageOffsets[pageid-1];
+	var endvpos=pageOffsets[pageid];
 	var pagenames=Q.engine.getFilePageNames(fileid);
 
-	this.getPage(Q.engine, fileid,pageid+1,function(res){
+	this.getPage(Q.engine,fileid,pageid,function(res){
 		var opt={text:res.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
 		opt.hits=hitInRange(Q,startvpos,endvpos);
 		var pagename=pagenames[pageid];
