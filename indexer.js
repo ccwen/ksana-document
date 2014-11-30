@@ -180,7 +180,7 @@ var storeFields=function(fields,json) {
 			storepoint=storepoint[path[i]];
 		}
 		if (typeof field.value=="undefined") {
-			throw "empty field value of "+path;
+			throw "empty field value of ["+path+"]";
 		} 
 		storepoint.push(field.value);
 	}
@@ -194,7 +194,6 @@ var processTags=function(captureTags,tags,texts) {
 
 	var getTextBetween=function(from,to,startoffset,endoffset) {
 		if (from==to) return texts[from].t.substring(startoffset,endoffset);
-		throw "getTextBetween cannot deal with cross page text";
 		var first=texts[from].t.substr(startoffset-1);
 		var middle="";
 		for (var i=from+1;i<to;i++) {
@@ -203,7 +202,7 @@ var processTags=function(captureTags,tags,texts) {
 		var last=texts[to].t.substr(0,endoffset-1);
 		return first+middle+last;
 	}
-
+	var attr=null;
 	for (var i=0;i<tags.length;i++) {
 		for (var j=0;j<tags[i].length;j++) {
 			var T=tags[i][j],tagname=T[1],tagoffset=T[0],attributes=T[2],tagvpos=T[3];
@@ -223,10 +222,9 @@ var processTags=function(captureTags,tags,texts) {
 			}
 
 			if (captureTags[tagname]) {
-
-				var attr=parseAttributesString(attributes);
+				attr=parseAttributesString(attributes);
 				if (!nulltag) {
-					tagStack.push([tagname,tagoffset,attr,i]);
+					tagStack.push([tagname,tagoffset,attr,i, tagvpos]);
 				}
 			}
 			var handler=null;
@@ -246,10 +244,15 @@ var processTags=function(captureTags,tags,texts) {
 						//console.log(text,prev[1],tagoffset)
 					}
 				}
-				status.vpos=tagvpos; 
+				if (typeof prev=="undefined") {
+					status.vpos=tagvpos;
+				} else {
+					status.vpos=tagvpos; 
+					status.vposstart=prev[4];
+					attr=prev[2]; //use attribute from open tag
+				}
 				status.tagStack=tagStack;
 				var fields=handler(text, tagname, attr, status);
-				
 				if (fields) storeFields(fields,session.json);
 			}
 		}	
@@ -454,6 +457,7 @@ var optimize4kdb=function(json) {
 	json.postingslen=buildpostingslen(json.tokens,json.postings);
 	json.fileOffsets.sorted=true;
 	json.pageOffsets.sorted=true;
+
 	return json;
 }
 
@@ -475,7 +479,7 @@ var finalize=function(cb) {
 	//console.log(JSON.stringify(session.json,""," "));
 	if (session.config.finalizeField) {
 		console.log("finalizing fields");
-		session.config.finalizeField(session.fields);
+		session.config.finalizeField(session.json.fields);
 	}
 	console.log("optimizing");
 	var json=optimize4kdb(session.json);
