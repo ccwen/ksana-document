@@ -1,13 +1,13 @@
 var plist=require("./plist");
 
-var getPhraseWidths=function (Q,phraseid,voffs) {
+var getPhraseWidths=function (Q,phraseid,vposs) {
 	var res=[];
-	for (var i in voffs) {
-		res.push(getPhraseWidth(Q,phraseid,voffs[i]));
+	for (var i in vposs) {
+		res.push(getPhraseWidth(Q,phraseid,vposs[i]));
 	}
 	return res;
 }
-var getPhraseWidth=function (Q,phraseid,voff) {
+var getPhraseWidth=function (Q,phraseid,vpos) {
 	var P=Q.phrases[phraseid];
 	var width=0,varwidth=false;
 	if (P.width) return P.width; // no wildcard
@@ -24,33 +24,62 @@ var getPhraseWidth=function (Q,phraseid,voff) {
 		}
 	}
 	if (varwidth) { //width might be smaller due to * wildcard
-		var at=plist.indexOfSorted(lasttermposting,voff);
+		var at=plist.indexOfSorted(lasttermposting,vpos);
 		var endpos=lasttermposting[at];
-		if (endpos-voff<width) width=endpos-voff+1;
+		if (endpos-vpos<width) width=endpos-vpos+1;
 	}
 
 	return width;
 }
-/* return [voff, phraseid, phrasewidth, optional_tagname] by slot range*/
-var hitInRange=function(Q,startvoff,endvoff) {
+/* return [vpos, phraseid, phrasewidth, optional_tagname] by slot range*/
+var hitInRange=function(Q,startvpos,endvpos) {
 	var res=[];
 	if (!Q || !Q.rawresult.length) return res;
 	for (var i=0;i<Q.phrases.length;i++) {
 		var P=Q.phrases[i];
 		if (!P.posting) continue;
-		var s=plist.indexOfSorted(P.posting,startvoff);
-		var e=plist.indexOfSorted(P.posting,endvoff);
+		var s=plist.indexOfSorted(P.posting,startvpos);
+		var e=plist.indexOfSorted(P.posting,endvpos);
 		var r=P.posting.slice(s,e);
 		var width=getPhraseWidths(Q,i,r);
 
-		res=res.concat(r.map(function(voff,idx){ return [voff,i,width[idx]] }));
+		res=res.concat(r.map(function(vpos,idx){ return [vpos,width[idx],i] }));
 	}
-	// order by voff, if voff is the same, larger width come first.
+	// order by vpos, if vpos is the same, larger width come first.
 	// so the output will be
 	// <tag1><tag2>one</tag2>two</tag1>
-	//TODO, might cause overlap if same voff and same width
+	//TODO, might cause overlap if same vpos and same width
 	//need to check tag name
-	res.sort(function(a,b){return a[0]==b[0]? b[2]-a[2] :a[0]-b[0]});
+	res.sort(function(a,b){return a[0]==b[0]? b[1]-a[1] :a[0]-b[0]});
+
+	return res;
+}
+
+var tagsInRange=function(Q,renderTags,startvpos,endvpos) {
+	var res=[];
+	if (typeof renderTags=="string") renderTags=[renderTags];
+
+	renderTags.map(function(tag){
+		var starts=Q.engine.get(["fields",tag+"_start"]);
+		var ends=Q.engine.get(["fields",tag+"_end"]);
+		if (!starts) return;
+
+		var s=plist.indexOfSorted(starts,startvpos);
+		var e=s;
+		while (e<starts.length && starts[e]<endvpos) e++;
+		var opentags=starts.slice(s,e);
+
+		s=plist.indexOfSorted(ends,startvpos);
+		e=s;
+		while (e<ends.length && ends[e]<endvpos) e++;
+		var closetags=ends.slice(s,e);
+
+		opentags.map(function(start,idx) {
+			res.push([start,closetags[idx]-start,tag]);
+		})
+	});
+	// order by vpos, if vpos is the same, larger width come first.
+	res.sort(function(a,b){return a[0]==b[0]? b[1]-a[1] :a[0]-b[0]});
 
 	return res;
 }
@@ -173,56 +202,64 @@ var resultlist=function(engine,Q,opts,cb) {
 }
 var injectTag=function(Q,opts){
 	var hits=opts.hits;
-	var tag=opts.tag||'hl';
-	var output='',O=[],j=0;;
+	var tags=opts.tags;
+	if (!tags) tags=[];
+	var hitclass=opts.hitclass||'hl';
+	var output='',O=[],j=0,k=0;
 	var surround=opts.surround||5;
 
 	var tokens=Q.tokenize(opts.text).tokens;
-	var voff=opts.voff;
+	var vpos=opts.vpos;
 	var i=0,previnrange=!!opts.fulltext ,inrange=!!opts.fulltext;
+	var hitstart=0,hitend=0,tagstart=0,tagend=0,tagclass="";
+	console.log(opts.renderTags);
 	while (i<tokens.length) {
-		inrange=opts.fulltext || (j<hits.length && voff+surround>=hits[j][0] ||
-				(j>0 && j<=hits.length &&  hits[j-1][0]+surround*2>=voff));	
+		var skip=Q.isSkip(tokens[i]);
+		var hashit=false;
+		inrange=opts.fulltext || (j<hits.length && vpos+surround>=hits[j][0] ||
+				(j>0 && j<=hits.length &&  hits[j-1][0]+surround*2>=vpos));	
 
 		if (previnrange!=inrange) {
 			output+=opts.abridge||"...";
 		}
 		previnrange=inrange;
 
-		if (Q.isSkip(tokens[i])) {
-			if (inrange) output+=tokens[i];
-			i++;
-			continue;
-		}
-		if (i<tokens.length && j<hits.length && voff==hits[j][0]) {
-			var nphrase=hits[j][1] % 10, width=hits[j][2];
-			var tag=hits[j][3] || tag;
-			if (width) {
-				output+= '<'+tag+' n="'+nphrase+'">';
-				while (width && i<tokens.length) {
-					output+=tokens[i];
-					if (!Q.isSkip(tokens[i])) {voff++;width--;}
-					i++;
-				}
-				output+='</'+tag+'>';
+		if (inrange && i<tokens.length) {
+			if (skip) {
+				output+=tokens[i];
 			} else {
-				output+= '<'+tag+' n="'+nphrase+'"/>';
+				var classes="";	
+
+				//check hit
+				if (j<hits.length && vpos==hits[j][0]) {
+					var nphrase=hits[j][2] % 10, width=hits[j][1];
+					hitstart=hits[j][0];
+					hitend=hitstart+width;
+					j++;
+				}
+
+				//check tag
+				if (k<tags.length && vpos==tags[k][0]) {
+					var width=tags[k][1];
+					tagstart=tags[k][0];
+					tagend=tagstart+width;
+					tagclass=tags[k][2];
+					k++;
+				}
+
+				if (vpos>=hitstart && vpos<hitend) classes=hitclass+" "+hitclass+nphrase;
+				if (vpos>=tagstart && vpos<tagend) classes+=" "+tagclass;
+			
+				output+='<span vpos="'+vpos+'"';
+				if (classes) classes=' class="'+classes+'"';
+				output+=classes+'>';
+				output+=tokens[i]+'</span>';
 			}
-			while (j<hits.length && voff>hits[j][0]) j++;
-		} else {
-			if (inrange && i<tokens.length) output+=tokens[i];
-			i++;
-			voff++;
 		}
-		
+		if (!skip) vpos++;
+		i++; 
 	}
-	var remain=10;
-	while (i<tokens.length) {
-		if (inrange) output+= tokens[i];
-		i++;
-		remain--;
-		if (remain<=0) break;
-	}
+
 	O.push(output);
 	output="";
 
@@ -231,8 +268,8 @@ var injectTag=function(Q,opts){
 var highlight=function(Q,opts) {
 	if (!opts.text) return {text:"",hits:[]};
 	var opt={text:opts.text,
-		hits:null,tag:'hl',abridge:opts.abridge,voff:opts.startvpos,
-		fulltext:opts.fulltext
+		hits:null,abridge:opts.abridge,vpos:opts.startvpos,
+		fulltext:opts.fulltext,renderTags:opts.renderTags
 	};
 
 	opt.hits=hitInRange(opts.Q,opts.startvpos,opts.endvpos);
@@ -306,7 +343,7 @@ var highlightFile=function(Q,fileid,opts,cb) {
 				var endvpos=pageOffsets[i+1];
 				var pagenames=Q.engine.getFilePageNames(fileid);
 				var page=getPageSync(Q.engine, fileid,i+1);
-					var opt={text:page.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
+					var opt={text:page.text,hits:null,tag:'hl',vpos:startvpos,fulltext:true};
 				var pagename=pagenames[i+1];
 				opt.hits=hitInRange(Q,startvpos,endvpos);
 				var pb='<pb n="'+pagename+'"></pb>';
@@ -329,8 +366,12 @@ var highlightPage=function(Q,fileid,pageid,opts,cb) {
 	var pagenames=Q.engine.getFilePageNames(fileid);
 
 	this.getPage(Q.engine,fileid,pageid,function(res){
-		var opt={text:res.text,hits:null,tag:'hl',voff:startvpos,fulltext:true};
+		var opt={text:res.text,hits:null,vpos:startvpos,fulltext:true};
 		opt.hits=hitInRange(Q,startvpos,endvpos);
+		if (opts.renderTags) {
+			opt.tags=tagsInRange(Q,opts.renderTags,startvpos,endvpos);
+		}
+
 		var pagename=pagenames[pageid];
 		cb.apply(Q.engine.context,[{text:injectTag(Q,opt),page:pageid,file:fileid,hits:opt.hits,pagename:pagename}]);
 	});
