@@ -180,7 +180,7 @@ var storeFields=function(fields,json) {
 			storepoint=storepoint[path[i]];
 		}
 		if (typeof field.value=="undefined") {
-			throw "empty field value of ["+path+"]";
+			throw "empty field value of ["+path+"] in file "+status.filename;
 		} 
 		storepoint.push(field.value);
 	}
