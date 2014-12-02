@@ -157,6 +157,7 @@ var loadPhrase=function(phrase) {
   return Q;
 }
 var trimSpace=function(engine,query) {
+	if (!query) return "";
 	var i=0;
 	var isSkip=engine.customfunc.isSkip;
 	while (isSkip(query[i]) && i<query.length) i++;
@@ -227,12 +228,12 @@ var slowPhrase=function(engine,terms,phrase) {
 		return phrase_term;
 }
 var newQuery =function(engine,query,opts) {
-	if (!query) return;
+	//if (!query) return;
 	opts=opts||{};
 	query=trimSpace(engine,query);
 
-	var phrases=query;
-	if (typeof query=='string') {
+	var phrases=query,phrases=[];
+	if (typeof query=='string' && query) {
 		phrases=parseQuery(query);
 	}
 	
@@ -380,41 +381,45 @@ var main=function(engine,q,opts,cb){
 		return;
 	};
 	engine.queryCache[q]=Q;
-	loadPostings(engine,Q.terms,function(){
-		if (!Q.phrases[0].posting) {
-			cb.apply(engine.context,[{rawresult:[]}]);
-			return;			
-		}
-		
-		if (!Q.phrases[0].posting.length) { //
-			Q.phrases.forEach(loadPhrase.bind(Q));
-		}
-		if (Q.phrases.length==1) {
-			Q.rawresult=Q.phrases[0].posting;
-		} else {
-			phrase_intersect(engine,Q);
-		}
-		var fileOffsets=Q.engine.get("fileOffsets");
-		//console.log("search opts "+JSON.stringify(opts));
+	if (Q.terms.length) {
+		loadPostings(engine,Q.terms,function(){
+			if (!Q.phrases[0].posting) {
+				cb.apply(engine.context,[{rawresult:[]}]);
+				return;			
+			}
+			
+			if (!Q.phrases[0].posting.length) { //
+				Q.phrases.forEach(loadPhrase.bind(Q));
+			}
+			if (Q.phrases.length==1) {
+				Q.rawresult=Q.phrases[0].posting;
+			} else {
+				phrase_intersect(engine,Q);
+			}
+			var fileOffsets=Q.engine.get("fileOffsets");
+			//console.log("search opts "+JSON.stringify(opts));
 
-		if (!Q.byFile && Q.rawresult && !opts.nogroup) {
-			Q.byFile=plist.groupbyposting2(Q.rawresult, fileOffsets);
-			Q.byFile.shift();Q.byFile.pop();
-			Q.byFolder=groupByFolder(engine,Q.byFile);
+			if (!Q.byFile && Q.rawresult && !opts.nogroup) {
+				Q.byFile=plist.groupbyposting2(Q.rawresult, fileOffsets);
+				Q.byFile.shift();Q.byFile.pop();
+				Q.byFolder=groupByFolder(engine,Q.byFile);
 
-			countFolderFile(Q);
-		}
+				countFolderFile(Q);
+			}
 
-		if (opts.range) {
-			excerpt.resultlist(engine,Q,opts,function(data) { 
-				//console.log("excerpt ok");
-				Q.excerpt=data;
+			if (opts.range) {
+				excerpt.resultlist(engine,Q,opts,function(data) { 
+					//console.log("excerpt ok");
+					Q.excerpt=data;
+					cb.apply(engine.context,[Q]);
+				});
+			} else {
 				cb.apply(engine.context,[Q]);
-			});
-		} else {
-			cb.apply(engine.context,[Q]);
-		}		
-	});
+			}		
+		});
+	} else { //empty search
+		cb.apply(engine.context,[Q]);
+	};
 }
 
 module.exports=main;

@@ -34,7 +34,7 @@ var getPhraseWidth=function (Q,phraseid,vpos) {
 /* return [vpos, phraseid, phrasewidth, optional_tagname] by slot range*/
 var hitInRange=function(Q,startvpos,endvpos) {
 	var res=[];
-	if (!Q || !Q.rawresult.length) return res;
+	if (!Q || !Q.rawresult || !Q.rawresult.length) return res;
 	for (var i=0;i<Q.phrases.length;i++) {
 		var P=Q.phrases[i];
 		if (!P.posting) continue;

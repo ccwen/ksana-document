@@ -39,15 +39,17 @@ var _highlightRange=function(engine,start,end,opts,cb){
 	}
 }
 var _highlightFile=function(engine,fileid,opts,cb){
-	if (opts.q) {
-		_search(engine,opts.q,opts,function(Q){
-			api.excerpt.highlightFile(Q,fileid,opts,cb);
-		});
+	if (!opts.q) opts.q=""; 
+	_search(engine,opts.q,opts,function(Q){
+		api.excerpt.highlightFile(Q,fileid,opts,cb);
+	});
+	/*
 	} else {
 		api.excerpt.getFile(engine,fileid,function(data) {
 			cb.apply(engine.context,[data]);
 		});
 	}
+	*/
 }
 
 var vpos2filepage=function(engine,vpos) {
