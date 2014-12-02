@@ -212,7 +212,6 @@ var injectTag=function(Q,opts){
 	var vpos=opts.vpos;
 	var i=0,previnrange=!!opts.fulltext ,inrange=!!opts.fulltext;
 	var hitstart=0,hitend=0,tagstart=0,tagend=0,tagclass="";
-	console.log(opts.renderTags);
 	while (i<tokens.length) {
 		var skip=Q.isSkip(tokens[i]);
 		var hashit=false;
@@ -324,7 +323,6 @@ var highlightRange=function(Q,startvpos,endvpos,opts,cb){
 }
 
 var highlightFile=function(Q,fileid,opts,cb) {
-	console.log("higlight")
 	if (typeof opts=="function") {
 		cb=opts;
 	}
