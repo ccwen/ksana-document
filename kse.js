@@ -21,15 +21,13 @@ var _search=function(engine,q,opts,cb) {
 }
 
 var _highlightPage=function(engine,fileid,pageid,opts,cb){
-	if (opts.q) {
-		_search(engine,opts.q,opts,function(Q){
-			api.excerpt.highlightPage(Q,fileid,pageid,opts,cb);
-		});
-	} else {
-		api.excerpt.getPage(engine,fileid,pageid,cb);
-	}
+	if (!opts.q) opts.q=""; 
+	_search(engine,opts.q,opts,function(Q){
+		api.excerpt.highlightPage(Q,fileid,pageid,opts,cb);
+	});	
 }
 var _highlightRange=function(engine,start,end,opts,cb){
+
 	if (opts.q) {
 		_search(engine,opts.q,opts,function(Q){
 			api.excerpt.highlightRange(Q,start,end,opts,cb);

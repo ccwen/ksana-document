@@ -134,11 +134,14 @@ var resultlist=function(engine,Q,opts,cb) {
 	if (!Q.rawresult || !Q.rawresult.length) {
 		cb(output);
 		return;
-	} 
+	}
+
 	if (opts.range) {
 		if (opts.range.maxhit && !opts.range.maxfile) {
 			opts.range.maxfile=opts.range.maxhit;
+			opts.range.maxpage=opts.range.maxhit;
 		}
+		if (!opts.range.maxpage) opts.range.maxpage=100;
 	}
 	var fileWithHits=getFileWithHits(engine,Q,opts.range);
 	if (!fileWithHits.length) {
@@ -160,6 +163,7 @@ var resultlist=function(engine,Q,opts,cb) {
 			if (!pagewithhit[j].length) continue;
 			//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
 			output.push(  {file: nfile, page:j,  pagename:pageNames[j]});
+			if (output.length>opts.range.maxpage) break;
 		}
 	}
 

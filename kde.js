@@ -418,17 +418,18 @@ var open=function(kdbid,cb,context) {
 	return engine;
 }
 var getLocalTries=function(kdbfn) {
-	return ["./"+kdbfn  //TODO , allow any depth
-	           ,apppath+"/"+kdbfn,
-	           ,apppath+"/ksana_databases/"+kdbfn
-	           ,apppath+"/"+kdbfn,
-	           ,"./ksana_databases/"+kdbfn
-	           ,"../"+kdbfn
-	           ,"../ksana_databases/"+kdbfn
-	           ,"../../"+kdbfn
-	           ,"../../ksana_databases/"+kdbfn
-	           ,"../../../"+kdbfn
-	           ,"../../../ksana_databases/"+kdbfn
+	kdbfn=kdbfn.replace('.kdb','');
+	return ["./"+kdbfn+".kdb"  //TODO , allow any depth
+	           ,apppath+"/"+kdbfn+".kdb",
+	           ,kdbfn+"/"+kdbfn+".kdb", //application name same as path
+	           ,apppath+"/ksana_databases/"+kdbfn+".kdb"
+	           ,"./ksana_databases/"+kdbfn+".kdb"
+	           ,"../"+kdbfn+".kdb"
+	           ,"../ksana_databases/"+kdbfn+".kdb"
+	           ,"../../"+kdbfn+".kdb"
+	           ,"../../ksana_databases/"+kdbfn+".kdb"
+	           ,"../../../"+kdbfn+".kdb"
+	           ,"../../../ksana_databases/"+kdbfn+".kdb"
 	           ];
 }
 var openLocalKsanagap=function(kdbid,cb,context) {
@@ -440,7 +441,6 @@ var openLocalKsanagap=function(kdbid,cb,context) {
 
 	var Kdb=Require('ksana-document').kdb;
 	var kdbfn=kdbid;
-	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
 
 	var tries=getLocalTries(kdbfn);
 
@@ -469,7 +469,6 @@ var openLocalNode=function(kdbid,cb,context) {
 
 	var Kdb=nodeRequire('ksana-document').kdb;
 	var kdbfn=kdbid;
-	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
 
 	var tries=getLocalTries(kdbfn);
 
