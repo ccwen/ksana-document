@@ -381,7 +381,7 @@ var main=function(engine,q,opts,cb){
 		return;
 	};
 	engine.queryCache[q]=Q;
-	if (Q.terms.length) {
+	if (Q.phrases.length) {
 		loadPostings(engine,Q.terms,function(){
 			if (!Q.phrases[0].posting) {
 				cb.apply(engine.context,[{rawresult:[]}]);
