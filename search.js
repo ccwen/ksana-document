@@ -283,10 +283,10 @@ var postingPathFromTokens=function(engine,tokens) {
 	return postingid.map(function(t){return ["postings",t]});
 }
 var loadPostings=function(engine,tokens,cb) {
-	tokens=tokens.filter(function(t){
+	var toloadtokens=tokens.filter(function(t){
 		return !engine.postingCache[t.key]; //already in cache
 	});
-	if (tokens.length==0) {
+	if (toloadtokens.length==0) {
 		cb();
 		return;
 	}
