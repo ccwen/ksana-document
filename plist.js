@@ -80,6 +80,7 @@ var groupbyposting=function(arr,gposting) { //relative vpos
   return out;
 }
 var groupbyposting2=function(arr,gposting) { //absolute vpos
+  if (!arr || !arr.length) return [];
   if (!gposting.length) return [arr.length];
   var out=[];
   for (var i=0;i<=gposting.length;i++) out[i]=[];

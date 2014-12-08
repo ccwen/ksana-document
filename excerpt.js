@@ -40,7 +40,7 @@ var hitInRange=function(Q,startvpos,endvpos) {
 		if (!P.posting) continue;
 		var s=plist.indexOfSorted(P.posting,startvpos);
 		var e=plist.indexOfSorted(P.posting,endvpos);
-		var r=P.posting.slice(s,e);
+		var r=P.posting.slice(s,e+1);
 		var width=getPhraseWidths(Q,i,r);
 
 		res=res.concat(r.map(function(vpos,idx){ return [vpos,width[idx],i] }));
@@ -186,7 +186,9 @@ var resultlist=function(engine,Q,opts,cb) {
 				hl.text=pages[i];
 				hl.hits=hitInRange(Q,startvpos,endvpos);
 			} else {
-				var o={text:pages[i],startvpos:startvpos, endvpos: endvpos, Q:Q,fulltext:opts.fulltext};
+				var o={nocrlf:true,nospan:true,
+					text:pages[i],startvpos:startvpos, endvpos: endvpos, 
+					Q:Q,fulltext:opts.fulltext};
 				hl=highlight(Q,o);
 			}
 			if (hl.text) {
@@ -226,10 +228,12 @@ var injectTag=function(Q,opts){
 			output+=opts.abridge||"...";
 		}
 		previnrange=inrange;
+		var token=tokens[i];
+		if (opts.nocrlf && token=="\n") token="";
 
 		if (inrange && i<tokens.length) {
 			if (skip) {
-				output+=tokens[i];
+				output+=token;
 			} else {
 				var classes="";	
 
@@ -253,10 +257,15 @@ var injectTag=function(Q,opts){
 				if (vpos>=hitstart && vpos<hitend) classes=hitclass+" "+hitclass+nphrase;
 				if (vpos>=tagstart && vpos<tagend) classes+=" "+tagclass;
 			
-				output+='<span vpos="'+vpos+'"';
-				if (classes) classes=' class="'+classes+'"';
-				output+=classes+'>';
-				output+=tokens[i]+'</span>';
+
+				if (classes || !opts.nospan) {
+					output+='<span vpos="'+vpos+'"';
+					if (classes) classes=' class="'+classes+'"';
+					output+=classes+'>';
+					output+=token+'</span>';
+				} else {
+					output+=token;
+				}
 			}
 		}
 		if (!skip) vpos++;
@@ -345,7 +354,8 @@ var highlightFile=function(Q,fileid,opts,cb) {
 				var endvpos=pageOffsets[i+1];
 				var pagenames=Q.engine.getFilePageNames(fileid);
 				var page=getPageSync(Q.engine, fileid,i+1);
-					var opt={text:page.text,hits:null,tag:'hl',vpos:startvpos,fulltext:true};
+					var opt={text:page.text,hits:null,tag:'hl',vpos:startvpos,
+					fulltext:true,nospan:opts.nospan,nocrlf:opts.nocrlf};
 				var pagename=pagenames[i+1];
 				opt.hits=hitInRange(Q,startvpos,endvpos);
 				var pb='<pb n="'+pagename+'"></pb>';
@@ -368,7 +378,8 @@ var highlightPage=function(Q,fileid,pageid,opts,cb) {
 	var pagenames=Q.engine.getFilePageNames(fileid);
 
 	this.getPage(Q.engine,fileid,pageid,function(res){
-		var opt={text:res.text,hits:null,vpos:startvpos,fulltext:true};
+		var opt={text:res.text,hits:null,vpos:startvpos,fulltext:true,
+			nospan:opts.nospan,nocrlf:opts.nocrlf};
 		opt.hits=hitInRange(Q,startvpos,endvpos);
 		if (opts.renderTags) {
 			opt.tags=tagsInRange(Q,opts.renderTags,startvpos,endvpos);

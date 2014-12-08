@@ -103,14 +103,18 @@ var parseWildcard=function(raw) {
 var newPhrase=function() {
 	return {termid:[],posting:[],raw:''};
 } 
-var parseQuery=function(q) {
-	var match=q.match(/(".+?"|'.+?'|\S+)/g)
-	match=match.map(function(str){
-		var n=str.length, h=str.charAt(0), t=str.charAt(n-1)
-		if (h===t&&(h==='"'|h==="'")) str=str.substr(1,n-2)
-		return str
-	})
-	//console.log(input,'==>',match)
+var parseQuery=function(q,sep) {
+	if (sep && q.indexOf(sep)>-1) {
+		var match=q.split(sep);
+	} else {
+		var match=q.match(/(".+?"|'.+?'|\S+)/g)
+		match=match.map(function(str){
+			var n=str.length, h=str.charAt(0), t=str.charAt(n-1)
+			if (h===t&&(h==='"'|h==="'")) str=str.substr(1,n-2)
+			return str
+		})
+		//console.log(input,'==>',match)		
+	}
 	return match;
 }
 var loadPhrase=function(phrase) {
@@ -122,7 +126,11 @@ var loadPhrase=function(phrase) {
 		return Q;
 	}
 	if (phrase.termid.length==1) {
-		cache[phrase.key]=phrase.posting=Q.terms[phrase.termid[0]].posting;
+		if (!Q.terms.length){
+			phrase.posting=[];
+		} else {
+			cache[phrase.key]=phrase.posting=Q.terms[phrase.termid[0]].posting;	
+		}
 		return Q;
 	}
 
@@ -166,7 +174,7 @@ var trimSpace=function(engine,query) {
 var getPageWithHit=function(fileid,offsets) {
 	var Q=this,engine=Q.engine;
 	var pagewithhit=plist.groupbyposting2(Q.byFile[fileid ], offsets);
-	pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
+	if (pagewithhit.length) pagewithhit.shift(); //the first item is not used (0~Q.byFile[0] )
 	var out=[];
 	pagewithhit.map(function(p,idx){if (p.length) out.push(idx)});
 	return out;
@@ -196,7 +204,7 @@ var fastPhrase=function(engine,phrase) {
 var slowPhrase=function(engine,terms,phrase) {
 	  var j=0,tokens=engine.customfunc.tokenize(phrase).tokens;
 	  var phrase_term=newPhrase();
-
+	  var termid=0;
 		while (j<tokens.length) {
 			var raw=tokens[j];
 			if (isWildcard(raw)) {
@@ -205,16 +213,26 @@ var slowPhrase=function(engine,terms,phrase) {
 					continue;
 				}
 				terms.push(parseWildcard(raw));
+				termid=terms.length-1;
 			} else if (isOrTerm(raw)){
 				var term=orTerms.apply(this,[tokens,j]);
-				terms.push(term);
-				j+=term.key.split(',').length-1;
+				if (term) {
+					terms.push(term);
+					termid=terms.length-1;
+					j+=term.key.split(',').length-1;					
+				}
+				j++;
 			} else {
 				var term=parseTerm(engine,raw);
 				var termidx=terms.map(function(a){return a.key}).indexOf(term.key);
-				if (termidx==-1) terms.push(term);
+				if (termidx==-1) {
+					terms.push(term);
+					termid=terms.length-1;
+				} else {
+					termid=termidx;
+				}
 			}
-			phrase_term.termid.push(terms.length-1);
+			phrase_term.termid.push(termid);
 			j++;
 		}
 		phrase_term.key=phrase;
@@ -234,7 +252,7 @@ var newQuery =function(engine,query,opts) {
 
 	var phrases=query,phrases=[];
 	if (typeof query=='string' && query) {
-		phrases=parseQuery(query);
+		phrases=parseQuery(query,opts.phrase_sep || "");
 	}
 	
 	var phrase_terms=[], terms=[],variants=[],operators=[];
@@ -339,7 +357,9 @@ var phrase_intersect=function(engine,Q) {
 	var empty=[],emptycount=0,hashit=0;
 	for (var i=0;i<Q.phrases.length;i++) {
 		var byfile=plist.groupbyposting2(Q.phrases[i].posting,fileOffsets);
-		byfile.shift();byfile.pop();
+		if (byfile.length) byfile.shift();
+		if (byfile.length) byfile.pop();
+		byfile.pop();
 		if (intersected==null) {
 			intersected=byfile;
 		} else {
