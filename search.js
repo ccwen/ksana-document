@@ -17,9 +17,9 @@ var parseTerm = function(engine,raw,opts) {
 	term=engine.customfunc.normalize(term);
 	
 	if (term.indexOf("%")>-1) {
-		var termregex="^"+term.replace(/%+/g,".*")+"$";
-		if (firstchar=="%") 	termregex=".*"+termregex.substr(1);
-		if (lastchar=="%") 	termregex=termregex.substr(0,termregex.length-1)+".*";
+		var termregex="^"+term.replace(/%+/g,".+")+"$";
+		if (firstchar=="%") 	termregex=".+"+termregex.substr(1);
+		if (lastchar=="%") 	termregex=termregex.substr(0,termregex.length-1)+".+";
 	}
 
 	if (termregex) {
