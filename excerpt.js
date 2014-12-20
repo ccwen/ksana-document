@@ -97,11 +97,19 @@ output:
 var getFileWithHits=function(engine,Q,range) {
 	var fileOffsets=engine.get("fileOffsets");
 	var out=[],filecount=100;
+	var start=0 , end=Q.byFile.length;
+	Q.excerptOverflow=false;
 	if (range.start) {
-		var first=range.start , start=0 , end;
+		var first=range.start ;
+		var last=range.end;
+		if (!last) last=Number.MAX_SAFE_INTEGER;
 		for (var i=0;i<fileOffsets.length;i++) {
-			if (fileOffsets[i]>first) break;
-			start=i;
+			//if (fileOffsets[i]>first) break;
+			if (fileOffsets[i]>last) {
+				end=i;
+				break;
+			}
+			if (fileOffsets[i]<first) start=i;
 		}		
 	} else {
 		start=range.filestart || 0;
@@ -115,16 +123,22 @@ var getFileWithHits=function(engine,Q,range) {
 	var fileWithHits=[],totalhit=0;
 	range.maxhit=range.maxhit||1000;
 
-	for (var i=start;i<Q.byFile.length;i++) {
+	for (var i=start;i<end;i++) {
 		if(Q.byFile[i].length>0) {
 			totalhit+=Q.byFile[i].length;
 			fileWithHits.push(i);
 			range.nextFileStart=i;
-			if (fileWithHits.length>=filecount) break;
-			if (totalhit>range.maxhit) break;
+			if (fileWithHits.length>=filecount) {
+				Q.excerptOverflow=true;
+				break;
+			}
+			if (totalhit>range.maxhit) {
+				Q.excerptOverflow=true;
+				break;
+			}
 		}
 	}
-	if (i>=Q.byFile.length) { //no more file
+	if (i>=end) { //no more file
 		Q.excerptStop=true;
 	}
 	return fileWithHits;
@@ -142,6 +156,9 @@ var resultlist=function(engine,Q,opts,cb) {
 			opts.range.maxpage=opts.range.maxhit;
 		}
 		if (!opts.range.maxpage) opts.range.maxpage=100;
+		if (!opts.range.end) {
+			opts.range.end=Number.MAX_SAFE_INTEGER;
+		}
 	}
 	var fileWithHits=getFileWithHits(engine,Q,opts.range);
 	if (!fileWithHits.length) {
@@ -162,6 +179,7 @@ var resultlist=function(engine,Q,opts,cb) {
 		for (var j=0; j<pagewithhit.length;j++) {
 			if (!pagewithhit[j].length) continue;
 			//var offsets=pagewithhit[j].map(function(p){return p- fileOffsets[i]});
+			if (pageOffsets[j]>opts.range.end) break;
 			output.push(  {file: nfile, page:j,  pagename:pageNames[j]});
 			if (output.length>opts.range.maxpage) break;
 		}
@@ -178,8 +196,9 @@ var resultlist=function(engine,Q,opts,cb) {
 			var endvpos=files[output[i].file].pageOffsets[output[i].page];
 			var hl={};
 
-			if (opts.range && opts.range.start && startvpos<opts.range.start ) {
-				startvpos=opts.range.start;
+			if (opts.range && opts.range.start  ) {
+				if ( startvpos<opts.range.start) startvpos=opts.range.start;
+			//	if (endvpos>opts.range.end) endvpos=opts.range.end;
 			}
 			
 			if (opts.nohighlight) {
@@ -359,7 +378,8 @@ var highlightFile=function(Q,fileid,opts,cb) {
 				var pagename=pagenames[i+1];
 				opt.hits=hitInRange(Q,startvpos,endvpos);
 				var pb='<pb n="'+pagename+'"></pb>';
-				output.push(pb+injectTag(Q,opt));
+				var withtag=injectTag(Q,opt);
+				output.push(pb+withtag);
 			}			
 		}
 

@@ -90,8 +90,26 @@ var parsePhrase=function(q) {
 	})
 	return match;
 }
+var tibetanNumber={
+	"\u0f20":"0","\u0f21":"1","\u0f22":"2",	"\u0f23":"3",	"\u0f24":"4",
+	"\u0f25":"5","\u0f26":"6","\u0f27":"7","\u0f28":"8","\u0f29":"9"
+}
+var parseNumber=function(raw) {
+	var n=parseInt(raw,10);
+	if (isNaN(n)){
+		var converted=[];
+		for (var i=0;i<raw.length;i++) {
+			var nn=tibetanNumber[raw[i]];
+			if (typeof nn !="undefined") converted[i]=nn;
+			else break;
+		}
+		return parseInt(converted,10);
+	} else {
+		return n;
+	}
+}
 var parseWildcard=function(raw) {
-	var n=parseInt(raw,10) || 1;
+	var n=parseNumber(raw) || 1;
 	var qcount=raw.split('?').length-1;
 	var scount=raw.split('*').length-1;
 	var type='';

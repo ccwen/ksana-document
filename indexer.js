@@ -81,6 +81,7 @@ var putPages_new=function(parsed,cb) { //25% faster than create a new document
 	for (var i=0;i<parsed.texts.length;i++) {
 		var t=parsed.texts[i];
 		fileContent.push(t.t);
+
 		var tovpos=putPage(t.t);
 		parsed.tovpos[i]=tovpos;
 		session.json.pageNames.push(t.n);
@@ -117,7 +118,8 @@ var putPages=function(doc,parsed,cb) {
 		} else {
 			fileContent.push("");
 		}
-		sesison.json.pageNames.push(pg.name);
+
+		session.json.pageNames.push(pg.name);
 		session.json.pageOffsets.push(session.vpos);
 
 		fileInfo.parentId.push(pg.parentId);

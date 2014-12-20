@@ -27,7 +27,7 @@ var tibetan =function(s) {
 	return {tokens:tokens,offsets:offsets};
 };
 var isSpace=function(c) {
-	return (c==" ") || (c==",") || (c==".");
+	return (c==" ") ;//|| (c==",") || (c==".");
 }
 var isCJK =function(c) {return ((c>=0x3000 && c<=0x9FFF) 
 || (c>=0xD800 && c<0xDC00) || (c>=0xFF00) ) ;}
@@ -107,16 +107,22 @@ var simple=function(s) {
 			}
 			addtoken();
 		} else {
-			if (c=='&' || c=='<' || c=='?'
+			if (c=='&' || c=='<' || c=='?' || c=="," || c=="."
 			|| c=='|' || c=='~' || c=='`' || c==';' 
-			|| c=='>' || c==':' || c=='{' || c=='}'
-			|| c=='=' || c=='@' || c=='[' || c==']' || c=='(' || c==')' || c=="-"
+			|| c=='>' || c==':' 
+			|| c=='=' || c=='@'  || c=="-" 
+			|| c==']' || c=='}'  || c==")" 
+			//|| c=='{' || c=='}'|| c=='[' || c==']' || c=='(' || c==')'
 			|| code==0xf0b || code==0xf0d // tibetan space
 			|| (code>=0x2000 && code<=0x206f)) {
 				addtoken();
-				if (c=='&' || c=='<') {
+				if (c=='&' || c=='<'){ // || c=='{'|| c=='('|| c=='[') {
 					var endchar='>';
 					if (c=='&') endchar=';'
+					//else if (c=='{') endchar='}';
+					//else if (c=='[') endchar=']';
+					//else if (c=='(') endchar=')';
+
 					while (i<s.length && s.charAt(i)!=endchar) {
 						token+=s.charAt(i);
 						i++;
@@ -129,7 +135,7 @@ var simple=function(s) {
 				}
 				token='';
 			} else {
-				if (isSpace(c)) {
+				if (c==" ") {
 					token+=c;
 					lastspace=true;
 				} else {

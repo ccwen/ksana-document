@@ -28,16 +28,19 @@ var startindexer=function(mkdbconfig) {
   }
   var getstatus=function() {
     var status=indexer.status();
-    console.log((Math.floor(status.progress*1000)/10)+'%');
+
     if (status.done) {
       var endtime=new Date();
       console.log("END",endtime, "elapse",(endtime-starttime) /1000,"seconds") ;
       //status.outputfn=movefile(status.outputfn,"..");
       clearInterval(timer);
+    } else {
+      if (mkdbconfig.callbacks && mkdbconfig.callbacks.onStatus) {
+        mkdbconfig.callbacks.onStatus(status);  
+      }
     }
   }  
-  timer=setInterval( getstatus, 1000);
-
+  var timer=setInterval( getstatus, 1000);
 }
 
 var build=function(path,mkdbjs){
@@ -53,7 +56,6 @@ var build=function(path,mkdbjs){
   
   var glob = require("glob");
   
-  var timer=null;
   var fn=require("path").resolve(path,mkdbjs);  
   var mkdbconfig=require(fn);
   
