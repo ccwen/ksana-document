@@ -9,7 +9,7 @@ var isSkip=null;
 var normalize=null;
 var tokenize=null;
 
-var putPosting=function(tk) {
+var putPosting=function(tk,vpos) {
 	var	postingid=session.json.tokens[tk];
 	var out=session.json, posting=null;
 	if (!postingid) {
@@ -19,11 +19,19 @@ var putPosting=function(tk) {
 	} else {
 		posting=out.postings[postingid];
 	}
-	posting.push(session.vpos);
+	posting.push(vpos||session.vpos);
 }
+var indexOfSorted=nodeRequire("./plist").indexOfSorted;
+var putBigram=function(bi,vpos) {
+	var i=indexOfSorted(session.config.meta.bigram,bi);
+	if (i>-1 && session.config.meta.bigram[i]==bi) {
+		putPosting(bi,vpos);
+	}
+}
+var lastnormalized="", lastnormalized_vpos=0;
 var putPage=function(inscription) {
 	var tokenized=tokenize(inscription);
-	var tokenOffset=0, tovpos=[];
+	var tokenOffset=0, tovpos=[] ;
 	for (var i=0;i<tokenized.tokens.length;i++) {
 		var t=tokenized.tokens[i];
 		tovpos[tokenOffset]=session.vpos;
@@ -32,7 +40,14 @@ var putPage=function(inscription) {
 			 session.vpos--;
 		} else {
 			var normalized=normalize(t);
-			if (normalized) 	putPosting(normalized);
+			if (normalized) {
+				putPosting(normalized);
+				if (lastnormalized_vpos+1==session.vpos &&  lastnormalized && session.config.meta && session.config.meta.bigram) {
+					putBigram(lastnormalized+normalized,lastnormalized_vpos);
+				} 
+				lastnormalized_vpos=session.vpos;
+			}
+			lastnormalized=normalized;
  		}
  		session.vpos++;
 	}

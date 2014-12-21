@@ -119,7 +119,7 @@ var parseWildcard=function(raw) {
 }
 
 var newPhrase=function() {
-	return {termid:[],posting:[],raw:''};
+	return {termid:[],posting:[],raw:'',termlength:[]};
 } 
 var parseQuery=function(q,sep) {
 	if (sep && q.indexOf(sep)>-1) {
@@ -175,7 +175,8 @@ var loadPhrase=function(phrase) {
 		    	}
 		    }
 		}
-		dis++;	i++;
+		dis += phrase.termlength[i];
+		i++;
 		if (!r) return Q;
   }
   phrase.posting=r;
@@ -220,48 +221,62 @@ var fastPhrase=function(engine,phrase) {
 	// put posting into cache[phrase.key]
 }
 var slowPhrase=function(engine,terms,phrase) {
-	  var j=0,tokens=engine.customfunc.tokenize(phrase).tokens;
-	  var phrase_term=newPhrase();
-	  var termid=0;
-		while (j<tokens.length) {
-			var raw=tokens[j];
-			if (isWildcard(raw)) {
-				if (phrase_term.termid.length==0)  { //skip leading wild card
-					j++
-					continue;
-				}
-				terms.push(parseWildcard(raw));
+	var j=0,tokens=engine.customfunc.tokenize(phrase).tokens;
+	var phrase_term=newPhrase();
+	var termid=0, bigram=engine.get("meta").bigram;
+	while (j<tokens.length) {
+		var raw=tokens[j], termlength=1;
+		if (isWildcard(raw)) {
+			if (phrase_term.termid.length==0)  { //skip leading wild card
+				j++
+				continue;
+			}
+			terms.push(parseWildcard(raw));
+			termid=terms.length-1;
+		} else if (isOrTerm(raw)){
+			var term=orTerms.apply(this,[tokens,j]);
+			if (term) {
+				terms.push(term);
 				termid=terms.length-1;
-			} else if (isOrTerm(raw)){
-				var term=orTerms.apply(this,[tokens,j]);
-				if (term) {
-					terms.push(term);
-					termid=terms.length-1;
-					j+=term.key.split(',').length-1;					
-				}
-				j++;
-			} else {
-				var term=parseTerm(engine,raw);
-				var termidx=terms.map(function(a){return a.key}).indexOf(term.key);
-				if (termidx==-1) {
-					terms.push(term);
-					termid=terms.length-1;
-				} else {
-					termid=termidx;
+				j+=term.key.split(',').length-1;					
+			}
+			j++;
+		} else {
+			var term=parseTerm(engine,raw);
+			
+			if (j+1<tokens.length && bigram ) {
+				var nextterm=parseTerm(engine,tokens[j+1]);
+				var bi=term.key+nextterm.key;
+				var i=plist.indexOfSorted(bigram,bi);
+				if (bigram[i]==bi) {
+					term.raw=raw+tokens[j+1];
+					term.key=bi;
+					termlength=2;
+					j++;
 				}
 			}
-			phrase_term.termid.push(termid);
-			j++;
+
+			var termidx=terms.map(function(a){return a.key}).indexOf(term.key);
+			if (termidx==-1) {
+				terms.push(term);
+				termid=terms.length-1;
+			} else {
+				termid=termidx;
+			}				
 		}
-		phrase_term.key=phrase;
-		//remove ending wildcard
-		var P=phrase_term , T=null;
-		do {
-			T=terms[P.termid[P.termid.length-1]];
-			if (!T) break;
-			if (T.wildcard) P.termid.pop(); else break;
-		} while(T);		
-		return phrase_term;
+		phrase_term.termid.push(termid);
+		phrase_term.termlength.push(termlength);
+		j++;
+	}
+	phrase_term.key=phrase;
+	//remove ending wildcard
+	var P=phrase_term , T=null;
+	do {
+		T=terms[P.termid[P.termid.length-1]];
+		if (!T) break;
+		if (T.wildcard) P.termid.pop(); else break;
+	} while(T);		
+	return phrase_term;
 }
 var newQuery =function(engine,query,opts) {
 	//if (!query) return;

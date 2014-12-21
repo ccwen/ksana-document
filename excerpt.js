@@ -20,7 +20,7 @@ var getPhraseWidth=function (Q,phraseid,vpos) {
 			width+=T.width;
 			if (T.wildcard=='*') varwidth=true;
 		} else {
-			width++;
+			width+=P.termlength[i];
 		}
 	}
 	if (varwidth) { //width might be smaller due to * wildcard
@@ -275,7 +275,6 @@ var injectTag=function(Q,opts){
 
 				if (vpos>=hitstart && vpos<hitend) classes=hitclass+" "+hitclass+nphrase;
 				if (vpos>=tagstart && vpos<tagend) classes+=" "+tagclass;
-			
 
 				if (classes || !opts.nospan) {
 					output+='<span vpos="'+vpos+'"';
@@ -300,7 +299,7 @@ var highlight=function(Q,opts) {
 	if (!opts.text) return {text:"",hits:[]};
 	var opt={text:opts.text,
 		hits:null,abridge:opts.abridge,vpos:opts.startvpos,
-		fulltext:opts.fulltext,renderTags:opts.renderTags
+		fulltext:opts.fulltext,renderTags:opts.renderTags,nospan:opts.nospan,nocrlf:opts.nocrlf,
 	};
 
 	opt.hits=hitInRange(opts.Q,opts.startvpos,opts.endvpos);
