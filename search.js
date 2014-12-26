@@ -207,15 +207,76 @@ var isSimplePhrase=function(phrase) {
 	var m=phrase.match(/[\?%^]/);
 	return !m;
 }
+
+// 發菩提心   ==> 發菩  提心       2 2   
+// 菩提心     ==> 菩提  提心       1 2
+// 劫劫       ==> 劫    劫         1 1   // invalid
+// 因緣所生道  ==> 因緣  所生   道   2 2 1
+var splitPhrase=function(engine,simplephrase,bigram) {
+	var bigram=bigram||engine.get("meta").bigram||[];
+	var tokens=engine.customfunc.tokenize(simplephrase).tokens;
+	var loadtokens=[],lengths=[],j=0,lastbigrampos=-1;
+	while (j+1<tokens.length) {
+		var token=engine.customfunc.normalize(tokens[j]);
+		var nexttoken=engine.customfunc.normalize(tokens[j+1]);
+		var bi=token+nexttoken;
+		var i=plist.indexOfSorted(bigram,bi);
+		if (bigram[i]==bi) {
+			loadtokens.push(bi);
+			if (j+3<tokens.length) {
+				lastbigrampos=j;
+				j++;
+			} else {
+				if (j+2==tokens.length){ 
+					if (lastbigrampos+1==j ) {
+						lengths[lengths.length-1]--;
+					}
+					lastbigrampos=j;
+					j++;
+				}else {
+					lastbigrampos=j;	
+				}
+			}
+			lengths.push(2);
+		} else {
+			if (!bigram || lastbigrampos==-1 || lastbigrampos+1!=j) {
+				loadtokens.push(token);
+				lengths.push(1);				
+			}
+		}
+		j++;
+	}
+
+	while (j<tokens.length) {
+		var token=engine.customfunc.normalize(tokens[j]);
+		loadtokens.push(token);
+		lengths.push(1);
+		j++;
+	}
+
+	return {tokens:loadtokens, lengths: lengths , tokenlength: tokens.length};
+}
 /* host has fast native function */
 var fastPhrase=function(engine,phrase) {
 	var phrase_term=newPhrase();
-	var tokens=engine.customfunc.tokenize(phrase).tokens;
-	var paths=postingPathFromTokens(engine,tokens);
-	phrase_term.width=tokens.length; //for excerpt.js to getPhraseWidth
+	//var tokens=engine.customfunc.tokenize(phrase).tokens;
+	var splitted=splitPhrase(engine,phrase);
+
+	var paths=postingPathFromTokens(engine,splitted.tokens);
+//create wildcard
+
+	phrase_term.width=splitted.tokenlength; //for excerpt.js to getPhraseWidth
+
 	engine.get(paths,{address:true},function(postingAddress){ //this is sync
 		phrase_term.key=phrase;
-		engine.postingCache[phrase]=engine.mergePostings(postingAddress);
+		var postingAddressWithWildcard=[];
+		for (var i=0;i<postingAddress.length;i++) {
+			postingAddressWithWildcard.push(postingAddress[i]);
+			if (splitted.lengths[i]>1) {
+				postingAddressWithWildcard.push([splitted.lengths[i],0]); //wildcard has blocksize==0 
+			}
+		}
+		engine.postingCache[phrase]=engine.mergePostings(postingAddressWithWildcard);
 	});
 	return phrase_term;
 	// put posting into cache[phrase.key]
@@ -223,7 +284,7 @@ var fastPhrase=function(engine,phrase) {
 var slowPhrase=function(engine,terms,phrase) {
 	var j=0,tokens=engine.customfunc.tokenize(phrase).tokens;
 	var phrase_term=newPhrase();
-	var termid=0, bigram=engine.get("meta").bigram;
+	var termid=0;
 	while (j<tokens.length) {
 		var raw=tokens[j], termlength=1;
 		if (isWildcard(raw)) {
@@ -233,6 +294,8 @@ var slowPhrase=function(engine,terms,phrase) {
 			}
 			terms.push(parseWildcard(raw));
 			termid=terms.length-1;
+			phrase_term.termid.push(termid);
+			phrase_term.termlength.push(termlength);
 		} else if (isOrTerm(raw)){
 			var term=orTerms.apply(this,[tokens,j]);
 			if (term) {
@@ -241,31 +304,32 @@ var slowPhrase=function(engine,terms,phrase) {
 				j+=term.key.split(',').length-1;					
 			}
 			j++;
+			phrase_term.termid.push(termid);
+			phrase_term.termlength.push(termlength);
 		} else {
-			var term=parseTerm(engine,raw);
-			
-			if (j+1<tokens.length && bigram ) {
-				var nextterm=parseTerm(engine,tokens[j+1]);
-				var bi=term.key+nextterm.key;
-				var i=plist.indexOfSorted(bigram,bi);
-				if (bigram[i]==bi) {
-					term.raw=raw+tokens[j+1];
-					term.key=bi;
-					termlength=2;
+			var phrase="";
+			while (j<tokens.length) {
+				if (!(isWildcard(tokens[j]) || isOrTerm(tokens[j]))) {
+					phrase+=tokens[j];
 					j++;
-				}
+				} else break;
 			}
 
-			var termidx=terms.map(function(a){return a.key}).indexOf(term.key);
-			if (termidx==-1) {
-				terms.push(term);
-				termid=terms.length-1;
-			} else {
-				termid=termidx;
-			}				
+			var splitted=splitPhrase(engine,phrase);
+			for (var i=0;i<splitted.tokens.length;i++) {
+
+				var term=parseTerm(engine,splitted.tokens[i]);
+				var termidx=terms.map(function(a){return a.key}).indexOf(term.key);
+				if (termidx==-1) {
+					terms.push(term);
+					termid=terms.length-1;
+				} else {
+					termid=termidx;
+				}				
+				phrase_term.termid.push(termid);
+				phrase_term.termlength.push(splitted.lengths[i]);
+			}
 		}
-		phrase_term.termid.push(termid);
-		phrase_term.termlength.push(termlength);
 		j++;
 	}
 	phrase_term.key=phrase;
@@ -424,11 +488,15 @@ var countFolderFile=function(Q) {
 	Q.byFolder.map(function(f){if (f) Q.folderWithHitCount++});
 }
 var main=function(engine,q,opts,cb){
+	var starttime=new Date();
+
 	if (typeof opts=="function") cb=opts;
 	opts=opts||{};
 	var Q=engine.queryCache[q];
 	if (!Q) Q=newQuery(engine,q,opts);
 	if (!Q) {
+		engine.searchtime=new Date()-starttime;
+		engine.totaltime=engine.searchtime
 		if (engine.context) cb.apply(engine.context,[{rawresult:[]}]);
 		else cb({rawresult:[]});
 		return;
@@ -437,6 +505,9 @@ var main=function(engine,q,opts,cb){
 	if (Q.phrases.length) {
 		loadPostings(engine,Q.terms,function(){
 			if (!Q.phrases[0].posting) {
+				engine.searchtime=new Date()-starttime;
+				engine.totaltime=engine.searchtime
+
 				cb.apply(engine.context,[{rawresult:[]}]);
 				return;			
 			}
@@ -461,18 +532,25 @@ var main=function(engine,q,opts,cb){
 			}
 
 			if (opts.range) {
+				engine.searchtime=new Date()-starttime;
 				excerpt.resultlist(engine,Q,opts,function(data) { 
 					//console.log("excerpt ok");
 					Q.excerpt=data;
+					engine.totaltime=new Date()-starttime;
 					cb.apply(engine.context,[Q]);
 				});
 			} else {
+				engine.searchtime=new Date()-starttime;
+				engine.totaltime=new Date()-starttime;
 				cb.apply(engine.context,[Q]);
-			}		
+			}
 		});
 	} else { //empty search
+		engine.searchtime=new Date()-starttime;
+		engine.totaltime=new Date()-starttime;
 		cb.apply(engine.context,[Q]);
 	};
 }
 
+main.splitPhrase=splitPhrase; //just for debug
 module.exports=main;

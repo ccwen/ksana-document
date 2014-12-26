@@ -13,6 +13,7 @@
 	,html5fs:require("./html5fs")
 	,plist:require("./plist")
 	,bsearch:require("./bsearch")
+	,search:require("./search")
 	,persistentmarkup:require("./persistentmarkup_pouchdb")
 	,underlines:require("./underlines")
 }

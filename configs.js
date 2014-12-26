@@ -1,6 +1,7 @@
 var tokenizers=require('./tokenizers');
 
 var normalize1=function(token) {
+	if (!token) return "";
 	return token.replace(/[ \n\.,，。！．「」：；、]/g,'').trim();
 }
 var isSkip1=function(token) {
