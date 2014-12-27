@@ -177,7 +177,12 @@ var getDocument=function(filename,markups,cb){
 var createLocalEngine=function(kdb,cb,context) {
 	var engine={kdb:kdb, queryCache:{}, postingCache:{}, cache:{}};
 	if ((kdb.fs && kdb.fs.html5fs) || typeof ksanagap!="undefined") {
-		var customfunc=Require("ksana-document").customfunc;
+		if (typeof Require!="undefined") {
+			var customfunc=Require("ksana-document").customfunc;	
+		} else {
+			var customfunc=require("./customfunc");
+		}
+		
 	} else {
 		var customfunc=nodeRequire("ksana-document").customfunc;		
 	}	
@@ -518,14 +523,18 @@ var openLocalNodeWebkit=function(kdbid,cb,context) {
 }
 
 var openLocalHtml5=function(kdbid,cb,context) {
-	var Kdb=Require('ksana-document').kdb;
+	if (typeof Require=="undefined") {
+		var Kdb=require("./kdb");
+	} else {
+		var Kdb=Require('ksana-document').kdb;	
+	}
+	
 	
 	var engine=localPool[kdbid];
 	if (engine) {
 		if (cb) cb.apply(context||engine.context,[engine]);
 		return engine;
 	}
-	var Kdb=Require('ksana-document').kdb;
 	var kdbfn=kdbid;
 	if (kdbfn.indexOf(".kdb")==-1) kdbfn+=".kdb";
 	new Kdb(kdbfn,function(handle){
