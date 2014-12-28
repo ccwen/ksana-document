@@ -492,7 +492,7 @@ var main=function(engine,q,opts,cb){
 	var starttime=new Date();
 	var meta=engine.get("meta");
 	if (meta.normalize && engine.customfunc.setNormalizeTable) {
-		engine.customfunc.setNormalizeTable(meta.normalize);
+		meta.normalizeObj=engine.customfunc.setNormalizeTable(meta.normalize,meta.normalizeObj);
 	}
 	if (typeof opts=="function") cb=opts;
 	opts=opts||{};

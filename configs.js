@@ -1,11 +1,15 @@
 var tokenizers=require('./tokenizers');
 var normalizeTbl=null;
-var setNormalizeTable=function(tbl) {
-	normalizeTbl={};
-	for (var i=0;i<tbl.length;i++) {
-		var arr=tbl[i].split("=");
-		normalizeTbl[arr[0]]=arr[1];
+var setNormalizeTable=function(tbl,obj) {
+	if (!obj) {
+		obj={};
+		for (var i=0;i<tbl.length;i++) {
+			var arr=tbl[i].split("=");
+			obj[arr[0]]=arr[1];
+		}
 	}
+	normalizeTbl=obj;
+	return obj;
 }
 var normalize1=function(token) {
 	if (!token) return "";
