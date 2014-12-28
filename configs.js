@@ -1,8 +1,24 @@
 var tokenizers=require('./tokenizers');
-
+var normalizeTbl=null;
+var setNormalizeTable=function(tbl) {
+	normalizeTbl={};
+	for (var i=0;i<tbl.length;i++) {
+		var arr=tbl[i].split("=");
+		normalizeTbl[arr[0]]=arr[1];
+	}
+}
 var normalize1=function(token) {
 	if (!token) return "";
-	return token.replace(/[ \n\.,，。！．「」：；、]/g,'').trim();
+	token=token.replace(/[ \n\.,，。！．「」：；、]/g,'').trim();
+	if (!normalizeTbl) return token;
+	if (token.length==1) {
+		return normalizeTbl[token] || token;
+	} else {
+		for (var i=0;i<token.length;i++) {
+			token[i]=normalizeTbl[token[i]] || token[i];
+		}
+		return token;
+	}
 }
 var isSkip1=function(token) {
 	var t=token.trim();
@@ -19,6 +35,7 @@ var isSkip_tibetan=function(token) {
 var simple1={
 	func:{
 		tokenize:tokenizers.simple
+		,setNormalizeTable:setNormalizeTable
 		,normalize: normalize1
 		,isSkip:	isSkip1
 	}
@@ -27,6 +44,7 @@ var simple1={
 var tibetan1={
 	func:{
 		tokenize:tokenizers.tibetan
+		,setNormalizeTable:setNormalizeTable
 		,normalize:normalize_tibetan
 		,isSkip:isSkip_tibetan
 	}

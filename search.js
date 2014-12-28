@@ -487,9 +487,13 @@ var countFolderFile=function(Q) {
 	Q.folderWithHitCount=0;
 	Q.byFolder.map(function(f){if (f) Q.folderWithHitCount++});
 }
+
 var main=function(engine,q,opts,cb){
 	var starttime=new Date();
-
+	var meta=engine.get("meta");
+	if (meta.normalize && engine.customfunc.setNormalizeTable) {
+		engine.customfunc.setNormalizeTable(meta.normalize);
+	}
 	if (typeof opts=="function") cb=opts;
 	opts=opts||{};
 	var Q=engine.queryCache[q];

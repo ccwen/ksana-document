@@ -364,7 +364,9 @@ var initIndexer=function(mkdbconfig) {
 	xml4kdb=nodeRequire("ksana-document").xml4kdb;
 
 	//mkdbconfig has a chance to overwrite API
-
+	if (mkdbconfig.meta && mkdbconfig.meta.normalize) {
+		api.setNormalizeTable(mkdbconfig.meta.normalize);
+	}
 	normalize=api["normalize"];
 	isSkip=api["isSkip"];
 	tokenize=api["tokenize"];
