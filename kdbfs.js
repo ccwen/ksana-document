@@ -1,6 +1,6 @@
 /* OS dependent file operation */
 
-if (typeof process=="undefined") {
+if (typeof process=="undefined" || process.browser) {
 	var fs=require('./html5fs');
 	var Buffer=function(){ return ""};
 	var html5fs=true; 

@@ -356,6 +356,10 @@ var Create=function(path,opts,cb) {
 		if (typeof path=="string") path=[path];
 		//opts.recursive=!!opts.recursive;
 		var that=this;
+		if (typeof opts=="function") {
+			cb=opts;
+			opts={};
+		}		
 		if (typeof cb!='function') return getSync(path);
 
 		reset.apply(this,[function(){

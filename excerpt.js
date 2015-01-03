@@ -11,7 +11,7 @@ var getPhraseWidth=function (Q,phraseid,vpos) {
 	var P=Q.phrases[phraseid];
 	var width=0,varwidth=false;
 	if (P.width) return P.width; // no wildcard
-	if (P.termid.length<2) return P.termid.length;
+	if (P.termid.length<2) return P.termlength[0];
 	var lasttermposting=Q.terms[P.termid[P.termid.length-1]].posting;
 
 	for (var i in P.termid) {
